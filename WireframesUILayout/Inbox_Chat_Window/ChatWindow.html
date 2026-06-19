@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Active Chat - TroUyTin</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet">
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed": "#d8e2ff",
+                        "inverse-surface": "#213145",
+                        "on-primary": "#ffffff",
+                        "inverse-on-surface": "#eaf1ff",
+                        "on-tertiary-fixed": "#2a1700",
+                        "outline": "#727785",
+                        "surface-container-highest": "#d3e4fe",
+                        "secondary-container": "#6cf8bb",
+                        "on-primary-container": "#fefcff",
+                        "tertiary": "#825100",
+                        "error": "#ba1a1a",
+                        "on-error": "#ffffff",
+                        "surface-dim": "#cbdbf5",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "surface-container-high": "#dce9ff",
+                        "tertiary-container": "#a36700",
+                        "on-error-container": "#93000a",
+                        "on-background": "#0b1c30",
+                        "on-primary-fixed": "#001a42",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed-variant": "#004395",
+                        "surface": "#f8f9ff",
+                        "primary": "#0058be",
+                        "secondary-fixed-dim": "#4edea3",
+                        "error-container": "#ffdad6",
+                        "on-tertiary": "#ffffff",
+                        "inverse-primary": "#adc6ff",
+                        "primary-fixed-dim": "#adc6ff",
+                        "surface-container-low": "#eff4ff",
+                        "surface-container": "#e5eeff",
+                        "surface-bright": "#f8f9ff",
+                        "surface-tint": "#005ac2",
+                        "secondary-fixed": "#6ffbbe",
+                        "on-surface-variant": "#424754",
+                        "on-secondary-fixed-variant": "#005236",
+                        "secondary": "#006c49",
+                        "background": "#f8f9ff",
+                        "on-secondary-container": "#00714d",
+                        "on-surface": "#0b1c30",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed": "#ffddb8",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "surface-variant": "#d3e4fe",
+                        "primary-container": "#2170e4",
+                        "on-tertiary-container": "#fffbff",
+                        "outline-variant": "#c2c6d6",
+                        "on-secondary-fixed": "#002113"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "section-gap": "24px",
+                        "touch-target": "48px",
+                        "stack-gap": "12px",
+                        "container-margin": "16px"
+                    },
+                    "fontFamily": {
+                        "label-bold": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "label-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-bold": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+        }
+
+        .pt-safe {
+            padding-top: env(safe-area-inset-top, 0px);
+        }
+
+        /* Custom scrollbar for chat area */
+        .chat-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .chat-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-scroll::-webkit-scrollbar-thumb {
+            background-color: theme('colors.outline-variant');
+            border-radius: 20px;
+        }
+    </style>
+</head>
+
+<body class="bg-background text-on-background font-body-lg h-screen flex flex-col overflow-hidden">
+    <!-- TopAppBar -->
+    <header
+        class="w-full top-0 sticky bg-surface border-b border-outline-variant flex items-center justify-between px-container-margin h-touch-target pt-safe z-10 shrink-0">
+        <button
+            class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-container-low transition-colors active:opacity-70 text-on-surface-variant">
+            <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <div class="flex items-center gap-2">
+            <div class="relative">
+                <img class="w-8 h-8 rounded-full object-cover"
+                    data-alt="A small circular avatar placeholder image showing a generic modern user portrait in soft studio lighting against a light gray background. The style is clean, modern, and trustworthy, suitable for a professional rental app. High quality, clear focus."
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvFwokZ9P8XHldxf4yjyYqjI5EmDSxoXYpandGFXDwpAh_wC2dmvluGgNkWIRujelz2Tr_GMGby5gh9RhiaBe6-eaer2J-sLFzKegTOH7s7SwKrMcWkwADJLjjbXoinIWtH0zl7uJc5_jArc1YWYBLieJJuUl4nXTiz00dXdHBzh1bWRJ4sEOgu9Je5QCarchptpxJUwO7duP3-36k9N1wzVKxrludDr0G_G-R0DsIx_blqTlyQi90PXjTUcBPxaQ33UfmUZMgs6k5">
+                <div
+                    class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-secondary-fixed-dim border-2 border-surface rounded-full">
+                </div>
+            </div>
+            <h1 class="font-headline-md text-headline-md text-on-surface">Nguyễn Văn A</h1>
+        </div>
+        <button
+            class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-container-low transition-colors active:opacity-70 text-on-surface-variant">
+            <span class="material-symbols-outlined">more_vert</span>
+        </button>
+    </header>
+    <!-- Context Banner -->
+    <div
+        class="bg-surface-container-low px-container-margin py-3 border-b border-outline-variant flex items-center gap-3 shrink-0 shadow-sm z-10">
+        <img class="w-14 h-14 rounded-md object-cover"
+            data-alt="A small rectangular thumbnail image of a modern, bright, minimalist bedroom interior in Vietnam. The room features a neatly made bed with white linens, soft natural light streaming through a window, and light wood flooring. The aesthetic is clean, inviting, and reliable."
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDJRlYS7tG4YteI8yvfimFUr07GtF80kzfkAK8ZfurdeWhF_8u7MKMo4tx-b5Y5EwGjMcwW8rlj46tXxA3Bd2XdMxEQVW24SbzkCcxhN9MxQ7iXGfuXqRoUiXMy5Md0ugU99cu9fCxYZo3WTPahYifuH2GCgc8xADOYs1ZiNHXfdg4bj171S4ps8-wJa1COlfeHUNHed60FlF0RTvK1xQUfSei2-81SCl0J_8C3cjekjvjGIc7-geWJFejHz7oMijr97ynLmlwIAgkY">
+        <div class="flex flex-col flex-1 overflow-hidden">
+            <span class="font-label-bold text-label-bold text-primary truncate text-body-lg">3.500.000đ/tháng</span>
+            <span class="font-body-md text-body-md text-on-surface-variant truncate mt-0.5">Quận Bình Thạnh, TP.
+                HCM</span>
+        </div>
+        <button class="text-primary hover:bg-primary-fixed p-2 rounded-full transition-colors">
+            <span class="material-symbols-outlined text-sm"
+                style="font-variation-settings: 'FILL' 1;">arrow_forward_ios</span>
+        </button>
+    </div>
+    <!-- Chat Canvas -->
+    <main
+        class="flex-1 overflow-y-auto chat-scroll px-container-margin py-stack-gap flex flex-col gap-4 bg-background relative z-0">
+        <!-- Timestamp -->
+        <div class="flex justify-center my-2">
+            <span
+                class="bg-surface-variant text-on-surface-variant font-label-sm text-label-sm px-3 py-1 rounded-full">Hôm
+                nay, 14:20</span>
+        </div>
+        <!-- Received Message -->
+        <div class="flex gap-2 max-w-[85%] self-start items-end">
+            <img class="w-6 h-6 rounded-full object-cover mb-1"
+                data-alt="A tiny circular avatar placeholder image showing a generic modern user portrait in soft studio lighting against a light gray background. The style is clean, modern, and trustworthy, suitable for a professional rental app. High quality, clear focus."
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKNNeXnqFmztXqmaBOFLak-wlJcSfgVo1lVrkW61Ca5DauJ9wzZneql7wI5imC7fMxxGnRwpeEOdynKdGiZmEa7DpU1810NACyDgCQAKtcYI8RLO0GowJQAMQZbph9moKXm2m7eWzXEQtXXUCqhdDDtLFrpMh3j0bub0OLcIFdXM-eIZxB_XhJB3q6J_GZcZJk-oObqrh5rE2tWFRs3yHCYgFr2PMWomcqkaAM5-O814Q27eJgCF6SB5ITN-42pYJgcLjmHt9QohHF">
+            <div class="bg-surface-variant text-on-surface rounded-2xl rounded-bl-sm px-4 py-2.5 shadow-sm">
+                <p class="font-body-md text-body-md">Chào bạn, bạn muốn xem phòng lúc mấy giờ?</p>
+            </div>
+            <span class="font-label-sm text-label-sm text-outline-variant ml-1 mb-1">14:21</span>
+        </div>
+        <!-- Sent Message -->
+        <div class="flex gap-2 max-w-[85%] self-end items-end flex-row-reverse">
+            <div class="bg-primary text-on-primary rounded-2xl rounded-br-sm px-4 py-2.5 shadow-sm">
+                <p class="font-body-md text-body-md">Dạ tầm 6h chiều nay được không ạ?</p>
+            </div>
+            <span class="font-label-sm text-label-sm text-outline-variant mr-1 mb-1 flex items-center gap-1">
+                14:25
+                <span class="material-symbols-outlined text-[14px] text-primary"
+                    style="font-variation-settings: 'FILL' 1;">done_all</span>
+            </span>
+        </div>
+        <!-- Typing indicator (mock) -->
+        <div class="flex gap-2 max-w-[85%] self-start items-end mt-2 opacity-50">
+            <img class="w-6 h-6 rounded-full object-cover mb-1"
+                data-alt="A tiny circular avatar placeholder image showing a generic modern user portrait in soft studio lighting against a light gray background. The style is clean, modern, and trustworthy, suitable for a professional rental app. High quality, clear focus."
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuC11AsOrC7Ci9GzXLFDWwiNkdoHUMXAjZsEr8YrsqHEsZ9TQmn4L1NG-HMRndeW7fPiJDIw37CGAUttcnF4Zy12AfC1h3fJP4MWYAJioq3HcBKD-JQHtYnWv8FKdtvviZ9J_1mSpIIj-s5d8GJQ2tlmXMxrUcO_ZtIKHJAV_Iimj60Bsh0BLMslXdrz3-VqRGb_Lh-I5XWym16DIeNMJwsFNiF0kitzfjkgGtoO0s7Nybym7VxUBsSvWhpETkU6oIT5N6dqQgfFW7T-">
+            <div class="bg-surface-variant rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1 items-center">
+                <div class="w-1.5 h-1.5 bg-outline rounded-full animate-bounce" style="animation-delay: 0ms"></div>
+                <div class="w-1.5 h-1.5 bg-outline rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+                <div class="w-1.5 h-1.5 bg-outline rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+            </div>
+        </div>
+        <!-- Spacer to ensure latest message is visible above input -->
+        <div class="h-4"></div>
+    </main>
+    <!-- Bottom Input Area -->
+    <div
+        class="bg-surface border-t border-outline-variant px-container-margin py-2 pb-safe flex items-end gap-2 shrink-0 z-10 shadow-[0_-4px_12px_rgba(0,0,0,0.02)]">
+        <button class="p-2 text-outline hover:text-primary transition-colors flex-shrink-0 mb-1">
+            <span class="material-symbols-outlined">attach_file</span>
+        </button>
+        <button class="p-2 text-outline hover:text-primary transition-colors flex-shrink-0 mb-1">
+            <span class="material-symbols-outlined">location_on</span>
+        </button>
+        <div
+            class="flex-1 bg-surface-container-low rounded-xl border border-outline-variant focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all flex items-center min-h-[44px] px-3 my-1">
+            <textarea
+                class="w-full bg-transparent border-none focus:ring-0 resize-none font-body-md text-body-md text-on-surface placeholder:text-outline-variant py-2.5 max-h-[100px] overflow-y-auto leading-tight"
+                oninput="this.style.height = ''; this.style.height = Math.min(this.scrollHeight, 100) + 'px'"
+                placeholder="Nhập tin nhắn..." rows="1"></textarea>
+        </div>
+        <button
+            class="bg-primary text-on-primary w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 mb-1 hover:bg-primary-fixed-variant transition-colors shadow-sm">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">send</span>
+        </button>
+    </div>
+
+
+</body>
+
+</html>
