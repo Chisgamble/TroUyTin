@@ -1,380 +1,423 @@
 <!DOCTYPE html>
-<html lang="vi">
 
-<head>
-    <meta charset="utf-8">
-    <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <title>TroUyTin - Chi tiết phòng</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-        rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-        rel="stylesheet">
-    <script id="tailwind-config">
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TroUyTin - Căn hộ mini cao cấp</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
         tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    "colors": {
-                        "outline-variant": "#c2c6d6",
-                        "primary-fixed": "#d8e2ff",
-                        "tertiary-fixed": "#ffddb8",
-                        "surface-bright": "#f8f9ff",
-                        "on-primary-container": "#fefcff",
-                        "secondary-fixed-dim": "#4edea3",
-                        "on-secondary": "#ffffff",
-                        "on-secondary-fixed": "#002113",
-                        "primary-fixed-dim": "#adc6ff",
-                        "error": "#ba1a1a",
-                        "outline": "#727785",
-                        "error-container": "#ffdad6",
-                        "tertiary": "#825100",
-                        "surface-container": "#e5eeff",
-                        "on-primary-fixed-variant": "#004395",
-                        "tertiary-fixed-dim": "#ffb95f",
-                        "on-tertiary-fixed-variant": "#653e00",
-                        "on-error-container": "#93000a",
-                        "on-surface": "#0b1c30",
-                        "on-secondary-container": "#00714d",
-                        "on-secondary-fixed-variant": "#005236",
-                        "primary-container": "#2170e4",
-                        "primary": "#0058be",
-                        "surface": "#f8f9ff",
-                        "surface-variant": "#d3e4fe",
-                        "background": "#f8f9ff",
-                        "surface-tint": "#005ac2",
-                        "on-tertiary": "#ffffff",
-                        "on-error": "#ffffff",
-                        "on-primary": "#ffffff",
-                        "on-tertiary-fixed": "#2a1700",
-                        "surface-container-high": "#dce9ff",
-                        "tertiary-container": "#a36700",
-                        "on-primary-fixed": "#001a42",
-                        "secondary-container": "#6cf8bb",
-                        "secondary": "#006c49",
-                        "inverse-on-surface": "#eaf1ff",
-                        "surface-dim": "#cbdbf5",
-                        "surface-container-low": "#eff4ff",
-                        "on-tertiary-container": "#fffbff",
-                        "inverse-surface": "#213145",
-                        "surface-container-lowest": "#ffffff",
-                        "on-background": "#0b1c30",
-                        "secondary-fixed": "#6ffbbe",
-                        "surface-container-highest": "#d3e4fe",
-                        "on-surface-variant": "#424754",
-                        "inverse-primary": "#adc6ff"
-                    },
-                    "borderRadius": {
-                        "DEFAULT": "0.25rem",
-                        "lg": "0.5rem",
-                        "xl": "0.75rem",
-                        "full": "9999px"
-                    },
-                    "spacing": {
-                        "touch-target": "48px",
-                        "section-gap": "24px",
-                        "stack-gap": "12px",
-                        "container-margin": "16px"
-                    },
-                    "fontFamily": {
-                        "headline-md": [
-                            "Inter"
-                        ],
-                        "body-lg": [
-                            "Inter"
-                        ],
-                        "label-sm": [
-                            "Inter"
-                        ],
-                        "headline-lg-mobile": [
-                            "Inter"
-                        ],
-                        "body-md": [
-                            "Inter"
-                        ],
-                        "label-bold": [
-                            "Inter"
-                        ]
-                    },
-                    "fontSize": {
-                        "headline-md": [
-                            "20px",
-                            {
-                                "lineHeight": "28px",
-                                "letterSpacing": "-0.01em",
-                                "fontWeight": "600"
-                            }
-                        ],
-                        "body-lg": [
-                            "16px",
-                            {
-                                "lineHeight": "24px",
-                                "fontWeight": "400"
-                            }
-                        ],
-                        "label-sm": [
-                            "12px",
-                            {
-                                "lineHeight": "16px",
-                                "fontWeight": "400"
-                            }
-                        ],
-                        "headline-lg-mobile": [
-                            "24px",
-                            {
-                                "lineHeight": "32px",
-                                "letterSpacing": "-0.02em",
-                                "fontWeight": "700"
-                            }
-                        ],
-                        "body-md": [
-                            "14px",
-                            {
-                                "lineHeight": "20px",
-                                "fontWeight": "400"
-                            }
-                        ],
-                        "label-bold": [
-                            "12px",
-                            {
-                                "lineHeight": "16px",
-                                "fontWeight": "600"
-                            }
-                        ]
-                    }
-                },
-            },
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-highest": "#d3e4fe",
+                      "tertiary": "#825100",
+                      "on-surface-variant": "#424754",
+                      "on-secondary-fixed-variant": "#005236",
+                      "on-secondary": "#ffffff",
+                      "surface-container-high": "#dce9ff",
+                      "on-tertiary-container": "#fffbff",
+                      "on-primary-fixed": "#001a42",
+                      "inverse-primary": "#adc6ff",
+                      "on-primary-container": "#fefcff",
+                      "inverse-on-surface": "#eaf1ff",
+                      "primary-fixed-dim": "#adc6ff",
+                      "tertiary-fixed": "#ffddb8",
+                      "secondary": "#006c49",
+                      "inverse-surface": "#213145",
+                      "primary-fixed": "#d8e2ff",
+                      "surface-container-lowest": "#ffffff",
+                      "error": "#ba1a1a",
+                      "surface-container-low": "#eff4ff",
+                      "outline": "#727785",
+                      "on-secondary-container": "#00714d",
+                      "surface-variant": "#d3e4fe",
+                      "surface-tint": "#005ac2",
+                      "on-error": "#ffffff",
+                      "on-primary": "#ffffff",
+                      "surface": "#f8f9ff",
+                      "on-primary-fixed-variant": "#004395",
+                      "tertiary-fixed-dim": "#ffb95f",
+                      "primary-container": "#2170e4",
+                      "secondary-container": "#6cf8bb",
+                      "outline-variant": "#c2c6d6",
+                      "on-tertiary": "#ffffff",
+                      "on-secondary-fixed": "#002113",
+                      "secondary-fixed": "#6ffbbe",
+                      "on-tertiary-fixed-variant": "#653e00",
+                      "surface-container": "#e5eeff",
+                      "surface-bright": "#f8f9ff",
+                      "background": "#f8f9ff",
+                      "error-container": "#ffdad6",
+                      "on-error-container": "#93000a",
+                      "surface-dim": "#cbdbf5",
+                      "on-background": "#0b1c30",
+                      "secondary-fixed-dim": "#4edea3",
+                      "tertiary-container": "#a36700",
+                      "on-surface": "#0b1c30",
+                      "primary": "#0058be",
+                      "on-tertiary-fixed": "#2a1700"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "container-margin": "16px",
+                      "touch-target": "48px",
+                      "stack-gap": "12px",
+                      "section-gap": "24px"
+              },
+              "fontFamily": {
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "headline-lg-mobile": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "label-bold": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "headline-md": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-bold": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
         }
-    </script>
-    <style>
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-
-        .material-symbols-outlined.fill {
-            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-
-        /* Hide scrollbar for carousel */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-    </style>
+      </script>
 </head>
-
-<body class="bg-background text-on-background font-body-lg min-h-screen pb-[96px] md:pb-0 pt-[72px]">
-    <!-- TopAppBar from JSON -->
-    <header
-        class="fixed top-0 w-full z-50 bg-surface border-b border-surface-variant shadow-sm flex items-center justify-between px-container-margin h-touch-target">
-        <button aria-label="Back"
-            class="text-on-surface-variant p-2 -ml-2 rounded-full hover:bg-surface-container-low active:scale-95 transition-transform"
-            onclick="history.back()">
-            <span class="material-symbols-outlined">arrow_back</span>
-        </button>
-        <h1 class="text-[28px] font-bold text-primary tracking-tight">TroUyTin</h1>
-        <button aria-label="Share"
-            class="text-on-surface-variant p-2 -mr-2 rounded-full hover:bg-surface-container-low active:scale-95 transition-transform">
-            <span class="material-symbols-outlined">share</span>
-        </button>
-    </header>
-    <main>
-        <!-- Top Media Carousel -->
-        <section class="relative w-full h-[35vh] bg-surface-container-lowest">
-            <div class="flex overflow-x-auto snap-x snap-mandatory no-scrollbar h-full">
-                <!-- Image 1 -->
-                <div class="w-full flex-shrink-0 snap-center relative">
-                    <img class="w-full h-full object-cover"
-                        data-alt="A bright, modern Vietnamese rental room interior. The room features a comfortable bed with crisp white linens, a minimalist desk setup near a large window letting in abundant natural light, and a clean, light-colored wooden floor. The overall color palette is airy, with soft whites, light blues, and natural wood tones, reflecting a welcoming and pristine living space."
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpH1UtdUwS9wjE7JEoqJd7RHqWexvQN2eVsd6SfXitDI9olWHREEb72QpOVdCtQAQfttE_aleSPVbWGN4Ke2QHsiwsHZPdz-dKNXb9PIwoVZDAsELsNC_5tuhuOCzUVP_5ej7DCGxzugQDdBEJz8SiqYvhkTiNDPgEymmaknnHL5CGX6ka_LHLwwirZWOokx_zeEssaZnlUV30Pb2hn4Qk31Z6lS23SYsJNBcAqGTvc7d1s6DA-RSbzZcLVE5sv6BGIXXqSWBjevta">
-                    <!-- Image counter badge -->
-                    <div
-                        class="absolute bottom-4 right-4 bg-on-background/60 text-on-primary px-3 py-1 rounded-full font-label-bold text-label-bold backdrop-blur-sm">
-                        1 / 4
-                    </div>
-                </div>
-                <!-- Image 2 -->
-                <div class="w-full flex-shrink-0 snap-center relative">
-                    <img class="w-full h-full object-cover"
-                        data-alt="A well-lit, modern bathroom in a Vietnamese rental apartment. The bathroom is clean, featuring white ceramic tiles, a modern glass shower enclosure, a sleek sink vanity, and bright, even lighting. The mood is hygienic and contemporary, utilizing a high-key lighting style to emphasize cleanliness."
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDm5zJ7zsF_eXwEDpYzGbvFnltgmVDip7Ze6Cz-aNSQ0DUzPhmmUT7MEtXxVAU8N3U58qrM7Ic6Wru-0BrRWegNbuaXeOSmhsO54NZYmxx_5kD2t8VqivTgmh7ZQBch2efkt1xAFfpYCVUZ0FgkxXNzEwkwgIroRUMtPonElNtS0g_OKLUjrBCxL7-AIBsi4Awv_umISpuyFWeeHusw6QRjAre5_lHeAPM44E07m7YBb51DYGHh4oC9cQlUPuU0b_3SQkS5MyjBuo-n">
-                </div>
-                <!-- Image 3 -->
-                <div class="w-full flex-shrink-0 snap-center relative">
-                    <img class="w-full h-full object-cover"
-                        data-alt="A compact, highly functional kitchenette area in a modern rental room. It features light wood cabinets, a clean white countertop, a small stainless steel sink, and a modern mini-fridge. The space is illuminated by warm under-cabinet lighting, creating a cozy and efficient cooking area within a bright, modern aesthetic."
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVH68DQBG3aa1es_0WC6EfvuakYLFzX2jx2IQDg8V8WrcuYYMCdM4J__Isa1kZe9rBQsHwliBbrTHaqLWB9DGk7db8TSDt-wqoQQ6RXwosX49R9yNJyCOaWCyy3KQU5dzbOipch5gmBHycQzFUNbUQvCvYfOAshfjtOR_zQzWHxLF36C6t0KOS0YTguaze5z_ii2FbF8Z0za79gwM2jAA1PvgglvIYAO8TKXpKPeOoosItZRUljSe73BZc5_HcMuMEYDL7B7hDt4Kn">
-                </div>
-            </div>
-        </section>
-        <!-- Info Section -->
-        <section class="px-container-margin py-stack-gap bg-surface-container-lowest">
-            <div class="flex justify-between items-start mb-2">
-                <h2 class="text-headline-lg-mobile font-headline-lg-mobile text-primary">3.500.000đ<span
-                        class="text-body-md font-body-md text-on-surface-variant font-normal">/tháng</span></h2>
-                <button aria-label="Save"
-                    class="text-on-surface-variant p-2 -mr-2 rounded-full hover:bg-surface-container-low active:scale-95 transition-transform">
-                    <span class="material-symbols-outlined">favorite_border</span>
+<body class="bg-background text-on-background font-body-md antialiased min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<nav class="bg-surface-container-lowest text-primary font-body-md text-body-md w-full top-0 sticky border-b border-outline-variant shadow-sm z-50">
+<div class="flex justify-between items-center px-container-margin py-3 max-w-7xl mx-auto">
+<!-- Brand -->
+<a class="text-headline-md font-headline-md text-primary flex items-center gap-2 hover:opacity-80 transition-opacity" href="#">
+                TroUyTin
+            </a>
+<!-- Search (Left) & Navigation -->
+<div class="hidden md:flex flex-1 items-center gap-8 ml-8">
+<!-- Search Bar Placeholder -->
+<div class="relative w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="Tìm kiếm phòng..." type="text"/>
+</div>
+<!-- Nav Links -->
+<div class="flex items-center gap-6">
+<a class="text-primary font-bold border-b-2 border-primary pb-1 transition-colors cursor-pointer active:opacity-80" href="#">
+                        Tìm phòng
+                    </a>
+<a class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:opacity-80 pb-1" href="#">
+                        Tin tức
+                    </a>
+<a class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer active:opacity-80 pb-1" href="#">
+                        Về chúng tôi
+                    </a>
+</div>
+</div>
+<!-- Actions -->
+<div class="flex items-center gap-4">
+<button class="hidden md:flex text-primary hover:bg-surface-container-low transition-all items-center gap-2 px-4 h-touch-target rounded-full font-label-bold text-label-bold">
+<span class="material-symbols-outlined">add_circle</span>
+                    Đăng tin
                 </button>
-            </div>
-            <h3 class="text-headline-md font-headline-md text-on-background mb-4">Phòng trọ mới xây, full nội thất tại
-                Bình Thạnh</h3>
-            <div class="flex flex-wrap gap-3 mb-section-gap">
-                <div class="flex items-center gap-1.5 bg-surface-container-low px-3 py-1.5 rounded-full">
-                    <span class="material-symbols-outlined text-[18px] text-primary">straighten</span>
-                    <span class="font-body-md text-body-md text-on-background">25m²</span>
-                </div>
-                <div class="flex items-center gap-1.5 bg-surface-container-low px-3 py-1.5 rounded-full">
-                    <span class="material-symbols-outlined text-[18px] text-primary">payments</span>
-                    <span class="font-body-md text-body-md text-on-background">Cọc 1 tháng</span>
-                </div>
-            </div>
-            <!-- Amenities Grid -->
-            <div>
-                <h4 class="text-body-lg font-headline-md text-on-background mb-stack-gap font-semibold">Tiện ích</h4>
-                <div class="grid grid-cols-3 gap-3">
-                    <div
-                        class="flex flex-col items-center justify-center p-3 bg-surface rounded-lg border border-surface-variant">
-                        <span class="material-symbols-outlined text-primary mb-1">wifi</span>
-                        <span class="font-label-sm text-label-sm text-on-surface-variant text-center">Wifi</span>
-                    </div>
-                    <div
-                        class="flex flex-col items-center justify-center p-3 bg-surface rounded-lg border border-surface-variant">
-                        <span class="material-symbols-outlined text-primary mb-1">ac_unit</span>
-                        <span class="font-label-sm text-label-sm text-on-surface-variant text-center">Máy lạnh</span>
-                    </div>
-                    <div
-                        class="flex flex-col items-center justify-center p-3 bg-surface rounded-lg border border-surface-variant">
-                        <span class="material-symbols-outlined text-primary mb-1">two_wheeler</span>
-                        <span class="font-label-sm text-label-sm text-on-surface-variant text-center">Chỗ để xe</span>
-                    </div>
-                    <div
-                        class="flex flex-col items-center justify-center p-3 bg-surface rounded-lg border border-surface-variant">
-                        <span class="material-symbols-outlined text-primary mb-1">local_laundry_service</span>
-                        <span class="font-label-sm text-label-sm text-on-surface-variant text-center">Máy giặt</span>
-                    </div>
-                    <div
-                        class="flex flex-col items-center justify-center p-3 bg-surface rounded-lg border border-surface-variant">
-                        <span class="material-symbols-outlined text-primary mb-1">kitchen</span>
-                        <span class="font-label-sm text-label-sm text-on-surface-variant text-center">Tủ lạnh</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-        <!-- Divider -->
-        <div class="h-2 w-full bg-surface-container-low"></div>
-        <!-- Trust Badge / Landlord Info -->
-        <section class="px-container-margin py-section-gap bg-surface-container-lowest">
-            <h4 class="text-body-lg font-headline-md text-on-background mb-stack-gap font-semibold">Thông tin chủ nhà
-            </h4>
-            <div class="flex items-center gap-4 p-4 rounded-xl border border-surface-variant shadow-sm bg-surface">
-                <div class="relative w-16 h-16 flex-shrink-0">
-                    <img class="w-full h-full rounded-full object-cover border-2 border-surface-container"
-                        data-alt="A professional headshot of a friendly Vietnamese landlord. The person is smiling warmly, conveying trust and approachability. They are wearing a casual yet neat collared shirt. The background is a soft, out-of-focus modern interior setting, illuminated by natural, flattering light that aligns with the welcoming brand aesthetic."
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCqsuCHzhFfktBlQOTK0sgQCiviD52ysn4jxWvMmABHhSCFaFmg_ARGL90FUhd0ZsBZYA5cjlnw045MpEkrhJ03rWUPG0HD_QRA2bNkdcUUlEnd56b17i8nWvDfXRhvGEkZGqYU2EJnPgguG_V6BZdJb0NDTGOi7G-8ekerIXI9LEusBuyjAIOiClioHw1Hk8aF0mzR05WqSSAnmEJNZV7O9irv83HdcWvxzHp7LcWfsqqyFhnQppTWNhDidagBXmPm29PMLbVoV7X6">
-                    <div
-                        class="absolute bottom-0 right-0 bg-secondary flex items-center justify-center w-5 h-5 rounded-full border-2 border-surface">
-                        <span class="material-symbols-outlined text-[12px] text-on-secondary font-bold">check</span>
-                    </div>
-                </div>
-                <div class="flex-1">
-                    <div class="flex items-center gap-2 mb-1">
-                        <h5 class="font-headline-md text-body-lg text-on-background font-semibold">Nguyễn Văn A</h5>
-                    </div>
-                    <p class="font-body-md text-body-md text-on-surface-variant mb-1">Chủ nhà • Đã xác minh</p>
-                    <div class="flex items-center gap-3">
-                        <div class="flex items-center gap-1">
-                            <span class="material-symbols-outlined text-[16px] text-tertiary-fixed-dim fill">star</span>
-                            <span class="font-label-sm text-label-sm text-on-background font-medium">4.9 (120)</span>
-                        </div>
-                        <span class="text-outline-variant">•</span>
-                        <span class="font-label-sm text-label-sm text-on-surface-variant">Phản hồi: 98%</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-        <!-- Divider -->
-        <div class="h-2 w-full bg-surface-container-low"></div>
-        <!-- Reviews Section -->
-        <section class="px-container-margin py-section-gap bg-surface-container-lowest mb-section-gap">
-            <div class="flex justify-between items-end mb-stack-gap">
-                <h4 class="text-body-lg font-headline-md text-on-background font-semibold">Đánh giá từ người thuê trước
-                </h4>
-                <a class="font-body-md text-body-md text-primary font-medium hover:underline" href="#">Xem tất cả</a>
-            </div>
-            <div class="flex flex-col gap-4">
-                <!-- Review 1 -->
-                <div
-                    class="p-4 rounded-xl bg-surface-bright border border-surface-container-low shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
-                    <div class="flex items-center gap-3 mb-2">
-                        <div
-                            class="w-8 h-8 rounded-full bg-primary-container text-primary flex items-center justify-center font-label-bold text-label-bold">
-                            T</div>
-                        <div>
-                            <p class="font-label-bold text-label-sm text-on-background">Trần B.</p>
-                            <p class="font-label-sm text-label-sm text-outline">Tháng 9, 2023</p>
-                        </div>
-                        <div class="ml-auto flex">
-                            <span class="material-symbols-outlined text-[16px] text-tertiary-fixed-dim fill">star</span>
-                            <span class="material-symbols-outlined text-[16px] text-tertiary-fixed-dim fill">star</span>
-                            <span class="material-symbols-outlined text-[16px] text-tertiary-fixed-dim fill">star</span>
-                            <span class="material-symbols-outlined text-[16px] text-tertiary-fixed-dim fill">star</span>
-                            <span class="material-symbols-outlined text-[16px] text-tertiary-fixed-dim fill">star</span>
-                        </div>
-                    </div>
-                    <p class="font-body-md text-body-md text-on-surface-variant">"Phòng sạch sẽ, chủ nhà thân thiện. An
-                        ninh tốt, đi lại thuận tiện."</p>
-                </div>
-                <!-- Review 2 -->
-                <div
-                    class="p-4 rounded-xl bg-surface-bright border border-surface-container-low shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
-                    <div class="flex items-center gap-3 mb-2">
-                        <div
-                            class="w-8 h-8 rounded-full bg-tertiary-container text-on-tertiary-container flex items-center justify-center font-label-bold text-label-bold">
-                            L</div>
-                        <div>
-                            <p class="font-label-bold text-label-sm text-on-background">Lê C.</p>
-                            <p class="font-label-sm text-label-sm text-outline">Tháng 7, 2023</p>
-                        </div>
-                        <div class="ml-auto flex">
-                            <span class="material-symbols-outlined text-[16px] text-tertiary-fixed-dim fill">star</span>
-                            <span class="material-symbols-outlined text-[16px] text-tertiary-fixed-dim fill">star</span>
-                            <span class="material-symbols-outlined text-[16px] text-tertiary-fixed-dim fill">star</span>
-                            <span class="material-symbols-outlined text-[16px] text-tertiary-fixed-dim fill">star</span>
-                            <span class="material-symbols-outlined text-[16px] text-tertiary-fixed-dim fill">star</span>
-                        </div>
-                    </div>
-                    <p class="font-body-md text-body-md text-on-surface-variant">"Tiện nghi đầy đủ, gần chợ và trạm bus.
-                        Khá yên tĩnh vào ban đêm."</p>
-                </div>
-            </div>
-        </section>
-    </main>
-    <!-- Bottom Sticky CTA -->
-    <div
-        class="fixed bottom-0 w-full z-50 bg-surface border-t border-surface-variant px-container-margin py-3 pb-safe shadow-[0_-8px_24px_rgba(0,0,0,0.05)] md:hidden">
-        <div class="flex gap-3">
-            <button
-                class="flex-1 h-touch-target rounded-lg border-2 border-primary text-primary font-label-bold text-body-lg flex items-center justify-center gap-2 hover:bg-surface-container-low active:scale-[0.98] transition-all">
-                <span class="material-symbols-outlined">chat</span>
-                Chat ngay
-            </button>
-            <button
-                class="flex-1 h-touch-target rounded-lg bg-primary text-on-primary font-label-bold text-body-lg flex items-center justify-center gap-2 hover:bg-surface-tint active:scale-[0.98] transition-all shadow-[0_4px_12px_rgba(0,88,190,0.2)]">
-                <span class="material-symbols-outlined">call</span>
-                Gọi điện
-            </button>
-        </div>
-    </div>
-
-
-</body>
-
-</html>
+<div class="flex items-center gap-2">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-all flex items-center justify-center h-10 w-10 relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-all flex items-center justify-center h-10 w-10">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</div>
+<img alt="User profile" class="w-10 h-10 rounded-full object-cover border border-outline-variant cursor-pointer hover:opacity-80 transition-opacity" data-alt="A small, professional portrait photo of a young Vietnamese professional smiling softly. The photo has a light background and is cropped closely to the face, suitable for a clean, modern user avatar in a web interface. The lighting is bright and even." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAQPmmFRDs3gFFk_gu7urvDbbjVxDAKs-1_X75xRqKHW0J9PZ_51k4N7DJ5HGq1OsS2oyZXmePVZl-lWqfRiQ7tI2EoW3ixIwstn0KumRR12pLstHq8iTkdsvcVA3AqG_ycA6pPw7G82kTlyX5qykHPdAeBF_Ivbz9RXlecwTppPjsKNvQI1ohEXo7u5TTGYgwd-LhPokWJzy8frMael3aOVwpaWmpvUX-PE1_Rj7GzFM-Qj6MGws-wSV2opjQ1XZ9n2jVn5oOBBbt"/>
+</div>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-1 max-w-7xl mx-auto w-full px-container-margin py-section-gap flex flex-col lg:flex-row gap-8 relative">
+<!-- Left Side (Wide Column) -->
+<div class="flex-1 flex flex-col gap-8 min-w-0">
+<!-- Photo Gallery -->
+<section class="flex flex-col gap-4">
+<div class="w-full aspect-[16/9] rounded-xl overflow-hidden bg-surface-container-high relative">
+<img alt="Main room image" class="w-full h-full object-cover" data-alt="A bright, modern, and clean mini-apartment in Ho Chi Minh City. The room features a comfortable bed with crisp white linens, a small wooden desk by a large window letting in abundant natural light, and tasteful minimalist decor. The color palette is neutral with soft blue accents, conveying a sense of modern living and tranquility." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8py4ufPw2hU7QSoZUhj-CyaQ2eX9pVLwAqqH0zPvU3OVqS_qi4LtD2FObnMuSK7dG7AlVv_SRUxTSZuupZL7N0vEJQwzMs8aCvYWUstb5L6wvZaQtC58TpxkJDprI5S-PiFKx6rpDFmFXk6Nt_3HtQ0-Mwl_Jv7kI6EQkj3V0Hy_dRC85bmLfQ2uLCka6P7yVul4phT_qskhNVMWf9P27DEtF13WhBt46gXB0YOxVQtqKdjHYiIk1n6HpsbDZM9oSAzITvQjAQ-7A"/>
+<!-- Verified Badge Overlaid -->
+<div class="absolute top-4 right-4 bg-secondary-fixed text-on-secondary-fixed px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span class="font-label-bold text-label-bold">Đã xác minh</span>
+</div>
+</div>
+<div class="grid grid-cols-4 gap-4 h-24">
+<img alt="Room thumbnail 1" class="w-full h-full object-cover rounded-lg bg-surface-container-high cursor-pointer hover:opacity-90 transition-opacity" data-alt="A close-up shot of a modern, clean bathroom in a mini-apartment. The bathroom has light grey tiles, a modern glass shower enclosure, and a clean white sink. The lighting is bright and hygienic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNTawtc0FEdH0O6Cz62RKDI3IRpyP8fdUIsU8dFiYY4HF74DZAaFFKv8NspYTMzXvbtnAMujxPL8Cn4GtZr93lBR5qyBJrDEz1ayfbCKmoXWqYC9kGY_kFJB5xYWaZ3IZzLfoN6fRihpNzeAgHlNC_4lOMFY3DlY-R1NMZPL2GXz5xdWmvbuScgXXnW08ceHqXNgkSrX9pNHBpfD9ViSrv2NV644WTzhOCKjs5_9X21Uz_YX_WZKTnMlJTTfqh7u4uKoltHWrdcg_5"/>
+<img alt="Room thumbnail 2" class="w-full h-full object-cover rounded-lg bg-surface-container-high cursor-pointer hover:opacity-90 transition-opacity" data-alt="A detailed view of a compact, modern kitchen area within a mini-apartment. It features sleek wooden cabinets, a clean white countertop, a small induction stove, and a stainless steel sink. The setting is neat and organized." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZLITdKujLM1Lh9564DbVHiFoX0GVW-uIz39ZoRXAMPuh4kdsTSM8nuaJrEoXDbYgtJEfbEuBaQOKjajIOj70NnutObcEZIu3poT6WN8mOufbA4boXer-aT5awADiH5SRjrXEix9hxBw4TOjfHIwbhinJI8NnYsXawg5Hah0XdidKuI_toOJ3JndQFFj3uJEN_Y31wMm6mAfSvvbZr0KrqFp7dMQUz53GRZh9qQRYdcJdV3bh4VWTqCqqQhjb75uGDqqSFH3kexdBE"/>
+<img alt="Room thumbnail 3" class="w-full h-full object-cover rounded-lg bg-surface-container-high cursor-pointer hover:opacity-90 transition-opacity" data-alt="A view of the living space in a mini-apartment showing a small, comfortable sofa in a neutral color, a compact coffee table, and a tidy arrangement. Sunlight gently illuminates the area, creating a warm and welcoming atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgImqSXqHdZEGZuJdTAuSJMhZDD1oe40JSQ0sPr3fUfl-NgrZmMdqotdILS7hx7vDJcOO-65okEbirj-hDy6B1FDHU-QUARWApcNxeo0CoV6PyESyFVCdAyA0NJqWVxwAObZFpur4ty_V4sVJ7ivIuS7h1pwkS9F6oiWnTrSwQvL-xT9qHiJB9RCzzxWQThfZ2SWfeySZoRMGZ8mAsagMzcxGObuMHrySk0fIUebgiDBNbiGCM-o_gsCVLZMIbVZQDjQUD-DpYsrBf"/>
+<div class="w-full h-full rounded-lg bg-surface-container relative overflow-hidden cursor-pointer hover:opacity-90 transition-opacity flex items-center justify-center">
+<img alt="Room thumbnail 4" class="absolute inset-0 w-full h-full object-cover opacity-50" data-alt="A view from the window of a mini-apartment, showing a typical sunny urban street scene in Ho Chi Minh City. The image is slightly blurred to suggest a view outside, conveying a sense of location without distracting from the room." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTjiZoKWhJrKErFYu2cFCBUltuCyccbklu_QLcmGxvgCZjs_2bPZVmRd7wY3lGo-F3CKwuGjzUQKJlkGlqlqPi4DYN9Uct7SwkHhF9XMCINMKRSTuIuFHgkzhbhZIlzdtDNzh7A79g33HK53vmq7nzX2e-mpExErGss_Qe2HmoQG7EI743RkW8OE9t_LiIg19S9LsAAGLrVC1_1jonfzQuYurDnEkSmzLtCLydt4hibZFaF3C2gU90ZN_f4OBTgIrj2LBiI4osNUCT"/>
+<span class="relative font-headline-md text-headline-md text-on-surface z-10">+5</span>
+</div>
+</div>
+</section>
+<!-- Room Description -->
+<section class="flex flex-col gap-4">
+<div class="flex flex-col gap-2">
+<h1 class="font-headline-lg-mobile md:font-headline-md text-headline-lg-mobile md:text-headline-md text-on-background">Căn hộ mini cao cấp, đầy đủ tiện nghi</h1>
+<div class="flex items-center gap-2 text-on-surface-variant font-body-md text-body-md">
+<span class="material-symbols-outlined text-[18px]">location_on</span>
+<span>Nguyễn Đình Chiểu, Quận 1, TP.HCM</span>
+<a class="text-primary hover:underline ml-2 font-label-sm text-label-sm" href="#">Xem bản đồ</a>
+</div>
+</div>
+<div class="prose max-w-none text-on-surface font-body-lg text-body-lg text-justify pt-4 border-t border-outline-variant/30">
+<p>Phòng sạch sẽ, thoáng mát, khu vực an ninh yên tĩnh. Giờ giấc tự do, không chung chủ. Gần chợ, siêu thị, các trường đại học lớn và trung tâm thương mại. Thích hợp cho sinh viên hoặc người đi làm mong muốn một không gian sống hiện đại, tiện nghi.</p>
+</div>
+</section>
+<!-- Reviews Section -->
+<section class="flex flex-col gap-6 pt-6 border-t border-outline-variant/30">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-md text-headline-md text-on-background">Đánh giá từ người thuê trước</h2>
+<div class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-bold text-label-bold text-body-lg">4.9 (12 đánh giá)</span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Review 1 -->
+<div class="bg-surface p-6 rounded-xl border border-surface-container-high shadow-[0_4px_12px_rgba(0,0,0,0.02)] flex flex-col gap-4">
+<div class="flex items-center gap-4">
+<img alt="Nguyễn Văn A avatar" class="w-12 h-12 rounded-full object-cover bg-surface-container-highest" data-alt="A small circular avatar placeholder image showing a young Vietnamese man smiling. The background is a soft, solid pastel color. The lighting is friendly and inviting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAC4mArZ-GVUYZja2KKKZ70CmOVpO5nQiEc_CiPVdPD38qvawY9crPRDPfC-EW7kbBxhlfSXeeiyVOd3X-bND6qSPV3qhCTn1Mz3yc3x4HphKikOu8Xik8phBMkGzhZtxNgC01x7UOF5BqeBt5GFgnA0DLFLefyYMK-MDIxLjs4A-iW0kiK5eL4rGIgc3SVNo78oNM-Zm06ipSu0fzXLqAiPkvqtNPcZfXvU62Sm2JlLvwpgbLT0Z_cqJBm-gNPFlN2hNocMXUtXQt3"/>
+<div>
+<h3 class="font-label-bold text-label-bold text-on-background text-body-md">Nguyễn Văn A</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Tháng 8, 2023</p>
+</div>
+</div>
+<div class="flex text-[#F59E0B] gap-1">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface">"Phòng rất sạch sẽ, chủ nhà nhiệt tình. Vị trí ngay trung tâm, đi lại rất thuận tiện. Các tiện ích xung quanh đầy đủ, mình rất hài lòng khi ở đây."</p>
+</div>
+<!-- Review 2 -->
+<div class="bg-surface p-6 rounded-xl border border-surface-container-high shadow-[0_4px_12px_rgba(0,0,0,0.02)] flex flex-col gap-4">
+<div class="flex items-center gap-4">
+<img alt="Trần Thị B avatar" class="w-12 h-12 rounded-full object-cover bg-surface-container-highest" data-alt="A small circular avatar placeholder image showing a young Vietnamese woman with a gentle smile. The background is a soft, solid pastel blue color. The lighting is soft and flattering." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVvUnDWCh4X4YVndzsYDz8Izc0yhHRPvtcFhcKKTxhJzZANd2kGq4CrfaVCS8s5LiDsmejXPjFGobCE7f3YZaxQX7waZB6ccyx6i9QcKzI4AglvnbWJ76oMLVCVyrQHiIhE6ala_oM6nBNssBn4n1JMmgslUzwnX8Fud8p5cxOyeCwd3wy8de6RwC2Z7L_9g676W3fz4mRCPyn1l9HHszw53hD8-BvKcrtIDFSY5e8Y_SEH3GeXuTHAVF6IZkAH2hKUkC9EEW3N42t"/>
+<div>
+<h3 class="font-label-bold text-label-bold text-on-background text-body-md">Trần Thị B</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Tháng 5, 2023</p>
+</div>
+</div>
+<div class="flex text-[#F59E0B] gap-1">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star_half</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface">"Vị trí thuận tiện, an ninh tốt. Không gian yên tĩnh phù hợp để làm việc. Điểm trừ nhỏ là chỗ để xe hơi chật vào buổi tối."</p>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Side (Sticky Column) -->
+<div class="w-full lg:w-[380px] flex-shrink-0 lg:sticky lg:top-[88px] h-fit flex flex-col gap-6">
+<!-- Pricing & Key Info Card -->
+<div class="bg-surface-container-lowest border border-outline-variant/50 rounded-xl p-6 shadow-[0_4px_12px_rgba(0,0,0,0.05)] flex flex-col gap-6">
+<!-- Price -->
+<div class="flex flex-col gap-1">
+<div class="text-[28px] font-bold text-primary leading-tight">3.500.000đ<span class="text-body-lg font-normal text-on-surface-variant">/tháng</span></div>
+</div>
+<!-- Info Grid -->
+<div class="grid grid-cols-2 gap-y-4 gap-x-2 py-4 border-y border-outline-variant/30">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">straighten</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Diện tích</span>
+<span class="font-body-md text-body-md text-on-surface font-semibold">25 m²</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">payments</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Đặt cọc</span>
+<span class="font-body-md text-body-md text-on-surface font-semibold">1 tháng</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">bolt</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Điện</span>
+<span class="font-body-md text-body-md text-on-surface font-semibold">3.5k/kWh</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">water_drop</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Nước</span>
+<span class="font-body-md text-body-md text-on-surface font-semibold">100k/người</span>
+</div>
+</div>
+</div>
+<!-- Primary Actions -->
+<div class="flex flex-col gap-3">
+<button class="w-full h-touch-target bg-primary text-on-primary rounded-lg font-label-bold text-label-bold flex items-center justify-center gap-2 hover:bg-primary-container hover:text-on-primary-container transition-colors shadow-[0_8px_24px_rgba(0,88,190,0.15)]">
+<span class="material-symbols-outlined">call</span>
+                        Gọi điện
+                    </button>
+<button class="w-full h-touch-target border border-primary text-primary rounded-lg font-label-bold text-label-bold flex items-center justify-center gap-2 hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined">chat</span>
+                        Chat ngay
+                    </button>
+</div>
+</div>
+<!-- Landlord Trust Card -->
+<div class="bg-surface-container-low rounded-xl p-5 flex flex-col gap-4 border border-outline-variant/30">
+<h3 class="font-label-bold text-label-bold text-on-surface uppercase tracking-wider text-xs">Thông tin chủ nhà</h3>
+<div class="flex items-center gap-4">
+<img alt="Chị Lan avatar" class="w-14 h-14 rounded-full object-cover bg-surface-container" data-alt="A warm, professional portrait of a middle-aged Vietnamese woman, representing a friendly and trustworthy landlady. She is smiling naturally. The photo has a bright, neutral background, suitable for a verified user profile avatar on a modern rental platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbI-mjq03SP4auX8LwNx9N-RzRoQGp26ndYGj91iX963ejoAoDMO6rj6ZSDoevpoDCVKEMR5ElLp7H1PzHIZCLng8wPH-zp2ftAZ6mNIuIV6oTCea-DWpwLz1SLkx3g5fYsO2KQ4oUGvuJfy0wp5npJ1DyRcGm8FicaB_9l9PHWOJWyizyivn5b-7FQFEqhDCu5HWJ3xVZibll7Ubhbe7V2O-ZnHXVf_PcxPP-MaqIR5mSqGj8kwkzvW8RAJJHQaDYAkOi8MDsMJLh"/>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-headline-md text-headline-md text-on-background text-base">Chị Lan</span>
+<div class="bg-secondary text-on-secondary px-2 py-0.5 rounded flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Chủ nhà</span>
+</div>
+</div>
+<div class="flex justify-between items-center text-sm mt-2">
+<div class="flex flex-col items-center">
+<span class="font-label-bold text-label-bold text-on-surface">98%</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Phản hồi</span>
+</div>
+<div class="w-px h-8 bg-outline-variant/50"></div>
+<div class="flex flex-col items-center">
+<span class="font-label-bold text-label-bold text-on-surface">4.9</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Đánh giá</span>
+</div>
+<div class="w-px h-8 bg-outline-variant/50"></div>
+<div class="flex flex-col items-center">
+<span class="font-label-bold text-label-bold text-on-surface">2 năm</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Hoạt động</span>
+</div>
+</div>
+</div>
+<!-- Amenities Section -->
+<div class="bg-surface-container-lowest border border-outline-variant/50 rounded-xl p-6 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+<h3 class="font-headline-md text-headline-md text-on-background mb-4">Tiện ích</h3>
+<div class="grid grid-cols-2 gap-4">
+<div class="flex items-center gap-3 text-on-surface">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">wifi</span>
+</div>
+<span class="font-body-md text-body-md">Wifi</span>
+</div>
+<div class="flex items-center gap-3 text-on-surface">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">ac_unit</span>
+</div>
+<span class="font-body-md text-body-md">Điều hòa</span>
+</div>
+<div class="flex items-center gap-3 text-on-surface">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">local_laundry_service</span>
+</div>
+<span class="font-body-md text-body-md">Máy giặt</span>
+</div>
+<div class="flex items-center gap-3 text-on-surface">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">kitchen</span>
+</div>
+<span class="font-body-md text-body-md">Bếp</span>
+</div>
+<div class="flex items-center gap-3 text-on-surface">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">two_wheeler</span>
+</div>
+<span class="font-body-md text-body-md">Chỗ để xe</span>
+</div>
+<div class="flex items-center gap-3 text-on-surface">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">key</span>
+</div>
+<span class="font-body-md text-body-md">Tự do giờ giấc</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-high text-on-surface font-label-sm text-label-sm w-full mt-section-gap border-t border-outline-variant flat no shadows transition-all flex flex-col items-center py-8 px-container-margin">
+<div class="max-w-7xl w-full flex flex-col md:flex-row items-center justify-between gap-6">
+<div class="flex flex-col items-center md:items-start gap-2">
+<span class="font-headline-md text-headline-md text-on-surface">TroUyTin</span>
+<span class="text-on-surface-variant text-center md:text-left">© 2024 TroUyTin - Nền tảng thuê phòng minh bạch</span>
+</div>
+<div class="flex flex-wrap items-center justify-center gap-6">
+<a class="text-on-surface-variant hover:underline hover:text-primary transition-colors" href="#">Điều khoản</a>
+<a class="text-on-surface-variant hover:underline hover:text-primary transition-colors" href="#">Chính sách bảo mật</a>
+<a class="text-on-surface-variant hover:underline hover:text-primary transition-colors" href="#">Liên hệ</a>
+<a class="text-on-surface-variant hover:underline hover:text-primary transition-colors" href="#">Trợ giúp</a>
+</div>
+</div>
+</footer>
+</body></html>

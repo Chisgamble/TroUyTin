@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TroUyTin - Chat</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-surface": "#0b1c30",
+                    "inverse-surface": "#213145",
+                    "surface-tint": "#005ac2",
+                    "error-container": "#ffdad6",
+                    "surface-bright": "#f8f9ff",
+                    "tertiary-fixed-dim": "#ffb95f",
+                    "secondary": "#006c49",
+                    "surface-variant": "#d3e4fe",
+                    "on-secondary-fixed-variant": "#005236",
+                    "on-error": "#ffffff",
+                    "on-primary": "#ffffff",
+                    "outline-variant": "#c2c6d6",
+                    "on-secondary-fixed": "#002113",
+                    "tertiary-fixed": "#ffddb8",
+                    "on-primary-fixed": "#001a42",
+                    "primary-fixed-dim": "#adc6ff",
+                    "primary-fixed": "#d8e2ff",
+                    "secondary-fixed-dim": "#4edea3",
+                    "surface-container": "#e5eeff",
+                    "tertiary": "#825100",
+                    "tertiary-container": "#a36700",
+                    "on-primary-container": "#fefcff",
+                    "inverse-on-surface": "#eaf1ff",
+                    "on-tertiary-fixed": "#2a1700",
+                    "on-error-container": "#93000a",
+                    "error": "#ba1a1a",
+                    "surface-container-low": "#eff4ff",
+                    "secondary-container": "#6cf8bb",
+                    "on-secondary": "#ffffff",
+                    "on-background": "#0b1c30",
+                    "secondary-fixed": "#6ffbbe",
+                    "on-surface-variant": "#424754",
+                    "surface-container-high": "#dce9ff",
+                    "surface": "#f8f9ff",
+                    "primary-container": "#2170e4",
+                    "outline": "#727785",
+                    "inverse-primary": "#adc6ff",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-highest": "#d3e4fe",
+                    "background": "#f8f9ff",
+                    "on-secondary-container": "#00714d",
+                    "surface-dim": "#cbdbf5",
+                    "on-tertiary-container": "#fffbff",
+                    "on-tertiary-fixed-variant": "#653e00",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary-fixed-variant": "#004395",
+                    "primary": "#0058be"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-gap": "12px",
+                    "section-gap": "24px",
+                    "touch-target": "48px",
+                    "container-margin": "16px"
+            },
+            "fontFamily": {
+                    "headline-md": [
+                            "Inter"
+                    ],
+                    "headline-lg-mobile": [
+                            "Inter"
+                    ],
+                    "label-sm": [
+                            "Inter"
+                    ],
+                    "body-md": [
+                            "Inter"
+                    ],
+                    "label-bold": [
+                            "Inter"
+                    ],
+                    "body-lg": [
+                            "Inter"
+                    ]
+            },
+            "fontSize": {
+                    "headline-md": [
+                            "20px",
+                            {
+                                    "lineHeight": "28px",
+                                    "letterSpacing": "-0.01em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-lg-mobile": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "label-sm": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "body-md": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "label-bold": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-lg": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom scrollbar for chat areas */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #c2c6d6;
+            border-radius: 10px;
+        }
+        /* Fixed height layout calc */
+        .chat-workspace {
+            height: calc(100vh - 64px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen overflow-hidden">
+<div class="max-w-7xl mx-auto flex flex-col h-screen">
+<!-- Top Navigation Bar ({{DATA:COMPONENTS:COMPONENTS_27}}) -->
+<nav class="bg-surface dark:bg-on-surface border-b border-outline-variant dark:border-outline w-full px-container-margin h-[64px] z-50 flex justify-between items-center shrink-0">
+<!-- Left: Logo -->
+<div class="text-headline-md font-headline-md font-bold text-primary dark:text-primary-fixed flex items-center">
+                TroUyTin
+            </div>
+<!-- Middle: Search Bar (Simulated on left per JSON, but centered in this layout looks better, adhering to 'search_bar: on_left' loosely by placing it next to logo) -->
+<div class="flex-1 flex justify-start ml-8">
+<div class="relative w-full max-w-md hidden md:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" style="font-variation-settings: 'FILL' 0;">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors" placeholder="Tìm kiếm..." type="text"/>
+</div>
+</div>
+<!-- Right: Actions -->
+<div class="flex items-center gap-4 text-on-surface-variant dark:text-surface-variant">
+<button class="hover:bg-surface-container dark:hover:bg-inverse-surface transition-colors p-2 rounded-full flex items-center justify-center h-10 w-10">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="hover:bg-surface-container dark:hover:bg-inverse-surface transition-colors p-2 rounded-full flex items-center justify-center h-10 w-10">
+<span class="material-symbols-outlined" data-icon="favorite">favorite</span>
+</button>
+<button class="hover:bg-surface-container dark:hover:bg-inverse-surface transition-colors p-2 rounded-full flex items-center justify-center h-10 w-10">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</nav>
+<!-- Main Workspace: Split View -->
+<main class="chat-workspace flex w-full border-x border-b border-outline-variant rounded-b-xl overflow-hidden bg-surface-container-lowest">
+<!-- Left Sidebar: Inbox (30%) -->
+<aside class="w-[30%] min-w-[300px] border-r border-outline-variant flex flex-col bg-surface-bright">
+<!-- Sidebar Header / Search -->
+<div class="p-container-margin border-b border-outline-variant shrink-0">
+<h2 class="text-headline-md font-headline-md mb-4 text-on-surface">Tin nhắn</h2>
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" style="font-variation-settings: 'FILL' 0;">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors" placeholder="Tìm kiếm cuộc trò chuyện..." type="text"/>
+</div>
+</div>
+<!-- Inbox List -->
+<div class="flex-1 overflow-y-auto">
+<!-- Active Chat Item -->
+<div class="flex items-center gap-3 p-4 bg-primary-fixed cursor-pointer transition-colors border-l-4 border-primary">
+<div class="relative w-12 h-12 rounded-full overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="Close up portrait photo of a friendly young Vietnamese woman host in a bright modern apartment setting, natural lighting, high resolution, professional photography, smiling warmly, wearing smart casual business attire." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCERJDT8BalF_C5vnwn4YfO025h-gBGB-Ce3qh3qqVnTiw3As7B2U463zIOFjtjkL0klCaShcns3IbfmiPmTAr2l7NRa7iLUGyeKT7fg2Ot2GVqs0xTGuFcMrZAiOspOrsC53OAdc2T8HPZDiO7J6QlD6-Yvxtwbvid_6OCEuj3HKSjLwVCmG6VJNKMreFLKwdrwPEkrp86QEMVdG_QbpK1e77MK9OtF4l2764Kr28SyXsifF-v-0k15dhVRVxs9xlu1j2suF-ly6l2"/>
+<!-- Online Indicator -->
+<div class="absolute bottom-0 right-0 w-3 h-3 bg-secondary rounded-full border-2 border-primary-fixed"></div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-1">
+<h3 class="font-label-bold text-label-bold text-on-surface truncate">Nguyễn Thị Mai</h3>
+<span class="text-label-sm font-label-sm text-on-surface-variant shrink-0 ml-2">14:30</span>
+</div>
+<p class="text-body-md font-body-md text-on-surface-variant truncate">Dạ vâng, em sẽ sắp xếp cho anh qua xem phòng ạ.</p>
+</div>
+</div>
+<!-- Inactive Chat Item 1 -->
+<div class="flex items-center gap-3 p-4 hover:bg-surface-container-low cursor-pointer transition-colors border-l-4 border-transparent">
+<div class="w-12 h-12 rounded-full overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="Portrait photo of a young Vietnamese man, casual modern style, standing in a well-lit cafe, high resolution, friendly expression, looking directly at the camera." src="https://lh3.googleusercontent.com/aida-public/AB6AXuARQypNoPb9RR-4o2KQCprNUl_5qck5n-FJUGNCcYMS6jEl1gQbaqMgtwQ0Ds4ofkX7Jz6z6ho2Gg-_wX3yeQ2sGS-lD81XuE9X5E_cvOGdMcSAR1u5tWMiLoSHi8HdxHIZI9xxd2blGpu2iQcwVPY72B2kxAqSM1xopo2czoz-aSl6uRXIA1dw05dt7bfy2ijuAv5hj_ySQPo8uhbo1kJSs8jzo0PUDyusbIwfLV0TWN-z4_mgrb97ytrMLjyBAqpxRuIn5EJO5LQQ"/>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-1">
+<h3 class="font-label-bold text-label-bold text-on-surface truncate">Trần Văn Hùng</h3>
+<span class="text-label-sm font-label-sm text-on-surface-variant shrink-0 ml-2">Hôm qua</span>
+</div>
+<p class="text-body-md font-body-md text-on-surface-variant truncate">Căn này còn trống không bạn?</p>
+</div>
+</div>
+<!-- Inactive Chat Item 2 -->
+<div class="flex items-center gap-3 p-4 hover:bg-surface-container-low cursor-pointer transition-colors border-l-4 border-transparent">
+<div class="w-12 h-12 rounded-full bg-surface-variant flex items-center justify-center shrink-0 text-primary font-headline-md">
+                            L
+                        </div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-1">
+<h3 class="font-label-bold text-label-bold text-on-surface truncate">Lê Thảo</h3>
+<span class="text-label-sm font-label-sm text-on-surface-variant shrink-0 ml-2">T2</span>
+</div>
+<p class="text-body-md font-body-md text-on-surface-variant truncate">Mình muốn hỏi về chi phí điện nước.</p>
+</div>
+</div>
+<!-- Inactive Chat Item 3 -->
+<div class="flex items-center gap-3 p-4 hover:bg-surface-container-low cursor-pointer transition-colors border-l-4 border-transparent">
+<div class="w-12 h-12 rounded-full overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="Portrait photo of an older Vietnamese gentleman, looking reliable and trustworthy, wearing a polo shirt, standing outside a modern residential building in Ho Chi Minh City, sunny daylight." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBY54EgegSbWtLFT1GlMCjnKgk2FcqfrqeiLwYdTOKK1xSW381mmzYow4Xag5y4e7qTHznY2PqkwLV52eYOsEd3RXpeLagOvDS-ksPs2jAsNKIbeF0k3bcUfNnBVh9onaWNZa4W0lhyVHw3Uf60qVJnRd7ZrcB9APxlLv6Aqo13fv0WfbuVu3EZvsVoNtbUfNqvZFR6cjw0RyBgLrILgEGFTqkJLLoQ-nN6ExmkiVCq4W7WGTPM637ylSwxfh-mG2337qaLOvmgBbeV"/>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-1">
+<h3 class="font-label-bold text-label-bold text-on-surface truncate">Chú Sơn Quản Lý</h3>
+<span class="text-label-sm font-label-sm text-on-surface-variant shrink-0 ml-2">20/10</span>
+</div>
+<p class="text-body-md font-body-md text-on-surface-variant truncate">Ok cháu, mai qua gọi chú nhé.</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Right Main Area: Chat Window (70%) -->
+<section class="w-[70%] flex flex-col bg-surface-bright relative">
+<!-- Top Header Banner: Property Context -->
+<header class="p-container-margin border-b border-outline-variant bg-surface-container-lowest shrink-0 flex items-center justify-between shadow-sm z-10">
+<div class="flex items-center gap-4">
+<!-- Property Thumbnail -->
+<div class="w-16 h-16 rounded-lg overflow-hidden shrink-0 border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="Interior shot of a bright, modern minimalist mini apartment in District 1 Ho Chi Minh City. Features a large window with natural light, a neat bed, small desk, light wood floors, and white walls. Professional real estate photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAedqBUb5vc9706asjhtdjkZFtpmQ-lqCzhJMZjtiUYvM1_N0wsgiAkEyF4AHy4FodRvRV8-GnfbJuv4upvQVEq7hXBw8UFx3OHsQWmPBrKYb3RK4yS9ExGn3M5kNpY6Rxq1fKNRQUTTI0e8RBw2CyRk4jieC25bEkO6RgZoW6FxDJoSFR58wZj1SyYlXtg_nSllRztWL-JECs9tJl0UbK6DgHP9MW9aEQhKR6YX-er_TEpgZWe9RJdEJ5HVTgDCT-QpDrJqCONr1KZ"/>
+</div>
+<!-- Property Info -->
+<div>
+<div class="flex items-center gap-2 mb-1">
+<h2 class="text-body-lg font-body-lg font-bold text-on-surface truncate">Căn hộ mini cao cấp Quận 1</h2>
+<!-- Verified Badge -->
+<span class="flex items-center justify-center w-4 h-4 rounded-full bg-secondary text-on-secondary" title="Đã xác minh">
+<span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'wght' 600;">check</span>
+</span>
+</div>
+<div class="flex items-center gap-x-4 text-body-md font-body-md">
+<span class="text-primary font-bold">3.500.000đ/tháng</span>
+<span class="text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">location_on</span>
+                                    Phường Đa Kao, Quận 1
+                                </span>
+</div>
+</div>
+</div>
+<!-- Header Actions -->
+<div class="flex items-center gap-2">
+<button class="h-touch-target px-4 bg-primary-container text-on-primary-container rounded-lg font-label-bold text-label-bold hover:bg-primary hover:text-on-primary transition-colors flex items-center gap-2 shadow-[0px_4px_12px_rgba(0,0,0,0.05)]">
+<span class="material-symbols-outlined text-[20px]">calendar_today</span>
+                            Đặt lịch
+                        </button>
+</div>
+</header>
+<!-- Scrollable Chat History -->
+<div class="flex-1 overflow-y-auto p-container-margin flex flex-col gap-stack-gap bg-surface-container-low/50">
+<!-- Date Separator -->
+<div class="flex justify-center my-4">
+<span class="text-label-sm font-label-sm text-on-surface-variant bg-surface-variant px-3 py-1 rounded-full">Hôm nay, 14:20</span>
+</div>
+<!-- Received Message -->
+<div class="flex justify-start max-w-[80%]">
+<div class="flex flex-col gap-1 items-start">
+<div class="bg-surface-container-high text-on-surface p-3 rounded-2xl rounded-tl-sm shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant/30">
+<p class="text-body-md font-body-md">Chào bạn, mình thấy bạn đang quan tâm căn hộ mini bên mình. Bạn muốn hỏi thông tin gì thêm không ạ?</p>
+</div>
+<span class="text-label-sm font-label-sm text-on-surface-variant px-1">14:21</span>
+</div>
+</div>
+<!-- Sent Message -->
+<div class="flex justify-end max-w-[80%] self-end">
+<div class="flex flex-col gap-1 items-end">
+<div class="bg-primary text-on-primary p-3 rounded-2xl rounded-tr-sm shadow-[0px_4px_12px_rgba(0,0,0,0.05)]">
+<p class="text-body-md font-body-md">Chào chị Mai. Em muốn hỏi là giá 3tr5 đã bao gồm phí quản lý và wifi chưa ạ?</p>
+</div>
+<span class="text-label-sm font-label-sm text-on-surface-variant px-1">14:25</span>
+</div>
+</div>
+<!-- Sent Message -->
+<div class="flex justify-end max-w-[80%] self-end">
+<div class="flex flex-col gap-1 items-end">
+<div class="bg-primary text-on-primary p-3 rounded-2xl rounded-tr-sm shadow-[0px_4px_12px_rgba(0,0,0,0.05)]">
+<p class="text-body-md font-body-md">Với lại em có thể qua xem phòng vào chiều mai được không?</p>
+</div>
+<span class="text-label-sm font-label-sm text-on-surface-variant px-1">14:26</span>
+</div>
+</div>
+<!-- Received Message -->
+<div class="flex justify-start max-w-[80%]">
+<div class="flex flex-col gap-1 items-start">
+<div class="bg-surface-container-high text-on-surface p-3 rounded-2xl rounded-tl-sm shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant/30">
+<p class="text-body-md font-body-md">Giá đó là bao gồm phí quản lý rồi em nhé. Wifi và rác là 100k/tháng. Điện 3.8k, nước 100k/người.</p>
+</div>
+<span class="text-label-sm font-label-sm text-on-surface-variant px-1">14:29</span>
+</div>
+</div>
+<!-- Received Message -->
+<div class="flex justify-start max-w-[80%]">
+<div class="flex flex-col gap-1 items-start">
+<div class="bg-surface-container-high text-on-surface p-3 rounded-2xl rounded-tl-sm shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant/30">
+<p class="text-body-md font-body-md">Dạ vâng, em sẽ sắp xếp cho anh qua xem phòng ạ. Chiều mai tầm 5h chiều anh qua được không?</p>
+</div>
+<span class="text-label-sm font-label-sm text-on-surface-variant px-1">14:30</span>
+</div>
+</div>
+</div>
+<!-- Bottom Input Area -->
+<div class="p-container-margin border-t border-outline-variant bg-surface-container-lowest shrink-0">
+<div class="flex items-end gap-3 bg-surface-container-low border border-outline-variant rounded-xl p-2 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+<!-- Attachment Actions -->
+<div class="flex items-center gap-1 pb-1">
+<button class="p-2 text-on-surface-variant hover:text-primary hover:bg-primary-fixed rounded-full transition-colors flex items-center justify-center" title="Đính kèm ảnh">
+<span class="material-symbols-outlined">image</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary hover:bg-primary-fixed rounded-full transition-colors flex items-center justify-center" title="Chia sẻ vị trí">
+<span class="material-symbols-outlined">location_on</span>
+</button>
+</div>
+<!-- Text Input -->
+<textarea class="flex-1 bg-transparent border-none text-body-md font-body-md resize-none py-3 focus:ring-0 outline-none max-h-32" placeholder="Viết tin nhắn..." rows="1" style="min-height: 44px;"></textarea>
+<!-- Send Button -->
+<button class="h-11 w-11 bg-primary text-on-primary rounded-full hover:bg-primary-container transition-colors flex items-center justify-center shrink-0 shadow-sm" title="Gửi">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">send</span>
+</button>
+</div>
+</div>
+</section>
+</main>
+</div>
+</body></html>
