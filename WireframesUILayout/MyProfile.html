@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hồ sơ của tôi | TroUyTin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#2170e4",
+                        "inverse-on-surface": "#eaf1ff",
+                        "primary-fixed": "#d8e2ff",
+                        "outline-variant": "#c2c6d6",
+                        "surface-container": "#e5eeff",
+                        "surface-container-high": "#dce9ff",
+                        "tertiary-fixed": "#ffddb8",
+                        "on-primary-fixed": "#001a42",
+                        "surface-container-low": "#eff4ff",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "on-primary": "#ffffff",
+                        "on-background": "#0b1c30",
+                        "on-tertiary-container": "#fffbff",
+                        "error-container": "#ffdad6",
+                        "on-secondary-container": "#00714d",
+                        "tertiary": "#825100",
+                        "surface": "#f8f9ff",
+                        "outline": "#727785",
+                        "on-primary-fixed-variant": "#004395",
+                        "on-tertiary": "#ffffff",
+                        "surface-dim": "#cbdbf5",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed": "#2a1700",
+                        "on-error": "#ffffff",
+                        "surface-variant": "#d3e4fe",
+                        "secondary-container": "#6cf8bb",
+                        "inverse-primary": "#adc6ff",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "surface-container-highest": "#d3e4fe",
+                        "on-secondary-fixed": "#002113",
+                        "on-secondary-fixed-variant": "#005236",
+                        "on-primary-container": "#fefcff",
+                        "surface-bright": "#f8f9ff",
+                        "secondary": "#006c49",
+                        "error": "#ba1a1a",
+                        "on-error-container": "#93000a",
+                        "on-surface-variant": "#424754",
+                        "inverse-surface": "#213145",
+                        "secondary-fixed-dim": "#4edea3",
+                        "tertiary-container": "#a36700",
+                        "primary": "#0058be",
+                        "primary-fixed-dim": "#adc6ff",
+                        "surface-tint": "#005ac2",
+                        "secondary-fixed": "#6ffbbe",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface": "#0b1c30",
+                        "background": "#f8f9ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-gap": "12px",
+                        "container-margin": "16px",
+                        "touch-target": "48px",
+                        "section-gap": "24px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "label-bold": ["Inter"],
+                        "headline-lg-mobile": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "label-bold": ["12px", {"lineHeight": "16px", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9ff;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface">
+<!-- TopNavBar -->
+<header class="bg-surface dark:bg-inverse-surface full-width top-0 sticky z-50 border-b border-outline-variant dark:border-outline shadow-sm dark:shadow-none">
+<div class="flex justify-between items-center w-full px-container-margin py-4 max-w-7xl mx-auto">
+<div class="flex items-center gap-8">
+<a class="text-headline-md font-headline-md font-bold text-primary dark:text-inverse-primary" href="#">TroUyTin</a>
+<nav class="hidden md:flex gap-6 items-center">
+<a class="text-on-surface-variant dark:text-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-inverse-primary transition-colors" href="#">Khám phá</a>
+<a class="text-on-surface-variant dark:text-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-inverse-primary transition-colors" href="#">Yêu thích</a>
+<a class="text-on-surface-variant dark:text-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-inverse-primary transition-colors" href="#">Quản lý tin</a>
+<a class="text-on-surface-variant dark:text-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-inverse-primary transition-colors" href="#">Trợ giúp</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="bg-primary text-on-primary px-6 py-2 rounded-xl font-label-bold text-label-bold active:opacity-80 active:scale-95 transition-all">Đăng tin</button>
+<div class="flex gap-2">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container rounded-full transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-primary hover:bg-surface-container rounded-full transition-colors border-2 border-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_circle</span>
+</button>
+</div>
+</div>
+</div>
+</header>
+<main class="max-w-7xl mx-auto py-8 px-container-margin">
+<div class="grid grid-cols-12 gap-section-gap items-start">
+<!-- Left Sidebar (25%) -->
+<aside class="col-span-12 md:col-span-3 sticky top-24">
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary-container text-on-primary-container font-label-bold text-label-bold transition-all" href="#">
+<span class="material-symbols-outlined">person</span>
+<span>Thông tin cá nhân</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container transition-all font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span>Thói quen ở ghép</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container transition-all font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">bookmark</span>
+<span>Phòng đã lưu</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container transition-all font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Cài đặt tài khoản</span>
+</a>
+</nav>
+</aside>
+<!-- Right Main Area (75%) -->
+<div class="col-span-12 md:col-span-9 flex flex-col gap-section-gap">
+<!-- Header Card: Cover & Avatar -->
+<section class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm">
+<div class="h-48 w-full relative">
+<div class="bg-cover bg-center w-full h-full" data-alt="A panoramic, high-quality photograph of a modern Ho Chi Minh City skyline at sunset, with warm golden light reflecting off glass skyscrapers and the Saigon River. The style is professional and clean, using a soft depth of field to create an elegant background for a user profile page, maintaining a reliable and modern Vietnamese urban atmosphere." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCUT_Flk5xaWXQ78nJVib-Q54sl0yR_YHwV-J10CuyR5MRMJycEqpKwGwfpy05oSxDup6kTzmhbKYbV6A5cP0dFwfLm5mUrH-7WsDgghZg5EIGZ9XfnYRUhGpv2TINwNjC7vDO8xoU-WzF66KSJ6tzYFJPYc8m5VoyObiDTReo012S6mIhyjoEg3w9KNIZQEeXXkkZXb1nPkaCpxsLNk79UclAwcucl3cs1UuKtaw2UN9mVOQKtOBs547CZikgV6lSzyrDzxffgyY3H')"></div>
+<button class="absolute bottom-4 right-4 bg-white/80 backdrop-blur-md px-4 py-2 rounded-lg flex items-center gap-2 font-label-bold text-label-bold hover:bg-white transition-all">
+<span class="material-symbols-outlined text-[18px]">photo_camera</span>
+                            Chỉnh sửa ảnh bìa
+                        </button>
+</div>
+<div class="px-8 pb-8 flex flex-col items-start relative">
+<div class="relative -mt-16 mb-4">
+<div class="w-32 h-32 rounded-full border-4 border-surface-container-lowest overflow-hidden shadow-md">
+<img class="w-full h-full object-cover" data-alt="A professional and friendly portrait of a young Vietnamese professional in their late 20s, smiling warmly at the camera. The background is a soft-focus modern office interior with natural daylight. The image conveys trustworthiness and reliability, styled with high-contrast, clean lighting suitable for a high-end rental platform profile." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDJrayoDM6nd5WZF7UTw4_n4_WIUlcOn3TFlW2hFL3lQGhX-b0fmwVcfTEBqtVFRJbu1hbI8Zaz1z6o5xippnyD0HCFdPu7r_CWAStF4hJPkhJNAugdJZ7sMJ25ojL2okufmjAP_G_M4qtrmr3_T-h5gttpETCNqcDl-7Mt7CSw-JNbrDtTAjquC1SE9P3Wg1ARNZsfk91AuMh2Q7CdWeOfMQLjUxUrWPyteeiS9foJda0qKql4T0gftdRJMElSXTv-vAw-ofFHa7Pt"/>
+</div>
+<button class="absolute bottom-1 right-1 bg-primary text-on-primary p-2 rounded-full border-2 border-surface-container-lowest hover:scale-105 transition-all">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+</div>
+<div class="flex items-center gap-2">
+<h1 class="font-headline-md text-headline-md text-on-surface">Nguyễn Minh Tuấn</h1>
+<div class="flex items-center gap-1 bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+                                Đã xác minh
+                            </div>
+</div>
+<p class="text-on-surface-variant font-body-md mt-1">Gia nhập từ Tháng 10, 2023 • TP. Hồ Chí Minh</p>
+</div>
+</section>
+<!-- Personal Info Form Card -->
+<section class="bg-surface-container-lowest p-8 rounded-xl shadow-sm">
+<div class="flex justify-between items-center mb-6">
+<h2 class="font-headline-md text-headline-md">Thông tin cá nhân</h2>
+<span class="text-on-surface-variant font-body-md">Thông tin được bảo mật bởi TroUyTin</span>
+</div>
+<form class="grid grid-cols-1 md:grid-cols-2 gap-stack-gap">
+<div class="flex flex-col gap-2">
+<label class="font-label-bold text-label-bold text-on-surface-variant">Họ và tên</label>
+<input class="w-full h-touch-target rounded-xl border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary font-body-md" type="text" value="Nguyễn Minh Tuấn"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-bold text-label-bold text-on-surface-variant">Số điện thoại</label>
+<input class="w-full h-touch-target rounded-xl border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary font-body-md" type="tel" value="090 123 4567"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-bold text-label-bold text-on-surface-variant">Email</label>
+<input class="w-full h-touch-target rounded-xl border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary font-body-md" type="email" value="tuan.nguyen@example.com"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-bold text-label-bold text-on-surface-variant">Vai trò</label>
+<select class="w-full h-touch-target rounded-xl border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary font-body-md bg-white">
+<option>Sinh viên</option>
+<option selected="">Người đi làm</option>
+<option>Chủ phòng</option>
+</select>
+</div>
+<div class="col-span-1 md:col-span-2 flex justify-end mt-4">
+<button class="bg-primary text-on-primary px-8 h-touch-target rounded-xl font-label-bold hover:shadow-lg active:scale-95 transition-all" type="submit">Lưu thay đổi</button>
+</div>
+</form>
+</section>
+<!-- Roommate Habits Card -->
+<section class="bg-surface-container-lowest p-8 rounded-xl shadow-sm">
+<div class="flex justify-between items-center mb-6">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">psychology</span>
+<h2 class="font-headline-md text-headline-md">Thói quen ở ghép</h2>
+</div>
+<button class="text-primary border border-primary px-4 py-2 rounded-xl font-label-bold hover:bg-surface-container transition-all">Chỉnh sửa thói quen</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div>
+<h3 class="font-label-bold text-on-surface mb-3">Lối sống cá nhân</h3>
+<div class="flex flex-wrap gap-2">
+<span class="px-4 py-2 bg-secondary-container/30 text-on-secondary-container rounded-full text-label-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">wb_sunny</span>
+                                    Dậy sớm
+                                </span>
+<span class="px-4 py-2 bg-secondary-container/30 text-on-secondary-container rounded-full text-label-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">bedtime</span>
+                                    Ngủ sớm
+                                </span>
+<span class="px-4 py-2 bg-primary-container/10 text-primary rounded-full text-label-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">cleaning_services</span>
+                                    Gọn gàng
+                                </span>
+<span class="px-4 py-2 bg-primary-container/10 text-primary rounded-full text-label-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">smoke_free</span>
+                                    Không hút thuốc
+                                </span>
+</div>
+</div>
+<div>
+<h3 class="font-label-bold text-on-surface mb-3">Ưu tiên môi trường</h3>
+<div class="flex flex-wrap gap-2">
+<span class="px-4 py-2 bg-surface-variant text-on-surface-variant rounded-full text-label-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">volume_off</span>
+                                    Yên tĩnh
+                                </span>
+<span class="px-4 py-2 bg-surface-variant text-on-surface-variant rounded-full text-label-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">pets</span>
+                                    Thích thú cưng
+                                </span>
+<span class="px-4 py-2 bg-surface-variant text-on-surface-variant rounded-full text-label-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">group</span>
+                                    Ít bạn bè ghé chơi
+                                </span>
+</div>
+</div>
+</div>
+<div class="mt-8 p-4 bg-surface-container-low rounded-xl border border-outline-variant/30 italic text-on-surface-variant font-body-md">
+                        "Mình là người làm việc văn phòng, mong muốn tìm bạn cùng phòng sống gọn gàng và tôn trọng không gian riêng tư. Thường xuyên tập gym vào buổi tối và ít khi nấu ăn tại nhà."
+                    </div>
+</section>
+<!-- Additional Settings Info -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-section-gap">
+<div class="bg-surface-container-highest/50 p-6 rounded-xl border border-outline-variant flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">security</span>
+</div>
+<div>
+<h4 class="font-label-bold">Bảo mật tài khoản</h4>
+<p class="text-label-sm text-on-surface-variant">Xác thực 2 lớp đang được bật</p>
+</div>
+<button class="ml-auto text-primary material-symbols-outlined">chevron_right</button>
+</div>
+<div class="bg-surface-container-highest/50 p-6 rounded-xl border border-outline-variant flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined">payments</span>
+</div>
+<div>
+<h4 class="font-label-bold">Phương thức thanh toán</h4>
+<p class="text-label-sm text-on-surface-variant">Liên kết với MoMo, ZaloPay</p>
+</div>
+<button class="ml-auto text-primary material-symbols-outlined">chevron_right</button>
+</div>
+</section>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest dark:bg-inverse-surface full-width mt-12 border-t border-outline-variant dark:border-outline">
+<div class="flex flex-col md:flex-row justify-between items-center w-full px-container-margin py-10 max-w-7xl mx-auto gap-section-gap">
+<div class="flex flex-col gap-2">
+<span class="text-headline-md font-headline-md font-bold text-primary dark:text-inverse-primary">TroUyTin</span>
+<p class="text-on-surface-variant dark:text-surface-variant font-body-md max-w-sm">© 2024 TroUyTin. Nền tảng thuê trọ minh bạch hàng đầu Việt Nam.</p>
+</div>
+<div class="flex flex-wrap justify-center gap-6">
+<a class="text-on-surface-variant dark:text-surface-variant font-body-md hover:underline hover:text-primary dark:hover:text-inverse-primary transition-all" href="#">Về chúng tôi</a>
+<a class="text-on-surface-variant dark:text-surface-variant font-body-md hover:underline hover:text-primary dark:hover:text-inverse-primary transition-all" href="#">Quy chế hoạt động</a>
+<a class="text-on-surface-variant dark:text-surface-variant font-body-md hover:underline hover:text-primary dark:hover:text-inverse-primary transition-all" href="#">Chính sách bảo mật</a>
+<a class="text-on-surface-variant dark:text-surface-variant font-body-md hover:underline hover:text-primary dark:hover:text-inverse-primary transition-all" href="#">Điều khoản sử dụng</a>
+<a class="text-on-surface-variant dark:text-surface-variant font-body-md hover:underline hover:text-primary dark:hover:text-inverse-primary transition-all" href="#">Liên hệ hỗ trợ</a>
+</div>
+</div>
+</footer>
+<script>
+        // Simple micro-interaction for active state sidebar
+        const navLinks = document.querySelectorAll('aside nav a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                navLinks.forEach(l => {
+                    l.classList.remove('bg-primary-container', 'text-on-primary-container', 'font-label-bold');
+                    l.classList.add('text-on-surface-variant', 'font-body-md');
+                });
+                link.classList.add('bg-primary-container', 'text-on-primary-container', 'font-label-bold');
+                link.classList.remove('text-on-surface-variant', 'font-body-md');
+            });
+        });
+    </script>
+</body></html>

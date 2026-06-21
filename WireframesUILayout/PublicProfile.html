@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hồ sơ người dùng - TroUyTin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-container": "#00714d",
+                    "on-error": "#ffffff",
+                    "background": "#f8f9ff",
+                    "primary-fixed": "#d8e2ff",
+                    "surface-bright": "#f8f9ff",
+                    "inverse-surface": "#213145",
+                    "inverse-primary": "#adc6ff",
+                    "outline": "#727785",
+                    "tertiary": "#825100",
+                    "surface-tint": "#005ac2",
+                    "surface-container": "#e5eeff",
+                    "secondary-fixed-dim": "#4edea3",
+                    "secondary-fixed": "#6ffbbe",
+                    "on-surface-variant": "#424754",
+                    "on-primary-fixed-variant": "#004395",
+                    "surface": "#f8f9ff",
+                    "primary": "#0058be",
+                    "on-primary": "#ffffff",
+                    "on-secondary-fixed-variant": "#005236",
+                    "surface-variant": "#d3e4fe",
+                    "on-tertiary": "#ffffff",
+                    "on-tertiary-fixed-variant": "#653e00",
+                    "on-error-container": "#93000a",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-high": "#dce9ff",
+                    "error": "#ba1a1a",
+                    "on-primary-container": "#fefcff",
+                    "inverse-on-surface": "#eaf1ff",
+                    "surface-dim": "#cbdbf5",
+                    "on-secondary": "#ffffff",
+                    "primary-container": "#2170e4",
+                    "primary-fixed-dim": "#adc6ff",
+                    "on-tertiary-container": "#fffbff",
+                    "secondary-container": "#6cf8bb",
+                    "on-tertiary-fixed": "#2a1700",
+                    "surface-container-low": "#eff4ff",
+                    "surface-container-highest": "#d3e4fe",
+                    "on-secondary-fixed": "#002113",
+                    "error-container": "#ffdad6",
+                    "on-primary-fixed": "#001a42",
+                    "tertiary-fixed-dim": "#ffb95f",
+                    "on-background": "#0b1c30",
+                    "tertiary-fixed": "#ffddb8",
+                    "tertiary-container": "#a36700",
+                    "secondary": "#006c49",
+                    "outline-variant": "#c2c6d6",
+                    "on-surface": "#0b1c30"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "touch-target": "48px",
+                    "container-margin": "16px",
+                    "stack-gap": "12px",
+                    "section-gap": "24px"
+            },
+            "fontFamily": {
+                    "label-sm": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "label-bold": ["Inter"]
+            },
+            "fontSize": {
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-bold": ["12px", {"lineHeight": "16px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .verified-badge {
+            background-color: #10B981;
+            color: white;
+            border-radius: 9999px;
+            padding: 2px;
+            font-size: 14px;
+        }
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.35s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md">
+<!-- TopNavBar -->
+<nav class="bg-surface-container-lowest dark:bg-on-background border-b border-outline-variant dark:border-on-surface-variant shadow-sm dark:shadow-none sticky top-0 z-50">
+<div class="flex justify-between items-center px-container-margin w-full max-w-7xl mx-auto h-touch-target">
+<div class="text-headline-md font-headline-md font-bold text-primary dark:text-primary-fixed-dim">
+                TroUyTin
+            </div>
+<div class="hidden md:flex gap-8 items-center">
+<a class="text-on-surface-variant dark:text-outline-variant font-label-bold hover:text-primary dark:hover:text-primary-fixed-dim transition-colors" href="#">Khám phá</a>
+<a class="text-on-surface-variant dark:text-outline-variant font-label-bold hover:text-primary dark:hover:text-primary-fixed-dim transition-colors" href="#">Yêu thích</a>
+<a class="text-on-surface-variant dark:text-outline-variant font-label-bold hover:text-primary dark:hover:text-primary-fixed-dim transition-colors" href="#">Quản lý tin</a>
+<a class="text-on-surface-variant dark:text-outline-variant font-label-bold hover:text-primary dark:hover:text-primary-fixed-dim transition-colors" href="#">Hỗ trợ</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-on-surface-variant p-2">notifications</button>
+<button class="bg-primary text-on-primary px-6 py-2 rounded-xl font-label-bold active:opacity-80 transition-opacity">Đăng tin</button>
+<div class="w-8 h-8 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A professional close-up of a modern Vietnamese male avatar in a bright, minimalist studio setting with soft warm lighting. The style is clean, approachable, and high-quality digital photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgdNwYfEq-MbmmJx5SpJf1Ljebjcp34GIjuluz9orGhqIiZ8X_NS93UR3Fj_fOqwi0k6kIY5nLA3U5SvPi7FJXusRZ4GGbRCk09XsLM8c0AeZV1VcGq0LMZb-LLZvMXt70NFHLHkaznXnuprCCgXQbcxcWBhD3LaYadgUCGJkODuDnTQaCGsJ7qRj5IIag7bMMAwfY8FMlASIV4RBpaMeKUytFQ11BMgDTbZGJrlkwz_P7NSwFso2gQliO1bWT2e1OQjJli9_FIplo"/>
+</div>
+</div>
+</div>
+</nav>
+<main class="max-w-5xl mx-auto py-8 px-container-margin">
+<!-- Profile Header Card -->
+<section class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm mb-section-gap relative">
+<div class="h-48 w-full bg-surface-variant relative overflow-hidden">
+<img class="w-full h-full object-cover opacity-80" data-alt="A wide cinematic shot of modern urban architecture in Ho Chi Minh City during sunset, featuring warm orange and deep blue sky colors. The view shows sleek apartment buildings and lush greenery, conveying a premium and comfortable living atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCuM8jKK62Lj34uTf3u-P-X-8i7N6dWFYwQPntC9eOnmWD3jYXU6NhD6w6mdcwv2LcA4L5wJ0bQmciat8z74oPX74C4zgMMp-RtPnp0ana2ishDNOQl0MNEVMKMIlQXjem64cSOS17LIfHDC9LQAjEqibKTNrcBXtQeGEqH9aFAj1_s-HjirI2u1RFIbICQE1GSS6DPmWg97csYMj5PCi5MTwPM0pGeAz2WeFYxJzl2TE9ORiMYuig3GHpULju4SriJtg8CxzfMIEo9"/>
+</div>
+<div class="px-8 pb-8 pt-0 relative flex flex-col md:flex-row items-end gap-6 -mt-12">
+<div class="relative">
+<div class="w-32 h-32 rounded-full border-4 border-surface-container-lowest overflow-hidden shadow-lg bg-white">
+<img class="w-full h-full object-cover" data-alt="A high-quality portrait of a friendly Vietnamese young professional male named Nguyễn Minh Tuấn. He is smiling warmly, wearing a neat casual shirt. The lighting is bright and airy, typical of a professional yet approachable personal profile photo." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCt4EX9AVpIVCI0ko-88BT7cimne2NxNQc4nYUYGBIpdsfqpKXFkHuMpT8U8FwU3_34nZ9Rv9jDRuQqUhVPHNDBt4Iwlj1lKsYZrYBgheoc3Z9RHm4IzuUdz0h_a0LlDoMNzq8VHUAzQVDHdMf18v2-NecB8Mq2I2_BinnIeFpTIBVladERtECyHIQGUbmRUB2iaB9Ps6OFPkuCU8HIaCkUgd-kAJ80pDi1jMbnrjljrM9_XXwFPdKbKflly65MBHTKL4wBMJpapI-p"/>
+</div>
+</div>
+<div class="flex-grow pb-2">
+<div class="flex items-center gap-2">
+<h1 class="text-headline-md font-headline-md text-on-background">Nguyễn Minh Tuấn</h1>
+<span class="material-symbols-outlined verified-badge" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<p class="text-on-surface-variant text-body-md mt-1 flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">calendar_today</span>
+                        Tham gia từ tháng 8/2023
+                    </p>
+</div>
+<div class="flex gap-stack-gap pb-2">
+<button class="bg-primary text-on-primary h-touch-target px-8 rounded-xl font-label-bold flex items-center gap-2 hover:opacity-90 transition-all">
+<span class="material-symbols-outlined">chat</span>
+                        Chat ngay
+                    </button>
+<button class="border-2 border-primary text-primary h-touch-target px-8 rounded-xl font-label-bold flex items-center gap-2 hover:bg-primary-fixed transition-all">
+                        Theo dõi
+                    </button>
+</div>
+</div>
+</section>
+<!-- Two-Column Layout -->
+<div class="grid grid-cols-1 md:grid-cols-[35%_1fr] gap-section-gap">
+<!-- Left Column: Intro & Lifestyle -->
+<aside class="flex flex-col gap-section-gap">
+<!-- About Card -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-surface-container">
+<h2 class="text-body-lg font-label-bold text-on-background mb-4">Giới thiệu</h2>
+<p class="text-on-surface-variant text-body-md mb-6 leading-relaxed">
+                        Mình là người hòa đồng, tôn trọng không gian riêng tư. Đang tìm kiếm những người bạn cùng phòng có lối sống văn minh, sạch sẽ để cùng chia sẻ ngôi nhà chung.
+                    </p>
+<div class="space-y-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary bg-primary-fixed p-2 rounded-lg">work</span>
+<div>
+<p class="text-label-sm text-outline">Ngành học/Công việc</p>
+<p class="text-body-md font-semibold">Nhân viên văn phòng</p>
+</div>
+</div>
+<!-- Lifestyle Progress -->
+<div class="pt-4 border-t border-surface-container flex items-center gap-4">
+<div class="relative w-16 h-16">
+<svg class="w-full h-full">
+<circle class="text-surface-container" cx="32" cy="32" fill="transparent" r="26" stroke="currentColor" stroke-width="6"></circle>
+<circle class="text-secondary progress-ring__circle" cx="32" cy="32" fill="transparent" r="26" stroke="currentColor" stroke-dasharray="163.36" stroke-dashoffset="24.5" stroke-linecap="round" stroke-width="6"></circle>
+</svg>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="text-label-bold text-on-secondary-container">85%</span>
+</div>
+</div>
+<div>
+<p class="text-body-md font-semibold text-on-secondary-container">Độ phù hợp lối sống</p>
+<p class="text-label-sm text-outline">Dựa trên thói quen sinh hoạt</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Lifestyle Habits Card -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-surface-container">
+<h2 class="text-body-lg font-label-bold text-on-background mb-4">Thói quen sinh hoạt</h2>
+<div class="flex flex-wrap gap-2">
+<span class="bg-surface-container text-primary px-3 py-1.5 rounded-full text-label-bold">Không hút thuốc</span>
+<span class="bg-secondary-container text-on-secondary-container px-3 py-1.5 rounded-full text-label-bold">Yêu động vật</span>
+<span class="bg-tertiary-container text-on-tertiary-container px-3 py-1.5 rounded-full text-label-bold">Gọn gàng</span>
+<span class="bg-primary-fixed text-primary px-3 py-1.5 rounded-full text-label-bold">Thích nấu ăn</span>
+<span class="bg-surface-container text-on-surface-variant px-3 py-1.5 rounded-full text-label-bold">Thể thao</span>
+</div>
+</div>
+</aside>
+<!-- Right Column: Tabs and Listings -->
+<section class="flex flex-col gap-6">
+<!-- Tabs UI -->
+<div class="border-b border-outline-variant flex gap-8">
+<button class="pb-3 text-primary border-b-2 border-primary font-label-bold transition-all">
+                        Tin đang đăng (2)
+                    </button>
+<button class="pb-3 text-on-surface-variant hover:text-primary font-label-bold transition-all">
+                        Đánh giá (12)
+                    </button>
+</div>
+<!-- Room Cards Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-stack-gap">
+<!-- Room Card 1 -->
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm border border-surface-container group cursor-pointer hover:shadow-md transition-all">
+<div class="h-48 relative overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A brightly lit, modern studio apartment with minimalist wooden furniture and white walls. Large windows offer a view of Ho Chi Minh City skyline. The room is decorated with small green indoor plants, creating a welcoming and clean urban living space." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBtA1O3QdeHNDVCQstTR1kfUsSi7-Ie9L8haVJ3Man8GWxhiAZMvOVQEMJ-XUIusHA8mFmhzF7AEv6kfwBc5COMwCzICr-fCyxd-NYWC9Yqb-vfk7WOJxV_D0bWN8p5CK4yJTvb52q6mk6Lb5u9V8IEwi9aK5AFbxXfvCFekiCcsdFEZsuSDCKSEGZOY7KPLYn3oZrv5IoNiZYgf0v4a4d6YPDpGkxnCebnDWWmdO3S2n-ah51HligMwkzY0UAUzmldst4ko9ANOC6"/>
+<div class="absolute top-3 right-3 bg-secondary text-white px-2 py-1 rounded-lg text-label-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+                                Đã xác minh
+                            </div>
+</div>
+<div class="p-4">
+<h3 class="text-body-lg font-semibold text-primary mb-1">3.500.000 VNĐ <span class="text-label-sm text-outline font-normal">/tháng</span></h3>
+<p class="text-on-background font-medium line-clamp-1 mb-2">Phòng trọ cao cấp, full nội thất Quận 1</p>
+<div class="flex items-center gap-1 text-on-surface-variant text-body-md mb-4">
+<span class="material-symbols-outlined text-[18px]">location_on</span>
+                                Quận 1, TP. HCM
+                            </div>
+<div class="flex gap-4 pt-3 border-t border-surface-container">
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">wifi</span>
+<span class="text-label-sm">Wifi</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">ac_unit</span>
+<span class="text-label-sm">Máy lạnh</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">local_parking</span>
+<span class="text-label-sm">Bãi đỗ xe</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Room Card 2 -->
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm border border-surface-container group cursor-pointer hover:shadow-md transition-all">
+<div class="h-48 relative overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A cozy, sun-drenched bedroom featuring soft grey bedding and a large window overlooking a quiet street with green trees. The interior has a Scandinavian aesthetic with neutral tones and organized shelving, perfect for a young professional's rental home." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAgSLNK0OUOwKWbGaUyCQIvQ6DYkxUs1d11H6kwi432AmKPc5YIAqlklNUuVHd7fjQ8s_9-wClvXCWm7N_es_o7IKRuOPIElqpiZWHrtZSnb8hR7wo-43YjFFVXoQPerkeZrxkiMBT6OWEJMYtm3oGT-SqktuDQZQlm7AbkeHZQITn066WlQVBsnJh8hRw8aqBu6Gm1sY59Uj0muQvDaLTLua04Plj1gtG592DIg4KWznpxlt8mNo3sGwW4EDtci5mS9nEsC7qjP3cK"/>
+<div class="absolute top-3 right-3 bg-secondary text-white px-2 py-1 rounded-lg text-label-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+                                Đã xác minh
+                            </div>
+</div>
+<div class="p-4">
+<h3 class="text-body-lg font-semibold text-primary mb-1">4.200.000 VNĐ <span class="text-label-sm text-outline font-normal">/tháng</span></h3>
+<p class="text-on-background font-medium line-clamp-1 mb-2">Căn hộ mini ban công thoáng mát</p>
+<div class="flex items-center gap-1 text-on-surface-variant text-body-md mb-4">
+<span class="material-symbols-outlined text-[18px]">location_on</span>
+                                Bình Thạnh, TP. HCM
+                            </div>
+<div class="flex gap-4 pt-3 border-t border-surface-container">
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">balcony</span>
+<span class="text-label-sm">Ban công</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">laundry</span>
+<span class="text-label-sm">Máy giặt</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">security</span>
+<span class="text-label-sm">An ninh 24/7</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- View More Button -->
+<button class="mx-auto mt-4 text-primary font-label-bold flex items-center gap-2 hover:underline">
+                    Xem tất cả tin đăng
+                    <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</section>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container dark:bg-inverse-surface border-t border-outline-variant dark:border-on-surface-variant mt-section-gap">
+<div class="flex flex-col md:flex-row justify-between items-center px-container-margin py-section-gap w-full max-w-7xl mx-auto">
+<div class="flex flex-col gap-2 mb-6 md:mb-0">
+<div class="text-headline-md font-headline-md font-bold text-primary dark:text-primary-fixed-dim">
+                    TroUyTin
+                </div>
+<p class="text-on-surface-variant dark:text-surface-variant text-body-md max-w-xs">
+                    © 2024 TroUyTin. Nền tảng thuê trọ minh bạch hàng đầu Việt Nam.
+                </p>
+</div>
+<div class="flex flex-wrap justify-center gap-6">
+<a class="text-on-surface-variant dark:text-surface-variant text-label-sm hover:underline hover:text-primary transition-colors" href="#">Về chúng tôi</a>
+<a class="text-on-surface-variant dark:text-surface-variant text-label-sm hover:underline hover:text-primary transition-colors" href="#">Chính sách bảo mật</a>
+<a class="text-on-surface-variant dark:text-surface-variant text-label-sm hover:underline hover:text-primary transition-colors" href="#">Điều khoản sử dụng</a>
+<a class="text-on-surface-variant dark:text-surface-variant text-label-sm hover:underline hover:text-primary transition-colors" href="#">Liên hệ quảng cáo</a>
+</div>
+</div>
+</footer>
+<script>
+        // Micro-interaction for room cards
+        document.querySelectorAll('.group').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.classList.add('translate-y-[-4px]');
+            });
+            card.addEventListener('mouseleave', () => {
+                card.classList.remove('translate-y-[-4px]');
+            });
+        });
+    </script>
+</body></html>
