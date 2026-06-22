@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+.next/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docs & Prototypes (không push lên repo)
+ERD*.md
+PRD*.md
+*.prototype.*
+docs/prototypes/
+
+# Logs
+*.log
+npm-debug.log*
