@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>TroUyTin - Kết quả tìm kiếm</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary": "#006c49",
+                        "tertiary-container": "#a36700",
+                        "surface-container-low": "#eff4ff",
+                        "on-surface": "#0b1c30",
+                        "on-tertiary-fixed": "#2a1700",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-high": "#dce9ff",
+                        "on-primary-container": "#fefcff",
+                        "on-secondary-container": "#00714d",
+                        "primary": "#0058be",
+                        "on-tertiary-container": "#fffbff",
+                        "primary-fixed-dim": "#adc6ff",
+                        "background": "#f8f9ff",
+                        "surface-bright": "#f8f9ff",
+                        "error": "#ba1a1a",
+                        "surface-variant": "#d3e4fe",
+                        "on-primary-fixed-variant": "#004395",
+                        "inverse-on-surface": "#eaf1ff",
+                        "on-primary-fixed": "#001a42",
+                        "secondary-fixed-dim": "#4edea3",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "surface-container-highest": "#d3e4fe",
+                        "surface-container": "#e5eeff",
+                        "on-background": "#0b1c30",
+                        "primary-container": "#2170e4",
+                        "surface": "#f8f9ff",
+                        "tertiary-fixed": "#ffddb8",
+                        "outline": "#727785",
+                        "inverse-surface": "#213145",
+                        "primary-fixed": "#d8e2ff",
+                        "on-tertiary": "#ffffff",
+                        "on-surface-variant": "#424754",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed-variant": "#005236",
+                        "on-primary": "#ffffff",
+                        "surface-dim": "#cbdbf5",
+                        "on-secondary": "#ffffff",
+                        "surface-tint": "#005ac2",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "tertiary": "#825100",
+                        "secondary-fixed": "#6ffbbe",
+                        "outline-variant": "#c2c6d6",
+                        "on-secondary-fixed": "#002113",
+                        "secondary-container": "#6cf8bb",
+                        "inverse-primary": "#adc6ff",
+                        "on-error-container": "#93000a",
+                        "error-container": "#ffdad6",
+                        "success": "#10B981"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "touch-target": "48px",
+                        "section-gap": "24px",
+                        "stack-gap": "12px",
+                        "container-margin": "16px"
+                    },
+                    "fontFamily": {
+                        "label-bold": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-bold": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .material-symbols-outlined[data-weight="fill"] {
+            font-variation-settings: 'FILL' 1;
+        }
+
+        /* Custom scrollbar for the left panel */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #c2c6d6;
+            /* outline-variant */
+            border-radius: 9999px;
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+            /* Prevent body scrolling */
+        }
+    </style>
+</head>
+
+<body class="bg-background text-on-background font-body-md h-screen flex flex-col">
+    <!-- TopNavBar (Shared Component) -->
+    <header
+        class="bg-surface-container-lowest dark:bg-on-surface w-full top-0 sticky border-b border-outline-variant dark:border-outline shadow-sm dark:shadow-none z-50 flex-shrink-0">
+        <div class="flex justify-between items-center h-16 px-container-margin w-full">
+            <!-- Left: Brand & Search -->
+            <div class="flex items-center gap-8 flex-1">
+                <a class="text-headline-md font-headline-md font-bold text-primary dark:text-inverse-primary shrink-0"
+                    href="#">
+                    TroUyTin
+                </a>
+                <!-- Search Bar -->
+                <div class="hidden md:flex relative max-w-md w-full items-center">
+                    <span
+                        class="material-symbols-outlined absolute left-3 text-on-surface-variant z-10 pointer-events-none"
+                        data-icon="search">search</span>
+                    <input id="room-search-input"
+                        class="w-full bg-surface-container h-touch-target pl-10 pr-4 rounded-full border-none focus:ring-2 focus:ring-primary text-body-lg font-body-lg shadow-[0px_4px_12px_rgba(0,0,0,0.05)]"
+                        placeholder="Tìm kiếm khu vực..." type="text" value="Quận 1, TP. Hồ Chí Minh" />
+                    <button id="room-search-button"
+                        class="ml-3 px-4 py-2 rounded-full bg-primary text-on-primary font-label-bold text-label-bold hover:bg-primary-fixed transition-colors">Tìm</button>
+                </div>
+            </div>
+            <!-- Center: Navigation -->
+            <nav class="hidden md:flex items-center gap-6">
+                <!-- Tích Cực Active State cho "Tìm phòng" dựa trên context trang kết quả tìm kiếm -->
+                <a class="text-primary dark:text-primary-fixed font-bold border-b-2 border-primary h-16 flex flex-col justify-center transition-colors active:scale-95 duration-150"
+                    href="#">
+                    <span class="font-label-bold text-label-bold">Tìm phòng</span>
+                </a>
+                <a class="text-on-surface-variant dark:text-surface-variant font-medium hover:text-primary dark:hover:text-primary-fixed transition-colors active:scale-95 duration-150"
+                    href="#">
+                    <span class="font-label-bold text-label-bold">Cho thuê</span>
+                </a>
+                <a class="text-on-surface-variant dark:text-surface-variant font-medium hover:text-primary dark:hover:text-primary-fixed transition-colors active:scale-95 duration-150"
+                    href="#">
+                    <span class="font-label-bold text-label-bold">Tin tức</span>
+                </a>
+                <a class="text-on-surface-variant dark:text-surface-variant font-medium hover:text-primary dark:hover:text-primary-fixed transition-colors active:scale-95 duration-150"
+                    href="#">
+                    <span class="font-label-bold text-label-bold">Hướng dẫn</span>
+                </a>
+            </nav>
+            <!-- Right: Actions & Profile -->
+            <div class="flex items-center gap-4 shrink-0">
+                <button
+                    class="text-on-surface-variant hover:text-primary transition-colors w-touch-target h-touch-target flex items-center justify-center rounded-full hover:bg-surface-container">
+                    <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+                </button>
+                <button
+                    class="text-on-surface-variant hover:text-primary transition-colors w-touch-target h-touch-target flex items-center justify-center rounded-full hover:bg-surface-container">
+                    <span class="material-symbols-outlined" data-icon="favorite">favorite</span>
+                </button>
+                <button class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant">
+                    <img alt="User avatar" class="w-full h-full object-cover"
+                        data-alt="A close up portrait of a young professional Vietnamese user, smiling warmly, natural daylight, soft focus background, reliable and friendly modern aesthetic, high quality photograph."
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDJ0XgbYgF488a2_MbzAtTz4eY6iTC3m_302_vfHtk4P6W51bGeL0TYgIQNH80WWKU-DyMJMCzc5gaiTkD0EOE1lxPD6FVLVMhEZOefUmXAzyOkvS-opfudufhQfA3JiDU1iKqqOK1BBtTUBnblfkj63O7xzNKTgEAK678lHfVH0iby0C8uCTexHwSW0_K2tZcXTEL_f_sy9y2G5EAhAmOmt4fb3ZCQyKn2knlJ7YYAzhEj33mFwAhGmXYqnwIp2pKUsmu7Bo_0jqbV" />
+                </button>
+            </div>
+        </div>
+    </header>
+    <!-- Split View Container -->
+    <main class="flex-1 flex overflow-hidden w-full relative">
+        <!-- Left Panel: Search Results List (40%) -->
+        <div
+            class="w-full md:w-[40%] h-full flex flex-col bg-surface border-r border-outline-variant z-10 shadow-[4px_0px_24px_rgba(0,0,0,0.02)]">
+            <!-- Results Header (Sticky inside left panel) -->
+            <div
+                class="p-container-margin border-b border-outline-variant bg-surface-container-lowest sticky top-0 z-20">
+                <h1 id="results-count" class="text-headline-md font-headline-md text-on-surface mb-2">Tìm thấy 0 phòng
+                    trọ</h1>
+                <p id="results-location" class="text-body-md font-body-md text-on-surface-variant mb-2">Nhập truy vấn để
+                    bắt đầu tìm kiếm.</p>
+                <div id="search-status" class="text-body-md font-body-md text-on-surface-variant mb-4"></div>
+                <!-- Filters & Sort -->
+                <div class="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                    <button
+                        class="flex items-center gap-2 px-4 py-2 rounded-full border border-outline-variant text-body-md font-body-md bg-surface-container-lowest hover:bg-surface-container transition-colors whitespace-nowrap">
+                        <span class="material-symbols-outlined text-[18px]" data-icon="tune">tune</span>
+                        Bộ lọc
+                    </button>
+                    <!-- Sort Dropdown Trigger -->
+                    <div class="relative inline-block text-left">
+                        <button aria-expanded="true" aria-haspopup="true"
+                            class="flex items-center gap-2 px-4 py-2 rounded-full border border-outline-variant text-body-md font-body-md bg-surface-container-lowest hover:bg-surface-container transition-colors whitespace-nowrap"
+                            id="menu-button" type="button">
+                            Mới nhất
+                            <span class="material-symbols-outlined text-[18px]"
+                                data-icon="keyboard_arrow_down">keyboard_arrow_down</span>
+                        </button>
+                        <!-- Dropdown panel (hidden by default, simulating open for visual representation if needed, but keeping hidden in static HTML) -->
+                        <div aria-labelledby="menu-button" aria-orientation="vertical"
+                            class="hidden absolute left-0 z-10 mt-2 w-56 origin-top-left rounded-md bg-surface-container-lowest shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                            role="menu" tabindex="-1">
+                            <div class="py-1" role="none">
+                                <a class="text-on-surface block px-4 py-2 text-body-md font-body-md hover:bg-surface-container"
+                                    href="#" role="menuitem" tabindex="-1">Độ liên quan AI</a>
+                                <a class="text-on-surface block px-4 py-2 text-body-md font-body-md hover:bg-surface-container bg-surface-container-low"
+                                    href="#" role="menuitem" tabindex="-1">Mới nhất</a>
+                                <a class="text-on-surface block px-4 py-2 text-body-md font-body-md hover:bg-surface-container"
+                                    href="#" role="menuitem" tabindex="-1">Giá thấp đến cao</a>
+                            </div>
+                        </div>
+                    </div>
+                    <button
+                        class="px-4 py-2 rounded-full border border-outline-variant text-body-md font-body-md bg-surface-container-lowest hover:bg-surface-container transition-colors whitespace-nowrap">
+                        Giá: Dưới 5 Triệu
+                    </button>
+                </div>
+            </div>
+            <!-- List Content (Scrollable) -->
+            <div id="results-list"
+                class="flex-1 overflow-y-auto p-container-margin custom-scrollbar flex flex-col gap-stack-gap">
+                <div class="text-body-md font-body-md text-on-surface-variant">Nhập từ khóa tìm kiếm và nhấn "Tìm" để
+                    xem kết quả phòng trọ.</div>
+            </div>
+        </div>
+        <!-- Right Panel: Interactive Map (60%) -->
+        <div class="hidden md:block w-[60%] h-full relative bg-surface-dim">
+            <!-- Simulated Map Image Background -->
+            <div class="absolute inset-0 w-full h-full bg-cover bg-center"
+                data-alt="A clean, highly detailed top-down view of a modern digital street map centered on District 1, Ho Chi Minh City. The map style is minimalist and light, using soft grays, whites, and light blues to represent streets and water, avoiding heavy clutter. It resembles a premium navigation app interface."
+                data-location="Ho Chi Minh City"
+                style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDfavmfxRvuiDI8Ei_5sdTsbRPd3inkrG8AdE9veaZ_DUf5abKLNcjutkZqCOPsVFuYD_l59wS7uYKrAYEZkgqprku1hEzYSYmZkz359rZYJzc7fX-flzHVKXEnSbDbFbwOFpgiN-iInKBMxa4RCOlR0xZTJ-bZDCKEJhlX5d981QXcWID7IFTDQLVsT5nP0M3Spmu0C20oLenhBOOKKJNQez-RxrmjroHOZPPrdRe28XkSaowLr8DPc3dCGuzK8EAyBirBjHcqPe19')">
+            </div>
+            <!-- Map Controls (Top Right) -->
+            <div class="absolute top-4 right-4 flex flex-col gap-2 z-10">
+                <button
+                    class="w-10 h-10 bg-surface-container-lowest rounded-lg shadow-sm border border-outline-variant flex items-center justify-center text-on-surface hover:bg-surface-container transition-colors">
+                    <span class="material-symbols-outlined" data-icon="add">add</span>
+                </button>
+                <button
+                    class="w-10 h-10 bg-surface-container-lowest rounded-lg shadow-sm border border-outline-variant flex items-center justify-center text-on-surface hover:bg-surface-container transition-colors">
+                    <span class="material-symbols-outlined" data-icon="remove">remove</span>
+                </button>
+                <button
+                    class="w-10 h-10 mt-4 bg-surface-container-lowest rounded-lg shadow-sm border border-outline-variant flex items-center justify-center text-primary hover:bg-surface-container transition-colors">
+                    <span class="material-symbols-outlined" data-icon="my_location">my_location</span>
+                </button>
+            </div>
+            <!-- Interactive Map Pins (Simulated) -->
+            <!-- Pin 1 (Active/Hover state) -->
+            <div
+                class="absolute top-[30%] left-[45%] z-20 group cursor-pointer transform -translate-x-1/2 -translate-y-full">
+                <div
+                    class="bg-primary text-on-primary px-3 py-1.5 rounded-full font-label-bold text-label-bold shadow-[0px_8px_24px_rgba(59,130,246,0.25)] flex items-center gap-1 scale-110 transition-transform origin-bottom relative">
+                    3.5M
+                    <!-- Little arrow pointing down -->
+                    <div
+                        class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-primary">
+                    </div>
+                </div>
+            </div>
+            <!-- Pin 2 -->
+            <div
+                class="absolute top-[50%] left-[60%] z-20 cursor-pointer transform -translate-x-1/2 -translate-y-full hover:z-30">
+                <div
+                    class="bg-surface-container-lowest text-on-surface border border-outline-variant px-3 py-1.5 rounded-full font-label-bold text-label-bold shadow-sm hover:bg-primary hover:text-on-primary hover:border-primary transition-colors flex items-center gap-1 relative">
+                    4.2M
+                    <div
+                        class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-surface-container-lowest group-hover:border-t-primary">
+                    </div>
+                </div>
+            </div>
+            <!-- Pin 3 -->
+            <div
+                class="absolute top-[20%] left-[30%] z-20 cursor-pointer transform -translate-x-1/2 -translate-y-full hover:z-30">
+                <div
+                    class="bg-surface-container-lowest text-on-surface border border-outline-variant px-3 py-1.5 rounded-full font-label-bold text-label-bold shadow-sm hover:bg-primary hover:text-on-primary hover:border-primary transition-colors flex items-center gap-1 relative">
+                    2.8M
+                    <div
+                        class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-surface-container-lowest group-hover:border-t-primary">
+                    </div>
+                </div>
+            </div>
+            <!-- Map Overlay Gradient (subtle edge blending) -->
+            <div
+                class="absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-outline-variant/20 to-transparent pointer-events-none z-10">
+            </div>
+        </div>
+    </main>
+    <script>
+        const apiUrl = "http://localhost:3000/api/rooms/ai-search";
+        const searchInput = document.getElementById("room-search-input");
+        const searchButton = document.getElementById("room-search-button");
+        const statusEl = document.getElementById("search-status");
+        const countEl = document.getElementById("results-count");
+        const locationEl = document.getElementById("results-location");
+        const resultsEl = document.getElementById("results-list");
+
+        function setStatus(message, isError = false) {
+            if (!statusEl) return;
+            statusEl.textContent = message;
+            statusEl.className = isError
+                ? "text-body-md font-body-md text-error mb-4"
+                : "text-body-md font-body-md text-on-surface-variant mb-4";
+        }
+
+        function formatPrice(price) {
+            if (typeof price !== "number") return String(price || "");
+            return price.toLocaleString("vi-VN") + "đ";
+        }
+
+        function createAmenityChip(amenity) {
+            return `<span class="px-3 py-1 bg-surface-container-high text-on-surface-variant rounded-full text-label-bold font-label-bold flex items-center gap-1"><span class="material-symbols-outlined text-[14px]" data-icon="check">check</span> ${amenity}</span>`;
+        }
+
+        function renderRooms(rooms) {
+            if (!resultsEl) return;
+
+            if (!rooms || rooms.length === 0) {
+                resultsEl.innerHTML = `<div class="text-body-md font-body-md text-on-surface-variant">Không tìm thấy kết quả phù hợp. Hãy thử thay đổi truy vấn của bạn.</div>`;
+                if (countEl) countEl.textContent = "Tìm thấy 0 phòng trọ";
+                if (locationEl) locationEl.textContent = "Thử truy vấn khác để tìm phòng phù hợp.";
+                return;
+            }
+
+            if (countEl) countEl.textContent = `Tìm thấy ${rooms.length} phòng trọ`;
+            if (locationEl) locationEl.textContent = `Kết quả cho: "${searchInput?.value?.trim() || "..."}"`;
+
+            resultsEl.innerHTML = rooms
+                .map((room) => {
+                    const amenities = Array.isArray(room.amenities) ? room.amenities : [];
+                    const imageUrl = room.image || room.photo || "https://via.placeholder.com/640x320?text=Room";
+                    const roomTitle = room.title || room.description || "Phòng trọ";
+                    const roomLocation = [room.ward, room.district].filter(Boolean).join(", ");
+
+                    return `
+        <div class="flex flex-col bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant hover:shadow-[0px_8px_24px_rgba(0,88,190,0.1)] transition-shadow cursor-pointer group">
+          <div class="relative h-48 w-full bg-surface-container-highest overflow-hidden">
+            <img alt="${roomTitle}" class="w-full h-full object-cover" src="${imageUrl}" />
+          </div>
+          <div class="p-4 flex flex-col gap-2">
+            <div class="flex justify-between items-start">
+              <div>
+                <p class="text-body-md font-body-md text-on-surface-variant flex items-center gap-1 mb-1">
+                  <span class="material-symbols-outlined text-[16px]" data-icon="location_on">location_on</span>
+                  ${roomLocation}
+                </p>
+                <h3 class="text-headline-md font-headline-md text-on-surface group-hover:text-primary transition-colors line-clamp-2">${roomTitle}</h3>
+              </div>
+            </div>
+            <div class="text-headline-md font-headline-md font-bold text-primary mt-1">
+              ${formatPrice(room.price)}<span class="text-body-md font-body-md text-on-surface-variant font-normal">/tháng</span>
+            </div>
+            <div class="flex flex-wrap gap-2 mt-2">
+              ${amenities.map(createAmenityChip).join("")}
+            </div>
+          </div>
+        </div>
+      `;
+                })
+                .join("");
+        }
+
+        async function fetchRoomResults(query) {
+            if (!statusEl) return;
+
+            setStatus("AI đang tìm kiếm...", false);
+            if (resultsEl) resultsEl.innerHTML = "";
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ query }),
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText || "Lỗi khi gọi API");
+                }
+
+                const payload = await response.json();
+
+                if (!payload?.success || !Array.isArray(payload.data)) {
+                    throw new Error("Dữ liệu trả về không hợp lệ.");
+                }
+
+                renderRooms(payload.data);
+                setStatus("Tìm kiếm hoàn tất.", false);
+            } catch (error) {
+                console.error(error);
+                setStatus("Không thể tìm phòng. Vui lòng thử lại sau.", true);
+                if (resultsEl) {
+                    resultsEl.innerHTML = `<div class="text-body-md font-body-md text-error">Lỗi: ${error?.message || "Không xác định"}</div>`;
+                }
+            }
+        }
+
+        function startSearch() {
+            const query = searchInput?.value?.trim();
+            if (!query) {
+                setStatus("Vui lòng nhập nội dung tìm kiếm.", true);
+                return;
+            }
+            fetchRoomResults(query);
+        }
+
+        searchButton?.addEventListener("click", startSearch);
+        searchInput?.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                startSearch();
+            }
+        });
+    </script>
+</body>
+
+</html>

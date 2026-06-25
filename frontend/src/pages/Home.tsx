@@ -52,10 +52,7 @@ export default function Home() {
   // --------------------
   const createProfile = async () => {
     console.log(session?.access_token);
-    const res = await api.post(
-      "/api/profiles",
-      { username, fullName }
-    );
+    const res = await api.post("/api/profiles", { username, fullName });
 
     setProfile(res.data);
   };
@@ -64,10 +61,7 @@ export default function Home() {
   // UPDATE
   // --------------------
   const updateProfile = async () => {
-    const res = await api.patch(
-      "/api/profiles/me",
-      { username, fullName }
-    );
+    const res = await api.patch("/api/profiles/me", { username, fullName });
 
     setProfile(res.data);
   };
@@ -105,13 +99,19 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-2xl mx-auto p-6">
-
         {/* HEADER */}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Profile</h1>
 
           <div className="flex items-center gap-4">
             <span className="text-gray-600">{user?.email}</span>
+
+            <button
+              onClick={() => navigate("/search")}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+            >
+              Thử AI Search
+            </button>
 
             <button
               onClick={handleLogout}
@@ -169,8 +169,12 @@ export default function Home() {
         {/* DISPLAY */}
         {profile && (
           <div className="mt-6 bg-white p-4 rounded shadow">
-            <p><b>Username:</b> {profile.username}</p>
-            <p><b>Full Name:</b> {profile.fullName}</p>
+            <p>
+              <b>Username:</b> {profile.username}
+            </p>
+            <p>
+              <b>Full Name:</b> {profile.fullName}
+            </p>
           </div>
         )}
       </div>
