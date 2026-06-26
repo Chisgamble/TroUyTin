@@ -28,9 +28,10 @@ export const listingStatusEnum = pgEnum("listing_status", [
 ]);
 
 export const roomTypeEnum = pgEnum("room_type", [
-  "PRIVATE_ROOM",
-  "SHARED_ROOM",
-  "APARTMENT",
+  "PHONG_TRO",
+  "CAN_HO_MINI",
+  "KTX",
+  "NGUYEN_CAN"
 ]);
 
 export const contentTypeEnum = pgEnum("content_type", [
@@ -394,6 +395,42 @@ export const savedListings = pgTable("saved_listings", {
     ),
   }));
 
+export const transactions = pgTable("transactions", {
+  id: serial("id").primaryKey(),
+
+  tenantId: uuid("tenant_id")
+    .notNull()
+    .references(() => profiles.id),
+
+  landlordId: uuid("landlord_id")
+    .notNull()
+    .references(() => profiles.id),
+
+  listingId: integer("listing_id")
+    .references(() => roomListings.id),
+
+  roommateMatchId: integer("roommate_match_id")
+    .references(() => roommateMatches.id),
+
+  type: text("type"),
+
+  status: text("status"),
+
+  startDate: timestamp("start_date"),
+  
+  endDate: timestamp("end_date"),
+
+  note: text("note"),
+
+  confirmedAt: timestamp("confirmed_at"),
+  
+  completedAt: timestamp("completed_at"),
+
+  createdAt: timestamp("created_at")
+    .defaultNow()
+    .notNull(),
+});
+
 export const reviews = pgTable("reviews", {
   id: serial("id").primaryKey(),
 
@@ -404,6 +441,10 @@ export const reviews = pgTable("reviews", {
   revieweeId: uuid("reviewee_id")
     .notNull()
     .references(() => profiles.id),
+
+  transactionId: integer("transaction_id")
+    .notNull()
+    .references(() => transactions.id),
 
   listingId: integer("listing_id")
     .references(() => roomListings.id),
@@ -418,11 +459,11 @@ export const reviews = pgTable("reviews", {
   },
   (table) => ({
     reviewUnique: unique(
-      "reviews_reviewer_reviewee_listing_unique"
+      "reviews_reviewer_reviewee_transaction_unique"
     ).on(
       table.reviewerId,
       table.revieweeId,
-      table.listingId
+      table.transactionId
     ),
   })
 );

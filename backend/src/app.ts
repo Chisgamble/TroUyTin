@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import profileRoutes from "./routes/profile.routes";
+import reviewRoutes from "./routes/review.routes";
 
 const app = express();
 
@@ -13,5 +14,6 @@ app.use(
 );
 app.use(express.json());
 app.use("/api/profiles", profileRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 export default app;
