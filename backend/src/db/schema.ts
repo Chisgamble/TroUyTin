@@ -396,6 +396,37 @@ export const savedListings = pgTable("saved_listings", {
   }));
 
 
+export const reviews = pgTable("reviews", {
+  id: serial("id").primaryKey(),
+
+  reviewerId: uuid("reviewer_id")
+    .notNull()
+    .references(() => profiles.id),
+
+  revieweeId: uuid("reviewee_id")
+    .notNull()
+    .references(() => profiles.id),
+
+  listingId: integer("listing_id")
+    .references(() => roomListings.id),
+
+  rating: integer("rating").notNull(),
+
+  comment: text("comment"),
+
+  createdAt: timestamp("created_at")
+    .defaultNow()
+    .notNull(),
+  },
+  (table) => [
+    unique("reviews_reviewer_reviewee_listing_unique").on(
+      table.reviewerId,
+      table.revieweeId,
+      table.listingId
+    ),
+  ]
+);
+
 export const notifications = pgTable("notifications", {
   id: serial("id").primaryKey(),
 
