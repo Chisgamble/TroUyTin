@@ -5,7 +5,7 @@ import { api } from '../lib/axios';
 interface ReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
-  transactionId: number;
+
   revieweeId: string;
 }
 
@@ -14,7 +14,7 @@ interface ReviewFormInputs {
   comment: string;
 }
 
-export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, transactionId, revieweeId }) => {
+export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, revieweeId }) => {
   const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<ReviewFormInputs>({
     defaultValues: {
       rating: 0,
@@ -34,7 +34,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, trans
     setSuccessMsg('');
     try {
       await api.post('/api/reviews', {
-        transactionId,
+
         revieweeId,
         rating: data.rating,
         comment: data.comment,

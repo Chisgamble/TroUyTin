@@ -4,8 +4,7 @@ import { ReviewModal } from '../components/ReviewModal';
 export const TestReview: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Hardcoded test data matching the SQL seed script
-  const testTransactionId = 9999;
+
   const testRevieweeId = '22222222-2222-2222-2222-222222222222'; // The landlord
 
   return (
@@ -15,7 +14,7 @@ export const TestReview: React.FC = () => {
         
         <p className="text-gray-600 mb-8">
           Nhấn nút bên dưới để mở Modal Đánh giá chủ trọ.
-          Lưu ý: Bạn phải đăng nhập và có 1 transaction đã complete với chủ trọ này để đánh giá thành công.
+          Lưu ý: Bạn chỉ được đánh giá mỗi chủ trọ một lần.
         </p>
 
         <button
@@ -29,7 +28,7 @@ export const TestReview: React.FC = () => {
       <ReviewModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
-        transactionId={testTransactionId}
+
         revieweeId={testRevieweeId}
       />
     </div>
