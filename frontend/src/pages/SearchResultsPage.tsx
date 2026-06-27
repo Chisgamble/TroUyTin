@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ListingCard from '../components/ListingCard';
-import { ROOM_LISTINGS, DISTRICTS, SAVED_LISTINGS, getRoomTypeLabel } from '../data/mockData';
+import type { RoomListing } from '../data/mockData';
+import { DISTRICTS, SAVED_LISTINGS, getRoomTypeLabel } from '../data/mockData';
 
 const ROOM_TYPES = ['PHONG_TRO', 'CAN_HO_MINI', 'KTX', 'NGUYEN_CAN'] as const;
 const PRICE_RANGES = [
@@ -29,16 +30,24 @@ export default function SearchResultsPage() {
   const [priceIdx, setPriceIdx] = useState(0);
   const [areaIdx, setAreaIdx] = useState(0);
   const [savedIds, setSavedIds] = useState<number[]>(SAVED_LISTINGS.map((s) => s.listing_id));
+  const [rooms, setRooms] = useState<RoomListing[]>([]);
 
-  const results = ROOM_LISTINGS.filter((l) => {
+  useEffect(() => {
+    fetch('http://localhost:3000/api/rooms')
+      .then(res => res.json())
+      .then(data => setRooms(data))
+      .catch(err => console.error('Failed to fetch rooms:', err));
+  }, []);
+
+  const results = rooms.filter((l) => {
     if (l.status !== 'AVAILABLE') return false;
     // Text search
     const q = query.toLowerCase();
     if (q && !(
-      l.title.toLowerCase().includes(q) ||
-      l.description.toLowerCase().includes(q) ||
-      l.address_detail.toLowerCase().includes(q) ||
-      l.district_name.toLowerCase().includes(q)
+      (l.title || '').toLowerCase().includes(q) ||
+      (l.description || '').toLowerCase().includes(q) ||
+      (l.address_detail || '').toLowerCase().includes(q) ||
+      (l.district_name || '').toLowerCase().includes(q)
     )) return false;
     // District
     if (districtId > 0) {

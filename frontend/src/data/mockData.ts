@@ -6,7 +6,7 @@
 // ---------- TYPES ----------
 
 export type User = {
-  id: number;
+  id: string | number;
   email: string;
   phone: string;
   full_name: string;
@@ -43,8 +43,8 @@ export type Amenity = {
 };
 
 export type RoomListing = {
-  id: number;
-  landlord_id: number;
+  id: number | string;
+  landlord_id: string | number;
   title: string;
   description: string;
   price: number;

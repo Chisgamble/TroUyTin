@@ -1,14 +1,23 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ListingCard from '../components/ListingCard';
-import { ROOM_LISTINGS, SAVED_LISTINGS } from '../data/mockData';
+import type { RoomListing } from '../data/mockData';
+import { SAVED_LISTINGS } from '../data/mockData';
 
 export default function HomePage() {
   const navigate = useNavigate();
   const [heroQuery, setHeroQuery] = useState('');
   const [savedIds, setSavedIds] = useState<number[]>(SAVED_LISTINGS.map((s) => s.listing_id));
+  const [rooms, setRooms] = useState<RoomListing[]>([]);
 
-  const featuredListings = ROOM_LISTINGS.filter((l) => l.status === 'AVAILABLE' && l.is_verified).slice(0, 4);
+  useEffect(() => {
+    fetch('http://localhost:3000/api/rooms')
+      .then(res => res.json())
+      .then(data => setRooms(data))
+      .catch(err => console.error('Failed to fetch rooms:', err));
+  }, []);
+
+  const featuredListings = rooms.filter((l) => l.status === 'AVAILABLE' && l.is_verified).slice(0, 4);
 
   const toggleSave = (id: number) => {
     setSavedIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);

@@ -26,6 +26,8 @@ ERD*.md
 PRD*.md
 *.prototype.*
 docs/prototypes/
+Prototype/
+prototype/
 
 # Logs
 *.log

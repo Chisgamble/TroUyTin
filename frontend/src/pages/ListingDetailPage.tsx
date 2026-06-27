@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import StarRating from '../components/StarRating';
 import ReviewCard from '../components/ReviewCard';
+import type { RoomListing } from '../data/mockData';
 import {
-  getListingById,
   getReviewsByListingId,
   getAmenitiesByIds,
   formatPriceVND,
@@ -13,8 +13,27 @@ import {
 
 export default function ListingDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const listing = getListingById(Number(id));
+  const [listing, setListing] = useState<RoomListing | null>(null);
+  const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
+
+  useEffect(() => {
+    if (id) {
+      setLoading(true);
+      fetch(`http://localhost:3000/api/rooms/${id}`)
+        .then(res => {
+          if (!res.ok) throw new Error('Room not found');
+          return res.json();
+        })
+        .then(data => setListing(data))
+        .catch(err => console.error(err))
+        .finally(() => setLoading(false));
+    }
+  }, [id]);
+
+  if (loading) {
+    return <div className="detail-page"><div className="detail-layout"><h2>Đang tải thông tin phòng...</h2></div></div>;
+  }
 
   if (!listing) {
     return (
