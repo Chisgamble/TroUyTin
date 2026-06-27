@@ -52,11 +52,6 @@ export const matchStatusEnum = pgEnum("match_status", [
   "REJECTED",
 ]);
 
-export const targetTypeEnum = pgEnum("target_type", [
-  "LISTING",
-  "ROOMMATE",
-]);
-
 export const profiles = pgTable("profiles", {
   id: uuid("id").primaryKey(),
 
@@ -68,6 +63,10 @@ export const profiles = pgTable("profiles", {
   avatarUrl: text("avatar_url"),
 
   bio: text("bio"),
+
+  isLookingForRoommate: boolean("is_looking_for_roommate")
+    .default(false)
+    .notNull(),
 
   role: roleEnum("role").default("TENANT"),
 
@@ -451,8 +450,8 @@ export const notifications = pgTable("notifications", {
     .notNull(),
 });
 
-export const watchlists = pgTable(
-  "watchlists",
+export const savedRoommates = pgTable(
+  "saved_roommates",
   {
     id: serial("id").primaryKey(),
 
@@ -460,27 +459,18 @@ export const watchlists = pgTable(
       .notNull()
       .references(() => profiles.id),
 
-    targetType: targetTypeEnum("target_type").notNull(),
-
-    targetListingId: integer("target_listing_id")
-      .references(() => roomListings.id),
-
-    targetRoommateId: uuid("target_roommate_id")
-      .references(() => profiles.id),
+    roommateProfileId: integer("roommate_profile_id")
+      .notNull()
+      .references(() => roommateProfiles.id),
 
     createdAt: timestamp("created_at")
       .defaultNow()
       .notNull(),
   },
   (table) => [
-    unique("watchlists_user_listing_unique").on(
+    unique("saved_roommates_user_profile_unique").on(
       table.userId,
-      table.targetListingId
-    ),
-
-    unique("watchlists_user_roommate_unique").on(
-      table.userId,
-      table.targetRoommateId
+      table.roommateProfileId
     ),
   ]
 );
