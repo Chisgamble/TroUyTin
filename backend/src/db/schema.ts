@@ -28,9 +28,10 @@ export const listingStatusEnum = pgEnum("listing_status", [
 ]);
 
 export const roomTypeEnum = pgEnum("room_type", [
-  "PRIVATE_ROOM",
-  "SHARED_ROOM",
-  "APARTMENT",
+  "PHONG_TRO",
+  "CAN_HO_MINI",
+  "KTX",
+  "NGUYEN_CAN"
 ]);
 
 export const contentTypeEnum = pgEnum("content_type", [
@@ -394,6 +395,8 @@ export const savedListings = pgTable("saved_listings", {
     ),
   }));
 
+
+
 export const reviews = pgTable("reviews", {
   id: serial("id").primaryKey(),
 
@@ -418,11 +421,10 @@ export const reviews = pgTable("reviews", {
   },
   (table) => ({
     reviewUnique: unique(
-      "reviews_reviewer_reviewee_listing_unique"
+      "reviews_reviewer_reviewee_unique"
     ).on(
       table.reviewerId,
-      table.revieweeId,
-      table.listingId
+      table.revieweeId
     ),
   })
 );
