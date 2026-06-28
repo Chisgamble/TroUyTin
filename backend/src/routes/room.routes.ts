@@ -74,6 +74,15 @@ router.get("/:id", async (req, res) => {
     // Fetch amenities
     const amenitiesData = await db.select().from(listingAmenities).where(eq(listingAmenities.listingId, roomId));
 
+    // Fetch landlord profile
+    let landlordProfile = null;
+    if (room.landlordId) {
+      const profileRows = await db.select().from(profiles).where(eq(profiles.id, room.landlordId));
+      if (profileRows.length > 0) {
+        landlordProfile = profileRows[0];
+      }
+    }
+
     const formattedRoom = {
       ...room,
       landlord_id: room.landlordId,
@@ -88,7 +97,14 @@ router.get("/:id", async (req, res) => {
       images: images.length > 0 ? images.map(img => img.imageUrl) : ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267'],
       amenity_ids: amenitiesData.map(am => am.amenityId),
       district_name: '', // TODO: join with districts table
-      ward_name: '' // TODO: join with wards table
+      ward_name: '', // TODO: join with wards table
+      landlord: landlordProfile ? {
+        id: landlordProfile.id,
+        full_name: landlordProfile.fullName,
+        avatar_url: landlordProfile.avatarUrl,
+        email: landlordProfile.email,
+        phone: landlordProfile.phone
+      } : null
     };
 
     return res.status(200).json(formattedRoom);
