@@ -1,20 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../services/supabase';
+import { chatService, type Message } from '../../services/chatService';
 
 interface ChatWindowProps {
   conversationId: number;
   otherParticipantId: string;
-}
-
-interface Message {
-  id: number;
-  conversation_id: number;
-  sender_id: string;
-  content_type: 'TEXT' | 'IMAGE' | 'FILE';
-  content: string;
-  is_read: boolean;
-  sent_at: string;
 }
 
 interface PartnerProfile {
@@ -36,13 +26,7 @@ export default function ChatWindow({ conversationId, otherParticipantId }: ChatW
   useEffect(() => {
     const fetchPartnerProfile = async () => {
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('full_name, avatar_url, email')
-          .eq('id', otherParticipantId)
-          .maybeSingle(); // Dùng maybeSingle thay vì single để tránh lỗi 406 khi không tìm thấy
-
-        if (error) throw error;
+        const data = await chatService.fetchPartnerProfile(otherParticipantId);
         if (data) {
           setPartner(data);
         }
@@ -59,14 +43,8 @@ export default function ChatWindow({ conversationId, otherParticipantId }: ChatW
     const fetchMessages = async () => {
       try {
         setLoading(true);
-        const { data, error } = await supabase
-          .from('messages')
-          .select('*')
-          .eq('conversation_id', conversationId)
-          .order('sent_at', { ascending: true });
-
-        if (error) throw error;
-        setMessages(data || []);
+        const data = await chatService.fetchMessages(conversationId);
+        setMessages(data);
       } catch (error) {
         console.error('Error fetching messages:', error);
       } finally {
@@ -77,29 +55,15 @@ export default function ChatWindow({ conversationId, otherParticipantId }: ChatW
     fetchMessages();
 
     // 3. Subscribe to Realtime messages for this conversation
-    const channel = supabase
-      .channel(`room:${conversationId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `conversation_id=eq.${conversationId}`,
-        },
-        (payload) => {
-          const newMsg = payload.new as Message;
-          // Tránh trùng lặp tin nhắn vừa tự gửi (đã được local state thêm vào hoặc chuẩn bị nhận)
-          setMessages((prev) => {
-            if (prev.some((m) => m.id === newMsg.id)) return prev;
-            return [...prev, newMsg];
-          });
-        }
-      )
-      .subscribe();
+    const channel = chatService.subscribeToMessages(conversationId, (newMsg) => {
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === newMsg.id)) return prev;
+        return [...prev, newMsg];
+      });
+    });
 
     return () => {
-      supabase.removeChannel(channel);
+      chatService.unsubscribe(channel);
     };
   }, [conversationId]);
 
@@ -115,12 +79,7 @@ export default function ChatWindow({ conversationId, otherParticipantId }: ChatW
     if (unreadMessages.length > 0) {
       const markAsRead = async () => {
         try {
-          const { error } = await supabase
-            .from('messages')
-            .update({ is_read: true })
-            .in('id', unreadMessages.map(m => m.id));
-
-          if (error) throw error;
+          await chatService.markMessagesAsRead(unreadMessages.map(m => m.id));
           
           // Cập nhật lại local state để UI phản ánh ngay
           setMessages(prev => prev.map(m => 
@@ -154,19 +113,7 @@ export default function ChatWindow({ conversationId, otherParticipantId }: ChatW
     setSending(true);
 
     try {
-      const { data, error } = await supabase
-        .from('messages')
-        .insert({
-          conversation_id: conversationId,
-          sender_id: user.id,
-          content_type: 'TEXT',
-          content: messageText,
-          is_read: false,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+      const data = await chatService.sendMessage(conversationId, user.id, messageText);
 
       // Update local state to be instant
       if (data) {

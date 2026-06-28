@@ -8,6 +8,5 @@ ON CONFLICT (id) DO NOTHING;
 -- Insert 1 Mock Room Listing
 INSERT INTO room_listings (id, landlord_id, title, description, price, area, room_type, status, is_verified)
 VALUES
-  (9999, '22222222-2222-2222-2222-222222222222', 'Phòng trọ cao cấp', 'Phòng đẹp có điều hòa', 3000000, 25, 'PHONG_TRO', 'RENTED', true)
+  (9999, '22222222-2222-2222-2222-222222222222', 'Phòng trọ cao cấp', 'Phòng đẹp đầy đủ tiện nghi, máy lạnh, máy giặt, giờ giấc tự do.', 3000000, 25, 'PHONG_TRO', 'RENTED', true)
 ON CONFLICT (id) DO NOTHING;
-
