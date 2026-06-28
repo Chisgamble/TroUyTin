@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { getProfile, updateProfile, uploadAvatar, type Profile } from '../services/profiles'
+import { Users, Bookmark, MessageSquare, Shield, CreditCard, Camera } from 'lucide-react'
 
 type ProfileFormValues = {
   fullName: string
@@ -40,6 +42,7 @@ function DefaultAvatar({ name }: { name: string }) {
 
 export default function ProfilePage() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -179,9 +182,7 @@ export default function ProfilePage() {
               {uploadingAvatar ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a4 4 0 01-1.414.829l-3.414.828.828-3.414A4 4 0 019 13z" />
-                </svg>
+                <Camera className="w-4 h-4" />
               )}
             </button>
             <input
@@ -231,6 +232,51 @@ export default function ProfilePage() {
             {errorMsg}
           </div>
         )}
+
+        {/* 🚀 QUICK NAVIGATION TILES (ROOMMATE & CHAT FUNCTIONALITIES) */}
+        <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* Tìm người ở ghép */}
+          <div 
+            onClick={() => navigate('/roommate-matching')}
+            className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-col items-start gap-2 hover:border-green-300 hover:shadow-md transition cursor-pointer group"
+          >
+            <div className="w-9 h-9 rounded-full bg-green-50 flex items-center justify-center text-green-600 group-hover:bg-green-100 transition">
+              <Users className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-800">Tìm ở ghép</p>
+              <p className="text-xs text-gray-400 mt-0.5">Khám phá bạn cùng gu</p>
+            </div>
+          </div>
+
+          {/* Người ở ghép đã lưu */}
+          <div 
+            onClick={() => navigate('/saved-roommates')}
+            className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-col items-start gap-2 hover:border-yellow-300 hover:shadow-md transition cursor-pointer group"
+          >
+            <div className="w-9 h-9 rounded-full bg-yellow-50 flex items-center justify-center text-yellow-600 group-hover:bg-yellow-100 transition">
+              <Bookmark className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-800">Hồ sơ đã lưu</p>
+              <p className="text-xs text-gray-400 mt-0.5">Danh sách đang theo dõi</p>
+            </div>
+          </div>
+
+          {/* Lịch sử chat nội bộ */}
+          <div 
+            onClick={() => navigate('/chat')}
+            className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-col items-start gap-2 hover:border-blue-300 hover:shadow-md transition cursor-pointer group"
+          >
+            <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-100 transition">
+              <MessageSquare className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-800">Lịch sử Chat</p>
+              <p className="text-xs text-gray-400 mt-0.5">Tin nhắn hệ thống</p>
+            </div>
+          </div>
+        </div>
 
         {/* Form card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -340,9 +386,7 @@ export default function ProfilePage() {
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-5 py-4 flex items-center justify-between hover:border-blue-200 transition cursor-pointer group">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-100 transition">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
+                <Shield className="w-5 h-5" />
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-800">Bảo mật tài khoản</p>
@@ -357,9 +401,7 @@ export default function ProfilePage() {
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-5 py-4 flex items-center justify-between hover:border-blue-200 transition cursor-pointer group">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-green-50 flex items-center justify-center text-green-600 group-hover:bg-green-100 transition">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                </svg>
+                <CreditCard className="w-5 h-5" />
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-800">Phương thức thanh toán</p>
