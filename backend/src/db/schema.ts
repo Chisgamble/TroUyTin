@@ -55,6 +55,7 @@ export const targetTypeEnum = pgEnum("target_type", [
   "ROOMMATE",
 ]);
 
+
 export const profiles = pgTable("profiles", {
   id: uuid("id").primaryKey(),
   email: text("email"),
@@ -63,6 +64,11 @@ export const profiles = pgTable("profiles", {
   fullName: text("full_name"),
   avatarUrl: text("avatar_url"),
   bio: text("bio"),
+
+  isLookingForRoommate: boolean("is_looking_for_roommate")
+    .default(false)
+    .notNull(),
+
   role: roleEnum("role").default("TENANT"),
   isVerified: boolean("is_verified").default(false).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
@@ -255,6 +261,7 @@ export const savedListings = pgTable("saved_listings", {
   savedListingsUnique: unique("saved_listings_user_listing_unique").on(table.userId, table.listingId),
 }));
 
+
 export const reviews = pgTable("reviews", {
   id: serial("id").primaryKey(),
   reviewerId: uuid("reviewer_id").notNull().references(() => profiles.id),
@@ -262,11 +269,19 @@ export const reviews = pgTable("reviews", {
   listingId: integer("listing_id").references(() => roomListings.id),
   rating: integer("rating").notNull(),
   comment: text("comment"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-},
-(table) => ({
-  reviewUnique: unique("reviews_reviewer_reviewee_unique").on(table.reviewerId, table.revieweeId),
-}));
+
+  createdAt: timestamp("created_at")
+    .defaultNow()
+    .notNull(),
+  },
+  (table) => [
+    unique("reviews_reviewer_reviewee_listing_unique").on(
+      table.reviewerId,
+      table.revieweeId,
+      table.listingId
+    ),
+  ]
+);
 
 export const notifications = pgTable("notifications", {
   id: serial("id").primaryKey(),

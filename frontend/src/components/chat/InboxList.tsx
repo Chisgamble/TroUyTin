@@ -1,19 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../services/supabase';
+import { chatService, type ConversationDisplay } from '../../services/chatService';
 
 interface InboxListProps {
   selectedConversationId: number | null;
   onSelectConversation: (conversationId: number, otherParticipantId: string) => void;
 }
 
-type ConversationDisplay = {
-  id: number;
-  otherUserId: string;
-  otherUserName: string;
-  otherUserAvatar: string | null;
-  lastMessageAt: string;
-};
+
 
 export default function InboxList({ selectedConversationId, onSelectConversation }: InboxListProps) {
   const { user } = useAuth();
@@ -26,46 +20,8 @@ export default function InboxList({ selectedConversationId, onSelectConversation
     const fetchConversations = async () => {
       try {
         setLoading(true);
-        // 1. Fetch conversations
-        const { data: convs, error: convError } = await supabase
-          .from('chat_conversations')
-          .select('*')
-          .or(`participant_1_id.eq.${user.id},participant_2_id.eq.${user.id}`)
-          .order('last_message_at', { ascending: false });
-
-        if (convError) throw convError;
-        if (!convs || convs.length === 0) {
-          setConversations([]);
-          return;
-        }
-
-        // 2. Collect other user IDs
-        const otherUserIds = convs.map(c =>
-          c.participant_1_id === user.id ? c.participant_2_id : c.participant_1_id
-        );
-
-        // 3. Fetch profiles of other users
-        const { data: profiles, error: profError } = await supabase
-          .from('profiles')
-          .select('id, full_name, avatar_url, email')
-          .in('id', otherUserIds);
-
-        if (profError) throw profError;
-
-        // 4. Map data
-        const mapped: ConversationDisplay[] = convs.map(c => {
-          const otherId = c.participant_1_id === user.id ? c.participant_2_id : c.participant_1_id;
-          const profile = profiles?.find(p => p.id === otherId);
-          return {
-            id: c.id,
-            otherUserId: otherId,
-            otherUserName: profile?.full_name || profile?.email || 'Người dùng ẩn danh',
-            otherUserAvatar: profile?.avatar_url || null,
-            lastMessageAt: c.last_message_at
-          };
-        });
-
-        setConversations(mapped);
+        const data = await chatService.fetchInboxConversations(user.id);
+        setConversations(data);
       } catch (error) {
         console.error("Error fetching conversations:", error);
       } finally {
@@ -76,32 +32,24 @@ export default function InboxList({ selectedConversationId, onSelectConversation
     fetchConversations();
 
     // 5. Subscribe to Realtime messages for Inbox updates
-    const channel = supabase
-      .channel('public:messages_inbox')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'messages' },
-        (payload) => {
-          const newMsg = payload.new as any;
-          setConversations((prev) => {
-            const index = prev.findIndex((c) => c.id === newMsg.conversation_id);
-            if (index > -1) {
-              const updatedConv = { ...prev[index], lastMessageAt: newMsg.sent_at };
-              const newConvs = [...prev];
-              newConvs.splice(index, 1);
-              return [updatedConv, ...newConvs]; // Push to top
-            } else {
-              // Nếu là hội thoại mới hoàn toàn, gọi lại fetchConversations
-              fetchConversations();
-              return prev;
-            }
-          });
+    const channel = chatService.subscribeToInbox((newMsg) => {
+      setConversations((prev) => {
+        const index = prev.findIndex((c) => c.id === newMsg.conversation_id);
+        if (index > -1) {
+          const updatedConv = { ...prev[index], lastMessageAt: newMsg.sent_at };
+          const newConvs = [...prev];
+          newConvs.splice(index, 1);
+          return [updatedConv, ...newConvs]; // Push to top
+        } else {
+          // Nếu là hội thoại mới hoàn toàn, gọi lại fetchConversations
+          fetchConversations();
+          return prev;
         }
-      )
-      .subscribe();
+      });
+    });
 
     return () => {
-      supabase.removeChannel(channel);
+      chatService.unsubscribe(channel);
     };
   }, [user]);
 
@@ -127,7 +75,8 @@ export default function InboxList({ selectedConversationId, onSelectConversation
           <input
             type="text"
             placeholder="Tìm kiếm cuộc trò chuyện..."
-            className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors"
+            className="w-full pr-4 py-2 bg-gray-50 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors"
+            style={{ paddingLeft: '40px' }}
           />
         </div>
       </div>

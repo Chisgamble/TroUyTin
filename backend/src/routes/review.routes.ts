@@ -10,9 +10,9 @@ const router = Router();
 router.post("/", auth, async (req, res) => {
   try {
     const userId = (req as any).userId;
-    const { revieweeId, rating, comment } = req.body;
+    const { revieweeId, listingId, rating, comment } = req.body;
 
-    if (!revieweeId || !rating) {
+    if (!revieweeId || !listingId || !rating) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
@@ -20,22 +20,24 @@ router.post("/", auth, async (req, res) => {
       return res.status(400).json({ error: "Rating must be between 1 and 5" });
     }
 
-    // 1. Check if a review already exists for this reviewee by this user (only 1 review allowed per user pair)
+    // 1. Check if a review already exists for this reviewee and listing by this user
     const existingReview = await db.query.reviews.findFirst({
       where: and(
         eq(reviews.reviewerId, userId),
-        eq(reviews.revieweeId, revieweeId)
+        eq(reviews.revieweeId, revieweeId),
+        eq(reviews.listingId, listingId)
       ),
     });
 
     if (existingReview) {
-      return res.status(400).json({ error: "You have already reviewed this user." });
+      return res.status(400).json({ error: "You have already reviewed this listing." });
     }
 
     // 2. Insert the review
     const newReview = await db.insert(reviews).values({
       reviewerId: userId,
       revieweeId: revieweeId,
+      listingId: listingId,
       rating: rating,
       comment: comment,
     }).returning();

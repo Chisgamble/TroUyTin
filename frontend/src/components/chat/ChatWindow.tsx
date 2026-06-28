@@ -1,20 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../services/supabase';
+import { chatService, type Message } from '../../services/chatService';
 
 interface ChatWindowProps {
   conversationId: number;
   otherParticipantId: string;
-}
-
-interface Message {
-  id: number;
-  conversation_id: number;
-  sender_id: string;
-  content_type: 'TEXT' | 'IMAGE' | 'FILE';
-  content: string;
-  is_read: boolean;
-  sent_at: string;
 }
 
 interface PartnerProfile {
@@ -30,19 +20,13 @@ export default function ChatWindow({ conversationId, otherParticipantId }: ChatW
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // 1. Fetch partner profile
   useEffect(() => {
     const fetchPartnerProfile = async () => {
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('full_name, avatar_url, email')
-          .eq('id', otherParticipantId)
-          .maybeSingle(); // Dùng maybeSingle thay vì single để tránh lỗi 406 khi không tìm thấy
-
-        if (error) throw error;
+        const data = await chatService.fetchPartnerProfile(otherParticipantId);
         if (data) {
           setPartner(data);
         }
@@ -59,14 +43,8 @@ export default function ChatWindow({ conversationId, otherParticipantId }: ChatW
     const fetchMessages = async () => {
       try {
         setLoading(true);
-        const { data, error } = await supabase
-          .from('messages')
-          .select('*')
-          .eq('conversation_id', conversationId)
-          .order('sent_at', { ascending: true });
-
-        if (error) throw error;
-        setMessages(data || []);
+        const data = await chatService.fetchMessages(conversationId);
+        setMessages(data);
       } catch (error) {
         console.error('Error fetching messages:', error);
       } finally {
@@ -77,29 +55,15 @@ export default function ChatWindow({ conversationId, otherParticipantId }: ChatW
     fetchMessages();
 
     // 3. Subscribe to Realtime messages for this conversation
-    const channel = supabase
-      .channel(`room:${conversationId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `conversation_id=eq.${conversationId}`,
-        },
-        (payload) => {
-          const newMsg = payload.new as Message;
-          // Tránh trùng lặp tin nhắn vừa tự gửi (đã được local state thêm vào hoặc chuẩn bị nhận)
-          setMessages((prev) => {
-            if (prev.some((m) => m.id === newMsg.id)) return prev;
-            return [...prev, newMsg];
-          });
-        }
-      )
-      .subscribe();
+    const channel = chatService.subscribeToMessages(conversationId, (newMsg) => {
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === newMsg.id)) return prev;
+        return [...prev, newMsg];
+      });
+    });
 
     return () => {
-      supabase.removeChannel(channel);
+      chatService.unsubscribe(channel);
     };
   }, [conversationId]);
 
@@ -115,12 +79,7 @@ export default function ChatWindow({ conversationId, otherParticipantId }: ChatW
     if (unreadMessages.length > 0) {
       const markAsRead = async () => {
         try {
-          const { error } = await supabase
-            .from('messages')
-            .update({ is_read: true })
-            .in('id', unreadMessages.map(m => m.id));
-
-          if (error) throw error;
+          await chatService.markMessagesAsRead(unreadMessages.map(m => m.id));
           
           // Cập nhật lại local state để UI phản ánh ngay
           setMessages(prev => prev.map(m => 
@@ -139,7 +98,9 @@ export default function ChatWindow({ conversationId, otherParticipantId }: ChatW
 
   // Scroll to bottom whenever messages list changes
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
   // Send message handler
@@ -152,19 +113,7 @@ export default function ChatWindow({ conversationId, otherParticipantId }: ChatW
     setSending(true);
 
     try {
-      const { data, error } = await supabase
-        .from('messages')
-        .insert({
-          conversation_id: conversationId,
-          sender_id: user.id,
-          content_type: 'TEXT',
-          content: messageText,
-          is_read: false,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+      const data = await chatService.sendMessage(conversationId, user.id, messageText);
 
       // Update local state to be instant
       if (data) {
@@ -214,7 +163,10 @@ export default function ChatWindow({ conversationId, otherParticipantId }: ChatW
       </div>
 
       {/* Message Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div 
+        className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0" 
+        ref={messagesContainerRef}
+      >
         {loading ? (
           <div className="flex items-center justify-center h-full text-sm text-gray-500">
             Đang tải cuộc hội thoại...
@@ -235,13 +187,14 @@ export default function ChatWindow({ conversationId, otherParticipantId }: ChatW
                 className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[70%] rounded-2xl px-4 py-2.5 text-sm shadow-sm ${
+                  className={`rounded-2xl text-sm shadow-sm ${
                     isMe
                       ? 'bg-blue-600 text-white rounded-br-none'
                       : 'bg-white text-gray-800 rounded-bl-none border border-gray-100'
                   }`}
+                  style={{ maxWidth: '70%', wordBreak: 'break-word', padding: '10px 16px' }}
                 >
-                  <p className="break-words whitespace-pre-wrap">{msg.content}</p>
+                  <div className="whitespace-pre-wrap">{msg.content}</div>
                   <span
                     className={`block text-[10px] mt-1 text-right flex items-center justify-end gap-1 ${
                       isMe ? 'text-blue-200' : 'text-gray-400'
@@ -260,7 +213,6 @@ export default function ChatWindow({ conversationId, otherParticipantId }: ChatW
             );
           })
         )}
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Input Area */}
