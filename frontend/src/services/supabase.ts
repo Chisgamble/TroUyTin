@@ -21,3 +21,12 @@ export async function getCurrentUser(): Promise<User | null> {
   const { data } = await supabase.auth.getSession();
   return data.session?.user ?? null;
 }
+
+export async function resetPassword(email: string, redirectTo: string) {
+  return await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+}
+
+export async function updatePassword(password: string) {
+  return await supabase.auth.updateUser({ password });
+}
+

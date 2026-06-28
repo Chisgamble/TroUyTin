@@ -84,136 +84,138 @@ export default function SearchResultsPage() {
   const hasFilters = districtId > 0 || roomType !== '' || priceIdx > 0 || areaIdx > 0;
 
   return (
-    <div className="search-page">
-      <div className="search-layout">
-        {/* Sidebar Filters */}
-        <aside className="search-sidebar">
-          <div className="search-sidebar-header">
-            <h3>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="4" y1="6" x2="20" y2="6" />
-                <line x1="4" y1="12" x2="14" y2="12" />
-                <line x1="4" y1="18" x2="10" y2="18" />
-              </svg>
-              Bộ lọc
-            </h3>
-            {hasFilters && (
-              <button className="search-clear-btn" onClick={clearFilters}>Xóa lọc</button>
-            )}
-          </div>
-
-          {/* Search within filters */}
-          <form className="search-filter-search" onSubmit={handleSearch}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.35-4.35" />
-            </svg>
-            <input
-              type="text"
-              placeholder="Tìm theo từ khóa..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-          </form>
-
-          {/* District */}
-          <div className="search-filter-group">
-            <label className="search-filter-label">Khu vực</label>
-            <select
-              className="search-filter-select"
-              value={districtId}
-              onChange={(e) => setDistrictId(Number(e.target.value))}
-            >
-              <option value={0}>Tất cả khu vực</option>
-              {DISTRICTS.map((d) => (
-                <option key={d.id} value={d.id}>{d.name}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Room Type */}
-          <div className="search-filter-group">
-            <label className="search-filter-label">Loại phòng</label>
-            <div className="search-filter-chips">
-              <button
-                className={`search-chip ${roomType === '' ? 'active' : ''}`}
-                onClick={() => setRoomType('')}
-              >Tất cả</button>
-              {ROOM_TYPES.map((t) => (
-                <button
-                  key={t}
-                  className={`search-chip ${roomType === t ? 'active' : ''}`}
-                  onClick={() => setRoomType(roomType === t ? '' : t)}
-                >{getRoomTypeLabel(t)}</button>
-              ))}
+    <div className="legacy-page-wrapper">
+      <div className="search-page">
+        <div className="search-layout">
+          {/* Sidebar Filters */}
+          <aside className="search-sidebar">
+            <div className="search-sidebar-header">
+              <h3>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="4" y1="6" x2="20" y2="6" />
+                  <line x1="4" y1="12" x2="14" y2="12" />
+                  <line x1="4" y1="18" x2="10" y2="18" />
+                </svg>
+                Bộ lọc
+              </h3>
+              {hasFilters && (
+                <button className="search-clear-btn" onClick={clearFilters}>Xóa lọc</button>
+              )}
             </div>
-          </div>
 
-          {/* Price Range */}
-          <div className="search-filter-group">
-            <label className="search-filter-label">Mức giá</label>
-            <div className="search-filter-radios">
-              {PRICE_RANGES.map((r, i) => (
-                <label key={i} className="search-radio">
-                  <input
-                    type="radio"
-                    name="price"
-                    checked={priceIdx === i}
-                    onChange={() => setPriceIdx(i)}
-                  />
-                  <span>{r.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Area Range */}
-          <div className="search-filter-group">
-            <label className="search-filter-label">Diện tích</label>
-            <div className="search-filter-radios">
-              {AREA_RANGES.map((r, i) => (
-                <label key={i} className="search-radio">
-                  <input
-                    type="radio"
-                    name="area"
-                    checked={areaIdx === i}
-                    onChange={() => setAreaIdx(i)}
-                  />
-                  <span>{r.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-        </aside>
-
-        {/* Results */}
-        <div className="search-results">
-          <div className="search-results-header">
-            <h1>{query ? `Kết quả: "${query}"` : 'Tất cả phòng trọ'}</h1>
-            <span className="search-results-count">{results.length} phòng</span>
-          </div>
-
-          {results.length > 0 ? (
-            <div className="search-grid">
-              {results.map((listing) => (
-                <ListingCard
-                  key={listing.id}
-                  listing={listing}
-                  saved={savedIds.includes(listing.id)}
-                  onToggleSave={toggleSave}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="search-empty">
-              <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            {/* Search within filters */}
+            <form className="search-filter-search" onSubmit={handleSearch}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="11" cy="11" r="8" />
                 <path d="m21 21-4.35-4.35" />
               </svg>
-              <h3>Không tìm thấy kết quả</h3>
-              <p>Thử thay đổi từ khóa hoặc bộ lọc</p>
+              <input
+                type="text"
+                placeholder="Tìm theo từ khóa..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </form>
+
+            {/* District */}
+            <div className="search-filter-group">
+              <label className="search-filter-label">Khu vực</label>
+              <select
+                className="search-filter-select"
+                value={districtId}
+                onChange={(e) => setDistrictId(Number(e.target.value))}
+              >
+                <option value={0}>Tất cả khu vực</option>
+                {DISTRICTS.map((d) => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </select>
             </div>
-          )}
+
+            {/* Room Type */}
+            <div className="search-filter-group">
+              <label className="search-filter-label">Loại phòng</label>
+              <div className="search-filter-chips">
+                <button
+                  className={`search-chip ${roomType === '' ? 'active' : ''}`}
+                  onClick={() => setRoomType('')}
+                >Tất cả</button>
+                {ROOM_TYPES.map((t) => (
+                  <button
+                    key={t}
+                    className={`search-chip ${roomType === t ? 'active' : ''}`}
+                    onClick={() => setRoomType(roomType === t ? '' : t)}
+                  >{getRoomTypeLabel(t)}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Price Range */}
+            <div className="search-filter-group">
+              <label className="search-filter-label">Mức giá</label>
+              <div className="search-filter-radios">
+                {PRICE_RANGES.map((r, i) => (
+                  <label key={i} className="search-radio">
+                    <input
+                      type="radio"
+                      name="price"
+                      checked={priceIdx === i}
+                      onChange={() => setPriceIdx(i)}
+                    />
+                    <span>{r.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Area Range */}
+            <div className="search-filter-group">
+              <label className="search-filter-label">Diện tích</label>
+              <div className="search-filter-radios">
+                {AREA_RANGES.map((r, i) => (
+                  <label key={i} className="search-radio">
+                    <input
+                      type="radio"
+                      name="area"
+                      checked={areaIdx === i}
+                      onChange={() => setAreaIdx(i)}
+                    />
+                    <span>{r.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </aside>
+
+          {/* Results */}
+          <div className="search-results">
+            <div className="search-results-header">
+              <h1>{query ? `Kết quả: "${query}"` : 'Tất cả phòng trọ'}</h1>
+              <span className="search-results-count">{results.length} phòng</span>
+            </div>
+
+            {results.length > 0 ? (
+              <div className="search-grid">
+                {results.map((listing) => (
+                  <ListingCard
+                    key={listing.id}
+                    listing={listing}
+                    saved={savedIds.includes(listing.id)}
+                    onToggleSave={toggleSave}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="search-empty">
+                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.35-4.35" />
+                </svg>
+                <h3>Không tìm thấy kết quả</h3>
+                <p>Thử thay đổi từ khóa hoặc bộ lọc</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
