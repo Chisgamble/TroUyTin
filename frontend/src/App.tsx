@@ -4,7 +4,9 @@ import HomePage from './pages/HomePage';
 import ListingDetailPage from './pages/ListingDetailPage';
 import SearchResultsPage from './pages/SearchResultsPage';
 
-import { Login, Profile } from './pages';
+import Login from './pages/Login';
+import Profile from './pages/Profile';
+import ResetPassword from './pages/ResetPassword';
 import { TestReview } from './pages/TestReview';
 import { Chat } from './pages/Chat';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -20,7 +22,8 @@ function AppRoutes() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
-        
+        <Route path="/reset-password" element={<ResetPassword />} />
+
         <Route element={<MainLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/tim-kiem" element={<SearchResultsPage />} />
