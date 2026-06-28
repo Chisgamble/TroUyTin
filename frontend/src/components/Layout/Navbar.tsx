@@ -1,13 +1,26 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { CURRENT_USER, NOTIFICATIONS } from '../../data/mockData';
+import { Link, useNavigate } from 'react-router-dom';
+import { NOTIFICATIONS } from '../../data/mockData';
+import { useAuth } from '../../contexts/AuthContext';
+import { getProfile, type Profile } from '../../services/profiles';
 
 export default function Navbar() {
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (user) {
+      getProfile(user.id).then(setProfile).catch(console.error);
+    } else {
+      setProfile(null);
+    }
+  }, [user]);
 
   const unreadCount = NOTIFICATIONS.filter((n) => !n.is_read).length;
 
@@ -99,44 +112,62 @@ export default function Navbar() {
             </svg>
           </button>
 
-          {/* Profile */}
-          <div className="navbar-dropdown-wrapper" ref={profileRef}>
-            <button
-              className="navbar-avatar-btn"
-              onClick={() => setShowProfile(!showProfile)}
-              aria-label="Hồ sơ"
-            >
-              <img src={CURRENT_USER.avatar_url} alt={CURRENT_USER.full_name} className="navbar-avatar" />
-            </button>
-            {showProfile && (
-              <div className="navbar-dropdown profile-dropdown">
-                <div className="dropdown-profile-header">
-                  <img src={CURRENT_USER.avatar_url} alt="" className="dropdown-avatar" />
-                  <div>
-                    <div className="dropdown-profile-name">{CURRENT_USER.full_name}</div>
-                    <div className="dropdown-profile-email">{CURRENT_USER.email}</div>
+          {/* Profile or Login */}
+          {user ? (
+            <div className="navbar-dropdown-wrapper" ref={profileRef}>
+              <button
+                className="navbar-avatar-btn"
+                onClick={() => setShowProfile(!showProfile)}
+                aria-label="Hồ sơ"
+              >
+                {profile?.avatarUrl ? (
+                  <img src={profile.avatarUrl} alt={profile?.fullName || ''} className="navbar-avatar" />
+                ) : (
+                  <div className="navbar-avatar" style={{ backgroundColor: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                    {(profile?.fullName || user.email || '?')[0].toUpperCase()}
                   </div>
+                )}
+              </button>
+              {showProfile && (
+                <div className="navbar-dropdown profile-dropdown">
+                  <div className="dropdown-profile-header">
+                    {profile?.avatarUrl ? (
+                      <img src={profile.avatarUrl} alt="" className="dropdown-avatar" />
+                    ) : (
+                      <div className="dropdown-avatar" style={{ backgroundColor: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.25rem' }}>
+                        {(profile?.fullName || user.email || '?')[0].toUpperCase()}
+                      </div>
+                    )}
+                    <div>
+                      <div className="dropdown-profile-name">{profile?.fullName || 'Chưa cập nhật tên'}</div>
+                      <div className="dropdown-profile-email">{user.email}</div>
+                    </div>
+                  </div>
+                  <div className="dropdown-divider" />
+                  <button className="dropdown-item" onClick={() => { setShowProfile(false); navigate('/profile'); }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                    Hồ sơ cá nhân
+                  </button>
+                  <div className="dropdown-divider" />
+                  <button className="dropdown-item dropdown-logout" onClick={() => { signOut(); setShowProfile(false); navigate('/'); }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                      <polyline points="16,17 21,12 16,7" />
+                      <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                    Đăng xuất
+                  </button>
                 </div>
-                <div className="dropdown-divider" />
-                <button className="dropdown-item">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
-                  </svg>
-                  Hồ sơ cá nhân
-                </button>
-                <div className="dropdown-divider" />
-                <button className="dropdown-item dropdown-logout">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                    <polyline points="16,17 21,12 16,7" />
-                    <line x1="21" y1="12" x2="9" y2="12" />
-                  </svg>
-                  Đăng xuất
-                </button>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          ) : (
+            <Link to="/login" className="navbar-link" style={{ fontWeight: '600', color: '#1d4ed8' }}>
+              Đăng nhập
+            </Link>
+          )}
         </div>
       </div>
     </nav>
