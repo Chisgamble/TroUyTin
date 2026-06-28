@@ -1,3 +1,4 @@
+import './StarRating.css';
 type StarRatingProps = {
   rating: number;
   size?: 'sm' | 'md' | 'lg';

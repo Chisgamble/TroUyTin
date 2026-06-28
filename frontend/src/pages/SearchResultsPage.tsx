@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import ListingCard from '../components/ListingCard';
 import type { RoomListing } from '../data/mockData';
 import { DISTRICTS, SAVED_LISTINGS, getRoomTypeLabel } from '../data/mockData';
+import './SearchResultsPage.css';
 
 const ROOM_TYPES = ['PHONG_TRO', 'CAN_HO_MINI', 'KTX', 'NGUYEN_CAN'] as const;
 const PRICE_RANGES = [
@@ -84,7 +85,7 @@ export default function SearchResultsPage() {
   const hasFilters = districtId > 0 || roomType !== '' || priceIdx > 0 || areaIdx > 0;
 
   return (
-    <div className="legacy-page-wrapper">
+    <>
       <div className="search-page">
         <div className="search-layout">
           {/* Sidebar Filters */}
@@ -217,7 +218,7 @@ export default function SearchResultsPage() {
             )}
           </div>
         </div>
-      </div>
-    </div>
+          </div>
+    </>
   );
 }

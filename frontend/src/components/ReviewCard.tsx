@@ -1,5 +1,6 @@
 import type { Review } from '../data/mockData';
 import StarRating from './StarRating';
+import './ReviewCard.css';
 
 type ReviewCardProps = {
   review: Review;
