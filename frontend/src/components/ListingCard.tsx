@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import type { RoomListing } from '../data/mockData';
 import { formatPriceVND, getRoomTypeLabel } from '../data/mockData';
+import './ListingCard.css';
 
 type ListingCardProps = {
   listing: RoomListing;

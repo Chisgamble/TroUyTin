@@ -12,6 +12,7 @@ import {
   USERS,
   REVIEWS,
 } from '../data/mockData';
+import './ListingDetailPage.css';
 
 export default function ListingDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -50,6 +51,9 @@ export default function ListingDetailPage() {
   }
 
   const reviews = getReviewsByListingId(Number(listing.id));
+  const listingAvgRating = reviews.length
+    ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
+    : 0;
   const amenities = getAmenitiesByIds(listing.amenity_ids);
   const landlord = listing.landlord || USERS.find((u) => u.id === listing.landlord_id);
 
@@ -96,7 +100,7 @@ export default function ListingDetailPage() {
   const remainingCount = listing.images.length - 4;
 
   return (
-    <div className="legacy-page-wrapper">
+    <>
       <div className="detail-page">
         <div className="detail-layout">
           {/* Left Column */}
@@ -162,7 +166,7 @@ export default function ListingDetailPage() {
                 <div className="detail-reviews-header">
                   <h2>Đánh giá từ người thuê trước</h2>
                   <div className="detail-reviews-summary">
-                    <StarRating rating={avgRating} size="md" showValue count={reviews.length} />
+                    <StarRating rating={listingAvgRating} size="md" showValue count={reviews.length} />
                   </div>
                 </div>
                 <div className="detail-reviews-grid">
@@ -293,7 +297,7 @@ export default function ListingDetailPage() {
             </div>
           </div>
         </div>
-      </div>
-    </div>
+          </div>
+    </>
   );
 }

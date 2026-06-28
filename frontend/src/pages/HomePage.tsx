@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import ListingCard from '../components/ListingCard';
 import type { RoomListing } from '../data/mockData';
 import { SAVED_LISTINGS } from '../data/mockData';
+import './HomePage.css';
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="legacy-page-wrapper">
+    <>
       <div className="home-page">
         {/* Hero */}
         <section className="hero">
@@ -96,7 +97,7 @@ export default function HomePage() {
             ))}
           </div>
         </section>
-      </div>
-    </div>
+          </div>
+    </>
   );
 }
