@@ -301,3 +301,80 @@ function mapListingWithRelations(row: Record<string, unknown>): RoomListing {
       .map(r => r.image_url),
   };
 }
+
+export async function isListingSaved(userId: string, listingId: number) {
+  const { data, error } = await supabase
+    .from('saved_listings')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('listing_id', listingId)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  return !!data;
+}
+
+// save
+export async function saveListing(userId: string, listingId: number) {
+  const { error } = await supabase.from('saved_listings').insert({
+    user_id: userId,
+    listing_id: listingId,
+  });
+
+  if (error) throw error;
+}
+
+// unsave
+export async function unsaveListing(userId: string, listingId: number) {
+  const { error } = await supabase
+    .from('saved_listings')
+    .delete()
+    .eq('user_id', userId)
+    .eq('listing_id', listingId);
+
+  if (error) throw error;
+}   
+
+export async function getSavedListingIds(userId: string): Promise<number[]> {
+  const { data, error } = await supabase
+    .from("saved_listings")
+    .select("listing_id")
+    .eq("user_id", userId);
+
+  if (error) throw error;
+
+  return (data ?? []).map(row => row.listing_id);
+}
+
+export async function getSavedListings(
+  userId: string
+): Promise<RoomListing[]> {
+  const { data, error } = await supabase
+    .from("saved_listings")
+    .select(`
+      listing_id,
+      room_listings (
+        *,
+        listing_amenities (
+          amenities (
+            id,
+            name,
+            icon
+          )
+        ),
+        listing_images (
+          image_url,
+          display_order
+        )
+      )
+    `)
+    .eq("user_id", userId);
+
+  if (error) throw error;
+
+  return (data ?? [])
+    .map((row: any) => row.room_listings)
+    .filter(Boolean)
+    .map(mapListingWithRelations);
+}

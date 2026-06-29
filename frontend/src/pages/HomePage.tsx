@@ -3,13 +3,38 @@ import { useNavigate } from 'react-router-dom';
 import ListingCard from '../components/ListingCard';
 import type { RoomListing } from '../data/mockData';
 import { SAVED_LISTINGS } from '../data/mockData';
+import { useAuth } from "../contexts/AuthContext";
 import './HomePage.css';
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [heroQuery, setHeroQuery] = useState('');
-  const [savedIds, setSavedIds] = useState<number[]>(SAVED_LISTINGS.map((s) => s.listing_id));
+  const [savedIds, setSavedIds] = useState<number[]>([]);
   const [rooms, setRooms] = useState<RoomListing[]>([]);
+
+  useEffect(() => {
+    if (!user) {
+      setSavedIds([]);
+      return;
+    }
+
+    async function fetchSaved() {
+      const { data, error } = await supabase
+        .from("saved_listings")
+        .select("listing_id")
+        .eq("user_id", user.id);
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      setSavedIds(data.map(x => x.listing_id));
+    }
+
+    fetchSaved();
+  }, [user]);
 
   useEffect(() => {
     fetch('http://localhost:3000/api/rooms')

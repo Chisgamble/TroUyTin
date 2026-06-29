@@ -2,6 +2,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 28px 24px 0;
+  margin-top: 70px
 }
 
 .detail-layout {
@@ -309,6 +310,25 @@
 
 .detail-amenity-icon {
   font-size: 18px;
+}
+
+.detail-actions {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.detail-actions button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.detail-favorite-btn.active {
+  border-color: red;
+  color: red;
 }
 
 /* Not Found */

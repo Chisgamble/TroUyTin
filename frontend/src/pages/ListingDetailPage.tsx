@@ -13,6 +13,8 @@ import {
   REVIEWS,
 } from '../data/mockData';
 import './ListingDetailPage.css';
+import { Phone, MessageCircle, Heart } from "lucide-react";
+import { isListingSaved, saveListing, unsaveListing } from '../services/roomListing';
 
 export default function ListingDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -22,6 +24,8 @@ export default function ListingDetailPage() {
   const [loading, setLoading] = useState(true);
   const [chatLoading, setChatLoading] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
+  const [isSaved, setIsSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -36,6 +40,14 @@ export default function ListingDetailPage() {
         .finally(() => setLoading(false));
     }
   }, [id]);
+
+  useEffect(() => {
+    if (!user || !id) return;
+
+    isListingSaved(user.id, Number(id))
+      .then(setIsSaved)
+      .catch(console.error);
+  }, [user, id]);
 
   if (loading) {
     return <div className="detail-page"><div className="detail-layout"><h2>Đang tải thông tin phòng...</h2></div></div>;
@@ -81,6 +93,33 @@ export default function ListingDetailPage() {
       alert('Có lỗi xảy ra khi bắt đầu chat. Vui lòng thử lại.');
     } finally {
       setChatLoading(false);
+    }
+  };
+
+  const handleToggleSave = async () => {
+    if (!user) {
+      alert('Vui lòng đăng nhập');
+      navigate('/login');
+      return;
+    }
+
+    if (!id) return;
+
+    try {
+      setSaving(true);
+
+      if (isSaved) {
+        await unsaveListing(user.id, Number(id));
+        setIsSaved(false);
+      } else {
+        await saveListing(user.id, Number(id));
+        setIsSaved(true);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Có lỗi khi lưu phòng');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -228,22 +267,34 @@ export default function ListingDetailPage() {
                 </div>
               </div>
 
-              <button className="btn-primary btn-full detail-call-btn">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                </svg>
-                Gọi điện
-              </button>
-              <button 
-                className="btn-outline btn-full detail-chat-btn"
-                onClick={handleChatClick}
-                disabled={chatLoading}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
-                {chatLoading ? 'Đang mở...' : 'Chat ngay'}
-              </button>
+              <div className="detail-actions">
+                <button className="btn-primary btn-full detail-call-btn">
+                  <Phone size={20} />
+                  Gọi điện
+                </button>
+
+                <button
+                  className="btn-outline btn-full detail-chat-btn"
+                  onClick={handleChatClick}
+                  disabled={chatLoading}
+                >
+                  <MessageCircle size={20} />
+                  {chatLoading ? "Đang mở..." : "Chat ngay"}
+                </button>
+
+                <button
+                  className={`btn-outline btn-full detail-favorite-btn ${isSaved ? 'active' : ''}`}
+                  onClick={handleToggleSave}
+                  disabled={saving}
+                >
+                  <Heart
+                    size={20}
+                    fill={isSaved ? 'red' : 'none'}
+                    color={isSaved ? 'red' : 'currentColor'}
+                  />
+                  {isSaved ? 'Đã lưu' : 'Yêu thích'}
+                </button>
+              </div>
             </div>
 
             {/* Landlord Card */}

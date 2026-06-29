@@ -10,6 +10,7 @@ import ResetPassword from './pages/ResetPassword';
 import { TestReview } from './pages/TestReview';
 import { Chat } from './pages/Chat';
 import PostListingPage from './pages/PostListingPage'
+import SavedRoomListings from './pages/SavedRoomListings';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 function AppRoutes() {
@@ -33,6 +34,7 @@ function AppRoutes() {
           <Route path="/chat" element={user ? <Chat /> : <Navigate to="/login" />} />
           <Route path="/test-review" element={<TestReview />} />
           <Route path="/dang-tin" element={<PostListingPage />} />
+          <Route path="/profile/saved-rooms" element={<SavedRoomListings />} />
         </Route>
       </Routes>
     </BrowserRouter>
