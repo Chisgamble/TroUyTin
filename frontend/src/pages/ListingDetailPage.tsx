@@ -110,8 +110,6 @@ export default function ListingDetailPage() {
     }
   };
 
-  const landlordReviews = REVIEWS.filter((r) => r.reviewee_id === listing.landlord_id);
->>>>>>> origin/main
   const avgRating = landlordReviews.length
     ? landlordReviews.reduce((s, r) => s + r.rating, 0) / landlordReviews.length
     : 0;
