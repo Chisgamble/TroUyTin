@@ -114,4 +114,57 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+
+async function deleteStorageFiles(paths: string[]) {
+  const promises = paths.map(path =>
+    fetch(
+      `${process.env.SUPABASE_URL}/storage/v1/object/listing-images/${path}`,
+      {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        },
+      }
+    )
+  );
+
+  await Promise.all(promises);
+}
+
+router.delete('/:id', async (req, res) => {
+  const id = Number(req.params.id);
+
+  try {
+    // 1. get images
+    const images = await db
+      .select()
+      .from(listingImages)
+      .where(eq(listingImages.listingId, id));
+
+    const paths = images
+      .map(i => i.imagePath)
+      .filter((p): p is string => typeof p === 'string');
+
+    // 2. delete storage
+    if (paths.length > 0) {
+      await deleteStorageFiles(paths);
+    }
+
+    // 3. delete DB images
+    await db.delete(listingImages)
+      .where(eq(listingImages.listingId, id));
+
+    // 4. delete listing
+    await db.delete(roomListings)
+      .where(eq(roomListings.id, id));
+
+    return res.json({ success: true });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Delete failed' });
+  }
+});
+
 export default router;

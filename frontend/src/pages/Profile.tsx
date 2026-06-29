@@ -1,7 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { getProfile, updateProfile, uploadAvatar, type Profile } from '../services/profiles'
+import {
+  User, Heart, Building2, Settings, Camera,
+  CheckCircle2, ChevronRight, Shield, CreditCard,
+  Pencil, Loader2, AlertCircle, Check, MessageCircle
+} from 'lucide-react'
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type ProfileFormValues = {
   fullName: string
@@ -10,33 +18,85 @@ type ProfileFormValues = {
   role: 'TENANT' | 'LANDLORD'
 }
 
+type SidebarItem = {
+  key: string
+  label: string
+  icon: React.ElementType
+  landlordOnly?: boolean
+  path: string
+}
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
 const ROLE_LABELS: Record<string, string> = {
   TENANT: 'Người đi thuê',
   LANDLORD: 'Chủ cho thuê',
   ADMIN: 'Quản trị viên',
 }
 
+const SIDEBAR_ITEMS: SidebarItem[] = [
+  { key: 'profile', label: 'Thông tin cá nhân', icon: User, path: '/profile' },
+  { key: 'listings', label: 'Phòng cho thuê', icon: Building2, landlordOnly: true, path: '/profile/listings' },
+  { key: 'saved-rooms', label: 'Phòng đã lưu', icon: Heart, path: '/profile/saved-rooms' },
+  { key: 'saved-profiles', label: 'Hồ sơ đã lưu', icon: User, path: '/profile/saved-profiles' },
+  { key: 'messages', label: 'Tin nhắn', icon: MessageCircle, path: '/profile/messages' },
+]
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
 function formatJoinDate(dateStr: string): string {
   const date = new Date(dateStr)
   return `Tháng ${date.getMonth() + 1}, ${date.getFullYear()}`
 }
 
-function DefaultAvatar({ name }: { name: string }) {
+function DefaultAvatar({ name, size = 'lg' }: { name: string; size?: 'sm' | 'lg' }) {
   const initials = name
-    ? name
-        .split(' ')
-        .map((w) => w[0])
-        .slice(-2)
-        .join('')
-        .toUpperCase()
+    ? name.split(' ').map(w => w[0]).slice(-2).join('').toUpperCase()
     : '?'
-
+  const textSize = size === 'lg' ? 'text-3xl' : 'text-sm'
   return (
-    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-3xl font-bold select-none rounded-full">
+    <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 text-white ${textSize} font-bold select-none`}>
       {initials}
     </div>
   )
 }
+
+// ─── Sidebar ─────────────────────────────────────────────────────────────────
+
+function Sidebar({ profile, activeKey }: { profile: Profile | null; activeKey: string }) {
+  const navigate = useNavigate()
+
+  const visibleItems = SIDEBAR_ITEMS.filter(item =>
+    !item.landlordOnly || profile?.role === 'LANDLORD'
+  )
+
+  return (
+    <aside className="w-56 shrink-0 pt-10">
+      <nav className="space-y-0.5">
+        {visibleItems.map(item => {
+          const Icon = item.icon
+          const active = activeKey === item.key
+          return (
+            <button
+              key={item.key}
+              onClick={() => item.key !== 'profile' && navigate(item.path)}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-left ${
+                active
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+              }`}
+            >
+              <Icon className="w-4 h-4 shrink-0" />
+              {item.label}
+            </button>
+          )
+        })}
+      </nav>
+    </aside>
+  )
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function ProfilePage() {
   const { user } = useAuth()
@@ -59,7 +119,7 @@ export default function ProfilePage() {
     if (!user) return
     setLoading(true)
     getProfile(user.id)
-      .then((p) => {
+      .then(p => {
         setProfile(p)
         if (p) {
           reset({
@@ -101,8 +161,7 @@ export default function ProfilePage() {
     const file = e.target.files?.[0]
     if (!file || !user) return
 
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp']
-    if (!validTypes.includes(file.type)) {
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
       setErrorMsg('Chỉ chấp nhận file JPG, PNG hoặc WebP.')
       return
     }
@@ -115,22 +174,25 @@ export default function ProfilePage() {
     setErrorMsg('')
     try {
       const url = await uploadAvatar(user.id, file)
-      setProfile((prev) => prev ? { ...prev, avatarUrl: url } : prev)
+      setProfile(prev => prev ? { ...prev, avatarUrl: url } : prev)
       setSuccessMsg('Đã cập nhật ảnh đại diện!')
       setTimeout(() => setSuccessMsg(''), 3000)
     } catch {
       setErrorMsg('Tải ảnh lên thất bại. Vui lòng thử lại.')
     } finally {
       setUploadingAvatar(false)
+      // Reset input so same file can be re-selected
+      if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 
+  // ── Loading ──
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="text-center">
-          <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-gray-500 text-sm">Đang tải hồ sơ...</p>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3 text-slate-400">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+          <p className="text-sm">Đang tải hồ sơ...</p>
         </div>
       </div>
     )
@@ -138,240 +200,231 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="text-center">
-          <p className="text-gray-500">Không tìm thấy hồ sơ.</p>
-        </div>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <p className="text-slate-500 text-sm">Không tìm thấy hồ sơ.</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Banner */}
-      <div className="h-40 bg-gradient-to-r from-blue-600 via-indigo-500 to-blue-400 relative" />
+    <div className="min-h-screen bg-slate-50 pt-20" style={{ fontFamily: "'Inter', sans-serif" }}>
+      {/* ── Layout wrapper ── */}
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="flex gap-6 items-start">
 
-      <div className="max-w-2xl mx-auto px-4 pb-16">
-        {/* Avatar + Name header */}
-        <div className="relative -mt-16 mb-6 flex items-end gap-4">
-          {/* Avatar */}
-          <div className="relative shrink-0">
-            <div className="w-28 h-28 rounded-full border-4 border-white shadow-md overflow-hidden bg-white">
-              {profile.avatarUrl ? (
-                <img
-                  src={profile.avatarUrl}
-                  alt={profile.fullName ?? 'Avatar'}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <DefaultAvatar name={profile.fullName ?? profile.email ?? ''} />
-              )}
-            </div>
+          {/* ── Sidebar ── */}
+          <Sidebar profile={profile} activeKey="profile" />
 
-            {/* Edit avatar button */}
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploadingAvatar}
-              className="absolute bottom-1 right-1 w-8 h-8 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center shadow-sm transition-colors disabled:opacity-60"
-              title="Đổi ảnh đại diện"
-            >
-              {uploadingAvatar ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a4 4 0 01-1.414.829l-3.414.828.828-3.414A4 4 0 019 13z" />
-                </svg>
-              )}
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="hidden"
-              onChange={handleAvatarChange}
-            />
-          </div>
+          {/* ── Main content ── */}
+          <div className="flex-1 min-w-0 space-y-5">
 
-          {/* Name + badge */}
-          <div className="pb-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-xl font-bold text-gray-900">
-                {profile.fullName || profile.username || 'Chưa cập nhật tên'}
-              </h1>
-              {profile.isVerified && (
-                <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-semibold px-2 py-0.5 rounded-full border border-green-200">
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                  Đã xác minh
-                </span>
-              )}
-            </div>
-            <p className="text-sm text-gray-500 mt-0.5">
-              Gia nhập từ {formatJoinDate(profile.createdAt)} · {ROLE_LABELS[profile.role] ?? profile.role}
-            </p>
-          </div>
-        </div>
-
-        {/* Alerts */}
-        {successMsg && (
-          <div className="mb-4 flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg px-4 py-3">
-            <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-            {successMsg}
-          </div>
-        )}
-        {errorMsg && (
-          <div className="mb-4 flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
-            <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-            </svg>
-            {errorMsg}
-          </div>
-        )}
-
-        {/* Form card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <h2 className="text-base font-semibold text-gray-800 mb-5">Thông tin cá nhân</h2>
-
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            {/* Full name */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Họ và tên
-              </label>
-              <input
-                type="text"
-                {...register('fullName', { required: 'Vui lòng nhập họ và tên' })}
-                placeholder="Nguyễn Văn A"
-                className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-gray-50 focus:bg-white"
-              />
-              {errors.fullName && (
-                <p className="text-red-500 text-xs mt-1">{errors.fullName.message}</p>
-              )}
-            </div>
-
-            {/* Phone + Role row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Số điện thoại
-                </label>
-                <input
-                  type="tel"
-                  {...register('phone', {
-                    pattern: {
-                      value: /^[0-9]{9,11}$/,
-                      message: 'Số điện thoại không hợp lệ',
-                    },
-                  })}
-                  placeholder="090 123 4567"
-                  className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-gray-50 focus:bg-white"
-                />
-                {errors.phone && (
-                  <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>
-                )}
+            {/* Cover + Avatar header card */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+              {/* Cover photo */}
+              <div className="h-36 bg-gradient-to-r from-blue-600 via-indigo-500 to-violet-500 relative">
+                {/* <button className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/30 hover:bg-black/50 text-white text-xs font-medium rounded-lg backdrop-blur-sm transition-all">
+                  <Camera className="w-3.5 h-3.5" />
+                  Chỉnh sửa ảnh bìa
+                </button> */}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Vai trò
-                </label>
-                <select
-                  {...register('role')}
-                  className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-gray-50 focus:bg-white appearance-none"
-                >
-                  <option value="TENANT">Người đi thuê</option>
-                  <option value="LANDLORD">Chủ cho thuê</option>
-                </select>
+              {/* Avatar row */}
+              <div className="px-6 pb-5">
+                <div className="flex items-end gap-4 -mt-12 mb-4">
+                  {/* Avatar */}
+                  <div className="relative shrink-0">
+                    <div className="w-24 h-24 rounded-full border-4 border-white shadow-md overflow-hidden bg-white">
+                      {profile.avatarUrl ? (
+                        <img
+                          src={profile.avatarUrl}
+                          alt={profile.fullName ?? 'Avatar'}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <DefaultAvatar name={profile.fullName ?? profile.email ?? ''} />
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingAvatar}
+                      className="absolute bottom-0.5 right-0.5 w-7 h-7 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center shadow transition-colors disabled:opacity-60"
+                    >
+                      {uploadingAvatar
+                        ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        : <Pencil className="w-3.5 h-3.5" />
+                      }
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={handleAvatarChange}
+                    />
+                  </div>
+
+                  {/* Name + meta */}
+                  <div className="pb-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h1 className="text-lg font-bold text-slate-900">
+                        {profile.fullName || profile.username || 'Chưa cập nhật tên'}
+                      </h1>
+                      {profile.isVerified && (
+                        <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-xs font-semibold px-2 py-0.5 rounded-full border border-emerald-200">
+                          <CheckCircle2 className="w-3 h-3" />
+                          Đã xác minh
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Gia nhập từ {formatJoinDate(profile.createdAt)}
+                      {' · '}
+                      {ROLE_LABELS[profile.role] ?? profile.role}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Email (read-only) */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Email
-                <span className="ml-2 text-xs font-normal text-gray-400">Không thể thay đổi</span>
-              </label>
-              <input
-                type="email"
-                value={profile.email ?? ''}
-                disabled
-                className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
-              />
-            </div>
-
-            {/* Bio */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Giới thiệu bản thân
-              </label>
-              <textarea
-                {...register('bio', { maxLength: { value: 300, message: 'Tối đa 300 ký tự' } })}
-                rows={3}
-                placeholder="Mô tả ngắn về bản thân, thói quen sinh hoạt, yêu cầu khi ở ghép..."
-                className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-gray-50 focus:bg-white resize-none"
-              />
-              {errors.bio && (
-                <p className="text-red-500 text-xs mt-1">{errors.bio.message}</p>
-              )}
-            </div>
-
-            {/* Submit */}
-            <div className="flex justify-end pt-1">
-              <button
-                type="submit"
-                disabled={saving || !isDirty}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {saving && (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                )}
-                {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
-              </button>
-            </div>
-          </form>
-        </div>
-
-        {/* Account info tiles */}
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-5 py-4 flex items-center justify-between hover:border-blue-200 transition cursor-pointer group">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-100 transition">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
+            {/* Alerts */}
+            {successMsg && (
+              <div className="flex items-center gap-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm rounded-xl px-4 py-3">
+                <Check className="w-4 h-4 shrink-0" />
+                {successMsg}
               </div>
-              <div>
-                <p className="text-sm font-medium text-gray-800">Bảo mật tài khoản</p>
-                <p className="text-xs text-gray-400">Xác thực 2 lớp đang bật</p>
+            )}
+            {errorMsg && (
+              <div className="flex items-center gap-2.5 bg-rose-50 border border-rose-200 text-rose-700 text-sm rounded-xl px-4 py-3">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                {errorMsg}
               </div>
-            </div>
-            <svg className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
+            )}
 
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-5 py-4 flex items-center justify-between hover:border-blue-200 transition cursor-pointer group">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-green-50 flex items-center justify-center text-green-600 group-hover:bg-green-100 transition">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                </svg>
+            {/* Form card */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-base font-semibold text-slate-800">Thông tin cá nhân</h2>
               </div>
-              <div>
-                <p className="text-sm font-medium text-gray-800">Phương thức thanh toán</p>
-                <p className="text-xs text-gray-400">Liên kết với MoMo, ZaloPay</p>
-              </div>
+
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                {/* Row 1: Full name + Phone */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField label="Họ và tên" error={errors.fullName?.message}>
+                    <input
+                      type="text"
+                      {...register('fullName', { required: 'Vui lòng nhập họ và tên' })}
+                      placeholder="Nguyễn Văn A"
+                      className={inputCls}
+                    />
+                  </FormField>
+                  <FormField label="Số điện thoại" error={errors.phone?.message}>
+                    <input
+                      type="tel"
+                      {...register('phone', {
+                        pattern: { value: /^[0-9]{9,11}$/, message: 'Số điện thoại không hợp lệ' },
+                      })}
+                      placeholder="090 123 4567"
+                      className={inputCls}
+                    />
+                  </FormField>
+                </div>
+
+                {/* Row 2: Email (read-only) + Role */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField label="Email" hint="Không thể thay đổi">
+                    <input
+                      type="email"
+                      value={profile.email ?? ''}
+                      disabled
+                      className={inputCls + ' opacity-60 cursor-not-allowed'}
+                    />
+                  </FormField>
+                  <FormField label="Vai trò">
+                    <div className="relative">
+                      <select
+                        {...register('role')}
+                        className={inputCls + ' appearance-none pr-8'}
+                      >
+                        <option value="TENANT">Người đi thuê</option>
+                        <option value="LANDLORD">Chủ cho thuê</option>
+                      </select>
+                      <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 rotate-90 w-4 h-4 text-slate-400 pointer-events-none" />
+                    </div>
+                  </FormField>
+                </div>
+
+                {/* Bio */}
+                <FormField label="Giới thiệu bản thân" error={errors.bio?.message}>
+                  <textarea
+                    {...register('bio', { maxLength: { value: 300, message: 'Tối đa 300 ký tự' } })}
+                    rows={3}
+                    placeholder="Mô tả ngắn về bản thân, thói quen sinh hoạt, yêu cầu khi ở ghép..."
+                    className={inputCls + ' resize-none'}
+                  />
+                </FormField>
+
+                <div className="flex justify-end pt-1">
+                  <button
+                    type="submit"
+                    disabled={saving || !isDirty}
+                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
+                  </button>
+                </div>
+              </form>
             </div>
-            <svg className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
           </div>
         </div>
       </div>
     </div>
+  )
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+const inputCls =
+  'w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all placeholder-slate-400 text-slate-900'
+
+function FormField({
+  label, hint, error, children,
+}: {
+  label: string; hint?: string; error?: string; children: React.ReactNode
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label className="block text-sm font-medium text-slate-700">
+        {label}
+        {hint && <span className="ml-2 text-xs font-normal text-slate-400">{hint}</span>}
+      </label>
+      {children}
+      {error && <p className="text-xs text-rose-500">{error}</p>}
+    </div>
+  )
+}
+
+function TileButton({
+  icon, iconBg, title, subtitle,
+}: {
+  icon: React.ReactNode; iconBg: string; title: string; subtitle: string
+}) {
+  return (
+    <button
+      type="button"
+      className="flex items-center justify-between px-5 py-4 bg-white rounded-2xl border border-slate-200 shadow-sm hover:border-blue-300 hover:shadow-md transition-all group text-left"
+    >
+      <div className="flex items-center gap-3">
+        <div className={`w-10 h-10 rounded-full ${iconBg} flex items-center justify-center shrink-0`}>
+          {icon}
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-slate-800">{title}</p>
+          <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>
+        </div>
+      </div>
+      <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors shrink-0" />
+    </button>
   )
 }

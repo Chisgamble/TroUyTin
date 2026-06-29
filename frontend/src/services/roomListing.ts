@@ -55,6 +55,7 @@ export type RoomListing = {
   // Joined fields
   amenities?: Amenity[];
   imageUrls?: string[];
+  imagePath?: string[];
 };
 
 export type CreateListingPayload = {
@@ -69,6 +70,7 @@ export type CreateListingPayload = {
   addressDetail?: string;
   amenityIds?: number[];
   imageUrls?: string[];
+  imagePaths?: string[];
 };
 
 // ─── Amenities ────────────────────────────────────────────────────────────────
@@ -183,6 +185,7 @@ export async function createListing(payload: CreateListingPayload): Promise<Room
         payload.imageUrls.map((url, index) => ({
           listing_id: listingId,
           image_url: url,
+          image_path: payload.imagePaths?.[index] ?? null,
           display_order: index,
         }))
       );
@@ -226,7 +229,10 @@ export async function getListingsByLandlord(landlordId: string): Promise<RoomLis
   return (data ?? []).map(mapListingWithRelations);
 }
 
-export async function uploadListingImage(file: File): Promise<string> {
+export async function uploadListingImage(file: File): Promise<{
+    publicUrl: string;
+    path: string;
+}> {
   const ext = file.name.split('.').pop();
   const fileName = `${uuidv4()}.${ext}`;
   const path = `listings/${fileName}`;
@@ -245,7 +251,10 @@ export async function uploadListingImage(file: File): Promise<string> {
     .from('listing-images')
     .getPublicUrl(path);
 
-  return data.publicUrl;
+  return {
+    publicUrl: data.publicUrl,
+    path,
+  };
 }
 
 // ─── Mappers ──────────────────────────────────────────────────────────────────

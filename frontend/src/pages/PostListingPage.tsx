@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getIcon } from '../utils/iconMap';
+import { getProfile, type Profile } from '../services/profiles';
 import {
   getAmenities, getProvinces, getDistricts, getWards,
   createListing, uploadListingImage,
@@ -39,6 +40,7 @@ interface UploadedImage {
   preview: string;
   uploading: boolean;
   url: string | null;
+  path?: string | null; 
   error: string | null;
 }
 
@@ -377,8 +379,8 @@ function Step3({
     // Upload each to supabase storage via service
     const uploaded = await Promise.all(newImgs.map(async (img) => {
       try {
-        const publicUrl = await uploadListingImage(img.file);
-        return { ...img, uploading: false, url: publicUrl, error: null };
+        const res = await uploadListingImage(img.file);
+        return { ...img, uploading: false, url: res.publicUrl, path: res.path, error: null };
       } catch {
         return { ...img, uploading: false, url: null, error: 'Upload thất bại' };
       }
@@ -629,6 +631,34 @@ export default function PostListingPage() {
   const [loadingGeo, setLoadingGeo] = useState(false);
   const [amenities, setAmenities] = useState<Amenity[]>([]);
 
+  const [profileRole, setProfileRole] = useState<string | null>(null);
+  const [checkingRole, setCheckingRole] = useState(true);
+
+  useEffect(() => {
+    if (!user) {
+        navigate('/login', { replace: true });
+        return;
+    }
+    getProfile(user.id)
+        .then(p => {
+        if (p?.role !== 'LANDLORD') {
+            navigate('/', { replace: true, state: { errorToast: 'Chỉ chủ nhà mới có thể đăng tin.' } });
+        } else {
+            setProfileRole(p.role);
+        }
+        })
+        .catch(() => navigate('/', { replace: true }))
+        .finally(() => setCheckingRole(false));
+    }, [user, navigate]);
+
+    if (checkingRole) {
+    return (
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        </div>
+    );
+    }
+
   const patch = useCallback((p: Partial<FormData>) => setForm(f => ({ ...f, ...p })), []);
 
   // Load amenities on mount
@@ -708,7 +738,13 @@ export default function PostListingPage() {
         wardId: form.ward_id ? Number(form.ward_id) : null,
         addressDetail: form.address_detail || undefined,
         amenityIds: form.amenity_ids,
-        imageUrls: form.images.filter(i => i.url).map(i => i.url as string),
+        imageUrls: form.images
+        .filter(i => i.url)
+        .map(i => i.url as string),
+
+        imagePaths: form.images
+        .filter(i => i.url)
+        .map(i => (i as any).path), 
       });
 
       navigate('/', { state: { successToast: 'Tin đăng đã được gửi và đang chờ duyệt!' } });
