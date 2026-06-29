@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "../db";
-import { roomListings, listingImages, listingAmenities, profiles } from "../db/schema";
+import { roomListings, listingImages, listingAmenities, profiles, wards, districts, amenities, reviews } from "../db/schema";
 import { eq, inArray } from "drizzle-orm";
 
 const router = Router();
@@ -8,13 +8,20 @@ const router = Router();
 // GET /api/rooms - Get all rooms
 router.get("/", async (req, res) => {
   try {
-    const rooms = await db.select().from(roomListings);
+    const roomsQuery = await db.select({
+      room: roomListings,
+      wardName: wards.name,
+      districtName: districts.name,
+    })
+    .from(roomListings)
+    .leftJoin(wards, eq(roomListings.wardId, wards.id))
+    .leftJoin(districts, eq(wards.districtId, districts.id));
     
-    if (rooms.length === 0) {
+    if (roomsQuery.length === 0) {
       return res.status(200).json([]);
     }
 
-    const roomIds = rooms.map(r => r.id);
+    const roomIds = roomsQuery.map(r => r.room.id);
 
     // Fetch images
     const images = await db.select().from(listingImages).where(inArray(listingImages.listingId, roomIds));
@@ -23,7 +30,8 @@ router.get("/", async (req, res) => {
     const amenitiesData = await db.select().from(listingAmenities).where(inArray(listingAmenities.listingId, roomIds));
 
     // Combine
-    const formattedRooms = rooms.map(room => {
+    const formattedRooms = roomsQuery.map(row => {
+      const room = row.room;
       const roomImages = images.filter(img => img.listingId === room.id).map(img => img.imageUrl);
       const roomAmenityIds = amenitiesData.filter(am => am.listingId === room.id).map(am => am.amenityId);
       
@@ -41,8 +49,8 @@ router.get("/", async (req, res) => {
         
         images: roomImages.length > 0 ? roomImages : ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267'], // fallback image
         amenity_ids: roomAmenityIds,
-        district_name: '', // TODO: join with districts table
-        ward_name: '' // TODO: join with wards table
+        district_name: row.districtName || '',
+        ward_name: row.wardName || ''
       };
     });
 
@@ -61,18 +69,62 @@ router.get("/:id", async (req, res) => {
       return res.status(400).json({ error: "Invalid room ID" });
     }
 
-    const roomRows = await db.select().from(roomListings).where(eq(roomListings.id, roomId));
-    const room = roomRows[0];
+    const roomRows = await db.select({
+      room: roomListings,
+      wardName: wards.name,
+      districtName: districts.name,
+      landlord: profiles
+    })
+    .from(roomListings)
+    .leftJoin(wards, eq(roomListings.wardId, wards.id))
+    .leftJoin(districts, eq(wards.districtId, districts.id))
+    .leftJoin(profiles, eq(roomListings.landlordId, profiles.id))
+    .where(eq(roomListings.id, roomId));
 
-    if (!room) {
+    const row = roomRows[0];
+    if (!row) {
       return res.status(404).json({ error: "Room not found" });
     }
+
+    const { room, wardName, districtName, landlord } = row;
 
     // Fetch images
     const images = await db.select().from(listingImages).where(eq(listingImages.listingId, roomId));
     
-    // Fetch amenities
-    const amenitiesData = await db.select().from(listingAmenities).where(eq(listingAmenities.listingId, roomId));
+    // Fetch amenities with details
+    const amenitiesData = await db.select({
+      id: amenities.id,
+      name: amenities.name,
+      icon: amenities.icon
+    })
+    .from(listingAmenities)
+    .innerJoin(amenities, eq(listingAmenities.amenityId, amenities.id))
+    .where(eq(listingAmenities.listingId, roomId));
+
+    // Fetch listing reviews
+    const listingReviews = await db.select({
+      id: reviews.id,
+      reviewer_id: reviews.reviewerId,
+      reviewer_name: profiles.fullName,
+      reviewer_avatar: profiles.avatarUrl,
+      rating: reviews.rating,
+      comment: reviews.comment,
+      created_at: reviews.createdAt
+    })
+    .from(reviews)
+    .leftJoin(profiles, eq(reviews.reviewerId, profiles.id))
+    .where(eq(reviews.listingId, roomId));
+
+    // Fetch landlord reviews
+    let landlordReviews: any[] = [];
+    if (landlord) {
+      landlordReviews = await db.select({
+        id: reviews.id,
+        rating: reviews.rating
+      })
+      .from(reviews)
+      .where(eq(reviews.revieweeId, landlord.id));
+    }
 
     const formattedRoom = {
       ...room,
@@ -86,9 +138,22 @@ router.get("/:id", async (req, res) => {
       updated_at: room.updatedAt,
       
       images: images.length > 0 ? images.map(img => img.imageUrl) : ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267'],
-      amenity_ids: amenitiesData.map(am => am.amenityId),
-      district_name: '', // TODO: join with districts table
-      ward_name: '' // TODO: join with wards table
+      amenity_ids: amenitiesData.map(am => am.id),
+      district_name: districtName || '',
+      ward_name: wardName || '',
+      
+      // Fully populated objects for the detail page
+      landlord: landlord ? {
+        id: landlord.id,
+        full_name: landlord.fullName,
+        avatar_url: landlord.avatarUrl,
+        phone: landlord.phone,
+        is_verified: landlord.isVerified,
+        created_at: landlord.createdAt
+      } : null,
+      amenities: amenitiesData,
+      reviews: listingReviews,
+      landlordReviews: landlordReviews
     };
 
     return res.status(200).json(formattedRoom);
