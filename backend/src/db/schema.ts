@@ -10,19 +10,15 @@ import {
   numeric,
   timestamp,
   index,
-  unique
+  unique,
 } from "drizzle-orm/pg-core";
 
-
-export const roleEnum = pgEnum("role", [
-  "TENANT",
-  "LANDLORD",
-  "ADMIN",
-]);
+export const roleEnum = pgEnum("role", ["TENANT", "LANDLORD", "ADMIN"]);
 
 export const listingStatusEnum = pgEnum("listing_status", [
   "PENDING",
-  "APPROVED",
+  // "APPROVED",
+  "AVAILABLE",
   "REJECTED",
   "RENTED",
 ]);
@@ -31,7 +27,7 @@ export const roomTypeEnum = pgEnum("room_type", [
   "PHONG_TRO",
   "CAN_HO_MINI",
   "KTX",
-  "NGUYEN_CAN"
+  "NGUYEN_CAN",
 ]);
 
 export const contentTypeEnum = pgEnum("content_type", [
@@ -52,11 +48,7 @@ export const matchStatusEnum = pgEnum("match_status", [
   "REJECTED",
 ]);
 
-export const targetTypeEnum = pgEnum("target_type", [
-  "LISTING",
-  "ROOMMATE",
-]);
-
+export const targetTypeEnum = pgEnum("target_type", ["LISTING", "ROOMMATE"]);
 
 export const profiles = pgTable("profiles", {
   id: uuid("id").primaryKey(),
@@ -74,24 +66,15 @@ export const profiles = pgTable("profiles", {
     .default(false)
     .notNull(),
 
-
   role: roleEnum("role").default("TENANT"),
 
-  isVerified: boolean("is_verified")
-    .default(false)
-    .notNull(),
+  isVerified: boolean("is_verified").default(false).notNull(),
 
-  isActive: boolean("is_active")
-    .default(true)
-    .notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
 
-  createdAt: timestamp("created_at")
-    .defaultNow()
-    .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 
-  updatedAt: timestamp("updated_at")
-    .defaultNow()
-    .notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const provinces = pgTable("provinces", {
@@ -123,7 +106,7 @@ export const amenities = pgTable("amenities", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   icon: text("icon"),
-},);
+});
 
 export const roomListings = pgTable("room_listings", {
   id: serial("id").primaryKey(),
@@ -155,25 +138,15 @@ export const roomListings = pgTable("room_listings", {
   latitude: real("latitude"),
   longitude: real("longitude"),
 
-  status: listingStatusEnum("status")
-    .default("PENDING")
-    .notNull(),
+  status: listingStatusEnum("status").default("PENDING").notNull(),
 
-  isVerified: boolean("is_verified")
-    .default(false)
-    .notNull(),
+  isVerified: boolean("is_verified").default(false).notNull(),
 
-  viewCount: integer("view_count")
-    .default(0)
-    .notNull(),
+  viewCount: integer("view_count").default(0).notNull(),
 
-  createdAt: timestamp("created_at")
-    .defaultNow()
-    .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 
-  updatedAt: timestamp("updated_at")
-    .defaultNow()
-    .notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const listingImages = pgTable("listing_images", {
@@ -185,13 +158,9 @@ export const listingImages = pgTable("listing_images", {
 
   imageUrl: text("image_url").notNull(),
 
-  displayOrder: integer("display_order")
-    .default(0)
-    .notNull(),
+  displayOrder: integer("display_order").default(0).notNull(),
 
-  uploadedAt: timestamp("uploaded_at")
-    .defaultNow()
-    .notNull(),
+  uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
 });
 
 export const listingAmenities = pgTable(
@@ -210,147 +179,134 @@ export const listingAmenities = pgTable(
   (table) => [
     unique("listing_amenities_listing_amenity_unique").on(
       table.listingId,
-      table.amenityId
+      table.amenityId,
     ),
-  ]
+  ],
 );
 
 export const roommateProfiles = pgTable(
-  "roommate_profiles", 
+  "roommate_profiles",
   {
-  id: serial("id").primaryKey(),
+    id: serial("id").primaryKey(),
 
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => profiles.id),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id),
 
-  gender: text("gender"),
+    gender: text("gender"),
 
-  age: integer("age"),
+    age: integer("age"),
 
-  hometown: text("hometown"),
+    hometown: text("hometown"),
 
-  schoolOrJob: text("school_or_job"),
+    schoolOrJob: text("school_or_job"),
 
-  budgetMin: numeric("budget_min"),
+    budgetMin: numeric("budget_min"),
 
-  budgetMax: numeric("budget_max"),
+    budgetMax: numeric("budget_max"),
 
-  preferredDistrictId: integer("preferred_district_id")
-    .references(() => districts.id),
+    preferredDistrictId: integer("preferred_district_id").references(
+      () => districts.id,
+    ),
 
-  smoking: text("smoking"),
+    smoking: text("smoking"),
 
-  drinking: text("drinking"),
+    drinking: text("drinking"),
 
-  sleepSchedule: text("sleep_schedule"),
+    sleepSchedule: text("sleep_schedule"),
 
-  tidiness: text("tidiness"),
+    tidiness: text("tidiness"),
 
-  cleaningFreq: text("cleaning_freq"),
+    cleaningFreq: text("cleaning_freq"),
 
-  hasPet: boolean("has_pet")
-    .default(false)
-    .notNull(),
+    hasPet: boolean("has_pet").default(false).notNull(),
 
-  allowOvernightGuest: boolean("allow_overnight_guest")
-    .default(false)
-    .notNull(),
+    allowOvernightGuest: boolean("allow_overnight_guest")
+      .default(false)
+      .notNull(),
 
-  cookingFreq: text("cooking_freq"),
+    cookingFreq: text("cooking_freq"),
 
-  hasRoom: boolean("has_room")
-    .default(false)
-    .notNull(),
+    hasRoom: boolean("has_room").default(false).notNull(),
 
-  vectorEmbedding: text("vector_embedding"),
+    vectorEmbedding: text("vector_embedding"),
 
-  createdAt: timestamp("created_at")
-    .defaultNow()
-    .notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
 
-  updatedAt: timestamp("updated_at")
-    .defaultNow()
-    .notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
-  (table) => [
-      unique("roommate_profiles_user_unique").on(table.userId),
-  ]
+  (table) => [unique("roommate_profiles_user_unique").on(table.userId)],
 );
 
-export const roommateMatches = pgTable("roommate_matches", {
-  id: serial("id").primaryKey(),
+export const roommateMatches = pgTable(
+  "roommate_matches",
+  {
+    id: serial("id").primaryKey(),
 
-  requesterId: uuid("requester_id")
-    .notNull()
-    .references(() => profiles.id),
+    requesterId: uuid("requester_id")
+      .notNull()
+      .references(() => profiles.id),
 
-  targetId: uuid("target_id")
-    .notNull()
-    .references(() => profiles.id),
+    targetId: uuid("target_id")
+      .notNull()
+      .references(() => profiles.id),
 
-  compatibilityPct: real("compatibility_pct"),
+    compatibilityPct: real("compatibility_pct"),
 
-  requesterAction: matchActionEnum("requester_action"),
+    requesterAction: matchActionEnum("requester_action"),
 
-  targetAction: matchActionEnum("target_action")
-    .default("PENDING"),
+    targetAction: matchActionEnum("target_action").default("PENDING"),
 
-  status: matchStatusEnum("status")
-    .default("PENDING")
-    .notNull(),
+    status: matchStatusEnum("status").default("PENDING").notNull(),
 
-  createdAt: timestamp("created_at")
-    .defaultNow()
-    .notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
 
-  matchedAt: timestamp("matched_at"),
+    matchedAt: timestamp("matched_at"),
   },
   (table) => [
-    unique(
-      "roommate_matches_requester_target_unique"
-    ).on(table.requesterId, table.targetId),
-  ]
+    unique("roommate_matches_requester_target_unique").on(
+      table.requesterId,
+      table.targetId,
+    ),
+  ],
 );
 
-export const chatConversations = pgTable("chat_conversations", {
-  id: serial("id").primaryKey(),
+export const chatConversations = pgTable(
+  "chat_conversations",
+  {
+    id: serial("id").primaryKey(),
 
-  participant1Id: uuid("participant_1_id")
-    .notNull()
-    .references(() => profiles.id),
+    participant1Id: uuid("participant_1_id")
+      .notNull()
+      .references(() => profiles.id),
 
-  participant2Id: uuid("participant_2_id")
-    .notNull()
-    .references(() => profiles.id),
+    participant2Id: uuid("participant_2_id")
+      .notNull()
+      .references(() => profiles.id),
 
-  listingId: integer("listing_id")
-    .references(() => roomListings.id),
+    listingId: integer("listing_id").references(() => roomListings.id),
 
-  roommateMatchId: integer("roommate_match_id")
-    .references(() => roommateMatches.id),
+    roommateMatchId: integer("roommate_match_id").references(
+      () => roommateMatches.id,
+    ),
 
-  createdAt: timestamp("created_at")
-    .defaultNow()
-    .notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
 
-  lastMessageAt: timestamp("last_message_at")
-    .defaultNow()
-    .notNull(),
+    lastMessageAt: timestamp("last_message_at").defaultNow().notNull(),
   },
   (table) => [
     unique("chat_conversation_listing_unique").on(
       table.participant1Id,
       table.participant2Id,
-      table.listingId
+      table.listingId,
     ),
 
     unique("chat_conversation_match_unique").on(
       table.participant1Id,
       table.participant2Id,
-      table.roommateMatchId
+      table.roommateMatchId,
     ),
-  ]
+  ],
 );
 
 export const messages = pgTable("messages", {
@@ -364,75 +320,67 @@ export const messages = pgTable("messages", {
     .notNull()
     .references(() => profiles.id),
 
-  contentType: contentTypeEnum("content_type")
-    .default("TEXT"),
+  contentType: contentTypeEnum("content_type").default("TEXT"),
 
   content: text("content").notNull(),
 
-  isRead: boolean("is_read")
-    .default(false)
-    .notNull(),
+  isRead: boolean("is_read").default(false).notNull(),
 
-  sentAt: timestamp("sent_at")
-    .defaultNow()
-    .notNull(),
+  sentAt: timestamp("sent_at").defaultNow().notNull(),
 });
 
-export const savedListings = pgTable("saved_listings", {
-  id: serial("id").primaryKey(),
+export const savedListings = pgTable(
+  "saved_listings",
+  {
+    id: serial("id").primaryKey(),
 
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => profiles.id),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id),
 
-  listingId: integer("listing_id")
-    .notNull()
-    .references(() => roomListings.id),
+    listingId: integer("listing_id")
+      .notNull()
+      .references(() => roomListings.id),
 
-  savedAt: timestamp("saved_at")
-    .defaultNow()
-    .notNull(),
+    savedAt: timestamp("saved_at").defaultNow().notNull(),
   },
 
-    (table) => ({
+  (table) => ({
     savedListingsUnique: unique("saved_listings_user_listing_unique").on(
       table.userId,
-      table.listingId
+      table.listingId,
     ),
-  }));
+  }),
+);
 
+export const reviews = pgTable(
+  "reviews",
+  {
+    id: serial("id").primaryKey(),
 
+    reviewerId: uuid("reviewer_id")
+      .notNull()
+      .references(() => profiles.id),
 
+    revieweeId: uuid("reviewee_id")
+      .notNull()
+      .references(() => profiles.id),
 
-export const reviews = pgTable("reviews", {
-  id: serial("id").primaryKey(),
+    listingId: integer("listing_id").references(() => roomListings.id),
 
-  reviewerId: uuid("reviewer_id")
-    .notNull()
-    .references(() => profiles.id),
+    rating: integer("rating").notNull(),
 
-  revieweeId: uuid("reviewee_id")
-    .notNull()
-    .references(() => profiles.id),
+    comment: text("comment"),
 
-  listingId: integer("listing_id")
-    .references(() => roomListings.id),
-
-  rating: integer("rating").notNull(),
-
-  comment: text("comment"),
-
-  createdAt: timestamp("created_at")
-    .defaultNow()
-    .notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
     unique("reviews_reviewer_reviewee_listing_unique").on(
       table.reviewerId,
       table.revieweeId,
-      table.listingId
+      table.listingId,
     ),
-  ]
+  ],
 );
 
 export const notifications = pgTable("notifications", {
@@ -450,13 +398,9 @@ export const notifications = pgTable("notifications", {
 
   actionUrl: text("action_url"),
 
-  isRead: boolean("is_read")
-    .default(false)
-    .notNull(),
+  isRead: boolean("is_read").default(false).notNull(),
 
-  createdAt: timestamp("created_at")
-    .defaultNow()
-    .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const watchlists = pgTable(
@@ -470,27 +414,25 @@ export const watchlists = pgTable(
 
     targetType: targetTypeEnum("target_type").notNull(),
 
-    targetListingId: integer("target_listing_id")
-      .references(() => roomListings.id),
+    targetListingId: integer("target_listing_id").references(
+      () => roomListings.id,
+    ),
 
-    targetRoommateId: uuid("target_roommate_id")
-      .references(() => profiles.id),
+    targetRoommateId: uuid("target_roommate_id").references(() => profiles.id),
 
-    createdAt: timestamp("created_at")
-      .defaultNow()
-      .notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
     unique("watchlists_user_listing_unique").on(
       table.userId,
-      table.targetListingId
+      table.targetListingId,
     ),
 
     unique("watchlists_user_roommate_unique").on(
       table.userId,
-      table.targetRoommateId
+      table.targetRoommateId,
     ),
-  ]
+  ],
 );
 
 export type Profile = typeof profiles.$inferSelect;

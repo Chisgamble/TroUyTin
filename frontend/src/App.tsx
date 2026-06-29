@@ -3,6 +3,7 @@ import MainLayout from './components/Layout/MainLayout';
 import HomePage from './pages/HomePage';
 import ListingDetailPage from './pages/ListingDetailPage';
 import SearchResultsPage from './pages/SearchResultsPage';
+import RoomSearchLLM from './pages/RoomSearchLLM';
 
 import Login from './pages/Login';
 import Profile from './pages/Profile';
@@ -27,6 +28,7 @@ function AppRoutes() {
         <Route element={<MainLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/tim-kiem" element={<SearchResultsPage />} />
+          <Route path="/tim-kiem-ai" element={<RoomSearchLLM />} />
           <Route path="/phong/:id" element={<ListingDetailPage />} />
           <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
           <Route path="/chat" element={user ? <Chat /> : <Navigate to="/login" />} />
