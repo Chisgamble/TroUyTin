@@ -192,6 +192,8 @@ export const listingImages = pgTable("listing_images", {
   uploadedAt: timestamp("uploaded_at")
     .defaultNow()
     .notNull(),
+
+  imagePath: text("image_path"),
 });
 
 export const listingAmenities = pgTable(

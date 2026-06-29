@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+﻿import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from './components/Layout/MainLayout';
 import HomePage from './pages/HomePage';
 import ListingDetailPage from './pages/ListingDetailPage';
@@ -9,6 +9,7 @@ import Profile from './pages/Profile';
 import ResetPassword from './pages/ResetPassword';
 import { TestReview } from './pages/TestReview';
 import { Chat } from './pages/Chat';
+import PostListingPage from './pages/PostListingPage'
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 function AppRoutes() {
@@ -31,6 +32,7 @@ function AppRoutes() {
           <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
           <Route path="/chat" element={user ? <Chat /> : <Navigate to="/login" />} />
           <Route path="/test-review" element={<TestReview />} />
+          <Route path="/dang-tin" element={<PostListingPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

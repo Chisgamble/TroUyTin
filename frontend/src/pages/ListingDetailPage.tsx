@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { chatService } from '../services/chatService';
 import StarRating from '../components/StarRating';
 import ReviewCard from '../components/ReviewCard';
 import { formatPriceVND } from '../data/mockData';
@@ -34,8 +36,11 @@ interface RoomListingDetail {
 
 export default function ListingDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [listing, setListing] = useState<RoomListingDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [chatLoading, setChatLoading] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
 
@@ -75,6 +80,38 @@ export default function ListingDetailPage() {
   const landlord = listing.landlord;
 
   const landlordReviews = listing.landlordReviews || [];
+
+  const handleChatClick = async () => {
+    if (!user) {
+      alert('Vui lòng đăng nhập để chat với chủ nhà');
+      navigate('/login');
+      return;
+    }
+
+    if (!landlord) {
+      alert('Không tìm thấy thông tin chủ nhà');
+      return;
+    }
+
+    if (user.id === landlord.id) {
+      alert('Bạn không thể tự chat với chính mình');
+      return;
+    }
+
+    try {
+      setChatLoading(true);
+      const channel = await chatService.createOrGetChannel(user.id, landlord.id);
+      navigate(`/messages/${channel.id}`);
+    } catch (error) {
+      console.error('Lỗi khi mở chat:', error);
+      alert('Không thể bắt đầu cuộc trò chuyện. Vui lòng thử lại sau.');
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  const landlordReviews = REVIEWS.filter((r) => r.reviewee_id === listing.landlord_id);
+>>>>>>> origin/main
   const avgRating = landlordReviews.length
     ? landlordReviews.reduce((s, r) => s + r.rating, 0) / landlordReviews.length
     : 0;
@@ -222,14 +259,15 @@ export default function ListingDetailPage() {
                   className="btn-outline btn-full detail-chat-btn"
                   onClick={(e) => {
                     e.preventDefault();
-                    alert('Tính năng nhắn tin đang được phát triển!');
+                    handleChatClick();
                   }}
+                  disabled={chatLoading}
                   style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--brand-500)', color: 'var(--brand-600)', fontWeight: '600' }}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px' }}>
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                   </svg>
-                  Chat ngay
+                  {chatLoading ? 'Đang mở...' : 'Chat ngay'}
                 </button>
               </div>
             </div>

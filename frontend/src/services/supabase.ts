@@ -30,3 +30,11 @@ export async function updatePassword(password: string) {
   return await supabase.auth.updateUser({ password });
 }
 
+export async function signInWithGoogle() {
+  return await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${window.location.origin}/`,
+    },
+  });
+}
