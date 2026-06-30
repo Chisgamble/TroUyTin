@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
 
 /* ============================================================
    DESIGN TOKENS
@@ -99,63 +100,3 @@ textarea {
   font-size: inherit;
 }
 
-/* ============================================================
-   LAYOUT
-   ============================================================ */
-.app-layout {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-.main-content {
-  flex: 1;
-  padding-top: 64px;
-}
-
-/* ============================================================
-   BUTTONS
-   ============================================================ */
-.btn-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 24px;
-  background: linear-gradient(135deg, var(--brand-600), var(--brand-700));
-  color: white;
-  font-weight: 600;
-  border-radius: var(--radius-sm);
-  transition: all 0.2s;
-  font-size: 15px;
-}
-
-.btn-primary:hover {
-  background: linear-gradient(135deg, var(--brand-700), var(--brand-800));
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-}
-
-.btn-outline {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 24px;
-  background: white;
-  color: var(--brand-700);
-  font-weight: 600;
-  border-radius: var(--radius-sm);
-  border: 2px solid var(--brand-200);
-  transition: all 0.2s;
-  font-size: 15px;
-}
-
-.btn-outline:hover {
-  background: var(--brand-50);
-  border-color: var(--brand-400);
-}
-
-.btn-full {
-  width: 100%;
-}
