@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { chatService } from '../services/chatService';
 import StarRating from '../components/StarRating';
 import ReviewCard from '../components/ReviewCard';
+import { ReviewModal } from '../components/ReviewModal';
 import { formatPriceVND } from '../data/mockData';
 import './ListingDetailPage.css';
 import '../components/ui/Button.css';
@@ -44,6 +45,7 @@ export default function ListingDetailPage() {
   const [chatLoading, setChatLoading] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -102,7 +104,7 @@ export default function ListingDetailPage() {
     try {
       setChatLoading(true);
       const conversationId = await chatService.getOrCreateConversation(String(user.id), String(landlord.id));
-      navigate('/chat', { state: { conversationId, participantId: landlord.id } });
+      navigate('/profile/messages', { state: { conversationId, participantId: landlord.id } });
     } catch (error: any) {
       console.error('Lỗi khi mở chat:', error);
       alert('Không thể bắt đầu cuộc trò chuyện. Lỗi: ' + (error?.message || JSON.stringify(error)));
@@ -186,22 +188,7 @@ export default function ListingDetailPage() {
               <p>{listing.description}</p>
             </div>
 
-            {/* Reviews */}
-            {reviews.length > 0 && (
-              <div className="detail-reviews">
-                <div className="detail-reviews-header">
-                  <h2>Đánh giá từ người thuê trước</h2>
-                  <div className="detail-reviews-summary">
-                    <StarRating rating={listingAvgRating} size="md" showValue count={reviews.length} />
-                  </div>
-                </div>
-                <div className="detail-reviews-grid">
-                  {reviews.slice(0, 3).map((review) => (
-                    <ReviewCard key={review.id} review={review} />
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Reviews section removed to avoid clutter */}
           </div>
 
           {/* Right Column - Sidebar */}
@@ -308,6 +295,65 @@ export default function ListingDetailPage() {
               </div>
             </div>
 
+            {/* Landlord Reviews Card */}
+            <div className="detail-landlord-reviews-card">
+              <h3 className="detail-amenities-title">Đánh giá độ uy tín</h3>
+              <div className="detail-landlord-reviews-content">
+                <div className="detail-landlord-avg-box">
+                  <div className="detail-landlord-avg-score">{avgRating.toFixed(1)}</div>
+                  <StarRating rating={avgRating} size="sm" showValue={false} />
+                  <div className="detail-landlord-avg-count">{landlordReviews.length} đánh giá</div>
+                </div>
+
+                {/* Star breakdown bar chart */}
+                <div className="detail-landlord-star-bars" style={{ marginTop: '8px', width: '100%' }}>
+                  {[5, 4, 3, 2, 1].map(star => {
+                    const count = landlordReviews.filter((r: any) => r.rating === star).length;
+                    const pct = landlordReviews.length ? (count / landlordReviews.length) * 100 : 0;
+                    return (
+                      <div key={star} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--gray-600)', marginBottom: '4px' }}>
+                        <span style={{ width: '36px' }}>{star} sao</span>
+                        <div style={{ flex: 1, height: '8px', borderRadius: '4px', overflow: 'hidden', background: '#e2e8f0' }}>
+                          <div style={{ width: `${pct}%`, height: '100%', background: '#fbbf24', borderRadius: '4px' }} />
+                        </div>
+                        <span style={{ width: '20px', textAlign: 'right' }}>{count}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Featured comments */}
+                {landlordReviews.filter((r: any) => r.rating >= 4 && r.comment).length > 0 && (
+                  <div className="detail-landlord-featured-comments" style={{ marginTop: '12px', borderTop: '1px solid var(--gray-100)', paddingTop: '12px' }}>
+                    <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--gray-800)', marginBottom: '8px' }}>Nhận xét tiêu biểu:</div>
+                    {landlordReviews
+                      .filter((r: any) => r.rating >= 4 && r.comment)
+                      .slice(0, 2)
+                      .map((r: any) => (
+                        <div key={r.id} style={{ fontSize: '12px', color: 'var(--gray-600)', marginBottom: '8px', background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--gray-100)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                            <span style={{ fontWeight: '600', color: 'var(--gray-700)' }}>{r.reviewer_name || 'Người dùng ẩn danh'}</span>
+                            <span style={{ color: '#fbbf24' }}>{'★'.repeat(r.rating)}</span>
+                          </div>
+                          <p style={{ fontStyle: 'italic', margin: 0 }}>"{r.comment}"</p>
+                        </div>
+                      ))}
+                  </div>
+                )}
+
+                <button 
+                  className="btn-outline btn-full detail-review-btn" 
+                  style={{ marginTop: '8px' }}
+                  onClick={() => setShowReviewModal(true)}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px' }}>
+                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                  </svg>
+                  Viết đánh giá
+                </button>
+              </div>
+            </div>
+
             {/* Amenities Card */}
             <div className="detail-amenities-card">
               <h3 className="detail-amenities-title">Tiện ích</h3>
@@ -345,6 +391,16 @@ export default function ListingDetailPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Review Modal */}
+      {landlord && (
+        <ReviewModal
+          isOpen={showReviewModal}
+          onClose={() => setShowReviewModal(false)}
+          revieweeId={landlord.id}
+          listingId={listing.id}
+        />
       )}
     </>
   );
