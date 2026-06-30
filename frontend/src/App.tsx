@@ -1,4 +1,4 @@
-﻿import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from './components/Layout/MainLayout';
 import HomePage from './pages/HomePage';
 import ListingDetailPage from './pages/ListingDetailPage';
@@ -30,7 +30,8 @@ function AppRoutes() {
           <Route path="/tim-kiem" element={<SearchResultsPage />} />
           <Route path="/phong/:id" element={<ListingDetailPage />} />
           <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
-          <Route path="/chat" element={user ? <Chat /> : <Navigate to="/login" />} />
+          <Route path="/profile/messages" element={user ? <Chat /> : <Navigate to="/login" />} />
+          <Route path="/chat" element={<Navigate to="/profile/messages" replace />} />
           <Route path="/test-review" element={<TestReview />} />
           <Route path="/dang-tin" element={<PostListingPage />} />
         </Route>

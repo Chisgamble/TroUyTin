@@ -120,9 +120,12 @@ router.get("/:id", async (req, res) => {
     if (landlord) {
       landlordReviews = await db.select({
         id: reviews.id,
-        rating: reviews.rating
+        rating: reviews.rating,
+        comment: reviews.comment,
+        reviewer_name: profiles.fullName
       })
       .from(reviews)
+      .leftJoin(profiles, eq(reviews.reviewerId, profiles.id))
       .where(eq(reviews.revieweeId, landlord.id));
     }
 
