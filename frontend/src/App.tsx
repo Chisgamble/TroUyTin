@@ -12,21 +12,16 @@ import {
 import { TestReview } from './pages/TestReview'
 import { Chat } from './pages/Chat'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import MainLayout from './components/Layout/MainLayout';
-import HomePage from './pages/HomePage';
-import ListingDetailPage from './pages/ListingDetailPage';
-import SearchResultsPage from './pages/SearchResultsPage';
 
-import Login from './pages/Login';
-import Profile from './pages/Profile';
-import ResetPassword from './pages/ResetPassword';
-import { TestReview } from './pages/TestReview';
-import { Chat } from './pages/Chat';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+// Import các trang mới từ nhánh main của bạn cùng nhóm
+import MainLayout from './components/Layout/MainLayout'
+import HomePage from './pages/HomePage'
+import ListingDetailPage from './pages/ListingDetailPage'
+import SearchResultsPage from './pages/SearchResultsPage'
+import ResetPassword from './pages/ResetPassword'
 
 function AppRoutes() {
-  const { user, loading } = useAuth();
+  const { user, loading } = useAuth()
 
   if (loading) {
     return (
@@ -37,49 +32,53 @@ function AppRoutes() {
         </div>
       </div>
     )
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
   return (
     <BrowserRouter>
       <Routes>
-        {/* Core Routes */}
-        <Route path="/" element={user ? <Home /> : <Navigate to="/login" />} />
+        {/* ==========================================
+            1. AUTHENTICATION ROUTES (KHÔNG BỌC LAYOUT)
+           ========================================== */}
         <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
-        <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
-        <Route path="/chat" element={user ? <Chat /> : <Navigate to="/login" />} />
-        
-        {/* Roommate Matching Routes (Swipe & Discovery) */}
+        <Route path="/reset-password" element={<ResetPassword />} />
+
+        {/* ==========================================
+            2. ROOMMATE MATCHING MODULE (CẦN CHECK AUTH)
+           ========================================== */}
         <Route path="/roommate-onboarding" element={user ? <RoommateOnboarding /> : <Navigate to="/login" />} />
         <Route path="/roommate-matching" element={user ? <RoommateMatching /> : <Navigate to="/login" />} />
         <Route path="/saved-roommates" element={user ? <SavedRoommates /> : <Navigate to="/login" />} />
         
-        {/* Roommate Post Routes (CRUD Phòng ở ghép) */}
+        {/* Roommate Post CRUD */}
         <Route path="/roommate-posts" element={user ? <RoommatePostList /> : <Navigate to="/login" />} />
         <Route path="/roommate-posts/create" element={user ? <RoommatePostCreate /> : <Navigate to="/login" />} />
-        
-        {/*Route chỉnh sửa bài đăng tích hợp tham số động :postId theo nốt họp */}
         <Route path="/roommate-posts/:postId/edit" element={user ? <RoommatePostCreate /> : <Navigate to="/login" />} />
-        
-        {/* Sandbox Test Routes */}
-        <Route path="/test-review" element={<TestReview />} />
 
-        {/* Fallback Route: Tự động đá về trang chủ nếu gõ sai URL vô tội vạ */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-        <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-
+        {/* ==========================================
+            3. CORE DỰ ÁN BỌC TRONG MAIN LAYOUT CHUNG
+           ========================================== */}
         <Route element={<MainLayout />}>
-          <Route path="/" element={<HomePage />} />
+          {/* Trang chủ: Nếu chưa đăng nhập thì xem HomePage công khai, đăng nhập rồi xem bản DashHome */}
+          <Route path="/" element={user ? <Home /> : <HomePage />} />
+          
+          {/* Các trang tìm kiếm phòng trọ của bạn nhóm */}
           <Route path="/tim-kiem" element={<SearchResultsPage />} />
           <Route path="/phong/:id" element={<ListingDetailPage />} />
+          
+          {/* Hồ sơ & Trò chuyện cá nhân */}
           <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
           <Route path="/chat" element={user ? <Chat /> : <Navigate to="/login" />} />
+          
+          {/* Sandbox Test */}
           <Route path="/test-review" element={<TestReview />} />
         </Route>
+
+        {/* Fallback Route: Tự động đá về trang chủ nếu gõ bậy URL */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
-  );
+  )
 }
 
 export default function App() {
@@ -88,6 +87,4 @@ export default function App() {
       <AppRoutes />
     </AuthProvider>
   )
-}
-  );
 }

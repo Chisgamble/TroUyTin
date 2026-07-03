@@ -80,6 +80,7 @@ router.get("/profiles/me", auth, async (req, res) => {
 // 3. GET /api/roommates/profiles/discover - Lấy danh sách ứng viên (Swipe)
 router.get("/profiles/discover", auth, async (req, res) => {
   try {
+    // 1. Lấy hồ sơ roommate của chính người dùng hiện tại
     const userProfile = await db
       .select()
       .from(roommateProfiles)
@@ -90,44 +91,46 @@ router.get("/profiles/discover", auth, async (req, res) => {
       return res.status(400).json({ message: "Bạn chưa thiết lập hồ sơ roommate" });
     }
 
+    // 2. Lấy danh sách ID những người đã quẹt (LIKE/PASS) để loại trừ
     const matchedIds = await db
       .select({ targetId: roommateMatches.targetId })
       .from(roommateMatches)
       .where(eq(roommateMatches.requesterId, req.userId));
 
-    const excludeUserIds = matchedIds.map((m) => m.targetId);
-    excludeUserIds.push(req.userId); 
+    // Đưa tất cả ID cần loại trừ vào một Set để xử lý cho sạch
+    const excludeUserIds = matchedIds.map((m) => m.targetId).filter(Boolean);
+    excludeUserIds.push(req.userId); // Loại trừ chính bản thân mình
 
-    // Chỉ tìm những người dùng đang bật trạng thái "isLookingForRoommate = true"
-    const candidateProfiles = await db
-      .select()
+    // 3. Query thông minh: Join bảng roommate_profiles với profiles để check điều kiện
+    const candidates = await db
+      .select({
+        profile: roommateProfiles,
+        user: profiles,
+      })
       .from(roommateProfiles)
+      .innerJoin(profiles, eq(roommateProfiles.userId, profiles.id)) // Khớp nối 2 bảng qua userId
       .where(
         and(
-          not(inArray(roommateProfiles.userId, excludeUserIds)),
-          eq(roommateProfiles.isLookingForRoommate, true)
+          // Tránh lỗi null/rỗng của inArray bằng cách check độ dài mảng loại trừ
+          excludeUserIds.length > 0 ? not(inArray(roommateProfiles.userId, excludeUserIds)) : undefined,
+          // ĐÚNG THỰC TẾ: Check trạng thái tìm kiếm nằm ở bảng profiles chung
+          eq(profiles.isLookingForRoommate, true) 
         )
       );
 
-    if (candidateProfiles.length === 0) {
+    if (candidates.length === 0) {
       return res.json([]);
     }
 
-    const candidateUserIds = candidateProfiles.map((p) => p.userId);
-    const candidateUsers = await db
-      .select()
-      .from(profiles)
-      .where(inArray(profiles.id, candidateUserIds));
-
-    const candidatesWithScore = candidateProfiles.map((profile) => {
-      const user = candidateUsers.find((u) => u.id === profile.userId);
+    // 4. Tính toán độ tương thích (Compatibility Score) và format dữ liệu trả về Frontend
+    const candidatesWithScore = candidates.map(({ profile, user }) => {
       const compatibilityScore = calculateCompatibility(userProfile[0], profile);
 
       return {
         id: profile.id,
         userId: profile.userId,
-        fullName: user?.fullName,
-        avatarUrl: user?.avatarUrl,
+        fullName: user.fullName,    // Lấy trực tiếp từ dữ liệu đã JOIN cực nhanh
+        avatarUrl: user.avatarUrl,  // Lấy trực tiếp từ dữ liệu đã JOIN cực nhanh
         gender: profile.gender,
         age: profile.age,
         hometown: profile.hometown,
@@ -138,10 +141,12 @@ router.get("/profiles/discover", auth, async (req, res) => {
       };
     });
 
+    // 5. Sắp xếp điểm tương thích từ cao xuống thấp và giới hạn 20 người
     candidatesWithScore.sort((a, b) => b.compatibilityPct - a.compatibilityPct);
     return res.json(candidatesWithScore.slice(0, 20));
+
   } catch (err) {
-    console.error(err);
+    console.error("LỖI TẠI DISCOVER ROUTE:", err);
     return res.status(500).json({ message: "Lỗi server" });
   }
 });
@@ -276,19 +281,34 @@ router.delete("/saved/:roommateId", auth, async (req, res) => {
   try {
     const { roommateId } = req.params;
 
-    await db
+    // 1. Kiểm tra tính hợp lệ của UUID phòng hờ lỗi "invalid input syntax for type uuid"
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(roommateId)) {
+      return res.status(400).json({ message: "Định dạng ID người được lưu không hợp lệ" });
+    }
+
+    // 2. Thực hiện xóa và yêu cầu DB trả về bản ghi vừa xóa (.returning())
+    const deletedRecords = await db
       .delete(savedRoommates)
       .where(
         and(
-          eq(savedRoommates.userId, req.userId),
-          eq(savedRoommates.savedRoommateId, roommateId)
+          eq(savedRoommates.userId, req.userId),         // Đúng chủ sở hữu session
+          eq(savedRoommates.savedRoommateId, roommateId) // Đúng ID người cần gỡ bỏ
         )
-      );
+      )
+      .returning(); // Trả về mảng các hàng đã bị xóa thực tế
 
+    // 3. Nếu mảng trả về rỗng, chứng tỏ bản ghi này không tồn tại
+    if (deletedRecords.length === 0) {
+      return res.status(404).json({ message: "Không tìm thấy bản ghi cần xóa trong danh sách lưu" });
+    }
+
+    // 4. Phản hồi thành công thực sự về cho Frontend
     return res.json({ message: "Đã xóa khỏi danh sách lưu thành công" });
+
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: "Lỗi server" });
+    console.error("LỖI TẠI DELETE /SAVED:", err);
+    return res.status(500).json({ message: "Lỗi server khi hủy lưu ứng viên" });
   }
 });
 
