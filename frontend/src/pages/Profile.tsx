@@ -266,32 +266,6 @@ export default function ProfilePage() {
           {/* 🚀 QUICK NAVIGATION TILES */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div 
-              onClick={() => navigate('/roommate-matching')}
-              className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-col items-start gap-2 hover:border-green-300 hover:shadow-md transition cursor-pointer group"
-            >
-              <div className="w-9 h-9 rounded-full bg-green-50 flex items-center justify-center text-green-600 group-hover:bg-green-100 transition">
-                <Users className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-800">Tìm ở ghép</p>
-                <p className="text-xs text-gray-400 mt-0.5">Khám phá bạn cùng gu</p>
-              </div>
-            </div>
-
-            <div 
-              onClick={() => navigate('/saved-roommates')}
-              className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-col items-start gap-2 hover:border-yellow-300 hover:shadow-md transition cursor-pointer group"
-            >
-              <div className="w-9 h-9 rounded-full bg-yellow-50 flex items-center justify-center text-yellow-600 group-hover:bg-yellow-100 transition">
-                <Bookmark className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-800">Hồ sơ đã lưu</p>
-                <p className="text-xs text-gray-400 mt-0.5">Danh sách đang theo dõi</p>
-              </div>
-            </div>
-
-            <div 
               onClick={() => navigate('/chat')}
               className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-col items-start gap-2 hover:border-blue-300 hover:shadow-md transition cursor-pointer group"
             >
@@ -300,7 +274,7 @@ export default function ProfilePage() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-gray-800">Lịch sử Chat</p>
-                <p className="text-xs text-gray-400 mt-0.5">Tin nhắn hệ thống</p>
+                <p className="text-xs text-gray-400 mt-0.5">Tin nhắn trao đổi</p>
               </div>
             </div>
           </div>

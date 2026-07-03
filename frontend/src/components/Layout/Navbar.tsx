@@ -63,6 +63,7 @@ export default function Navbar() {
           {/* Nav Links */}
           <div className="navbar-links">
             <Link to="/" className="navbar-link active">Tìm phòng</Link>
+            <Link to="/roommate-matching" className="navbar-link">Tìm ở ghép</Link>
             <Link to="#" className="navbar-link">Tin tức</Link>
             <Link to="#" className="navbar-link">Về chúng tôi</Link>
           </div>

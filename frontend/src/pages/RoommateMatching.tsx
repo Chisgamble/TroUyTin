@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { roommateService } from "../services/roommates";
-import { Heart, X, ThumbsUp, Loader, MessageSquare, Sparkles } from "lucide-react";
+import { Heart, X, ThumbsUp, Loader, MessageSquare, Sparkles, Bookmark } from "lucide-react";
 
 interface RoommateCandidate {
   id: number;
@@ -106,19 +106,20 @@ export default function RoommateMatching() {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto">
         
-        {/* Header Section */}
-        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        {/* 🚀 HEADER CỦA TRANG TÌM Ở GHÉP ĐÃ ĐƯỢC CẬP NHẬT */}
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">👥 Tìm Bạn Ở Ghép</h1>
-            <p className="text-gray-600 mt-1">
-              Hệ thống tìm thấy <span className="font-semibold text-emerald-600">{candidates.length}</span> ứng viên tương thích dựa trên lối sống của bạn
-            </p>
+            <h1 className="text-2xl font-bold text-gray-900">Khám phá bạn cùng phòng</h1>
+            <p className="text-sm text-gray-500 mt-1">Hệ thống đã chọn lọc những người có độ tương thích cao nhất với bạn</p>
           </div>
-          <button 
-            onClick={() => navigate("/saved-roommates")}
-            className="self-start sm:self-center text-sm font-medium text-emerald-600 bg-white border border-emerald-200 px-4 py-2 rounded-xl shadow-sm hover:bg-emerald-50 transition"
+          
+          {/* Nút chuyển sang trang Hồ sơ đã lưu */}
+          <button
+            onClick={() => navigate('/saved-roommates')}
+            className="flex items-center gap-2 px-5 py-2.5 bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-xl hover:bg-yellow-100 transition-all font-medium shadow-sm shrink-0"
           >
-            Xem hồ sơ đã lưu
+            <Bookmark className="w-5 h-5 fill-yellow-700" />
+            Hồ sơ đã lưu
           </button>
         </div>
 
@@ -176,7 +177,7 @@ export default function RoommateMatching() {
                         {candidate.fullName || "Sinh viên ẩn danh"}
                       </h3>
                       
-                      {/* 🔥 ĐÃ THÊM: Nút Chat nội bộ nhanh ngay tại góc thẻ hồ sơ theo nốt họp */}
+                      {/* 🔥 Nút Chat nội bộ nhanh ngay tại góc thẻ hồ sơ theo nốt họp */}
                       <button
                         onClick={() => navigate("/chat")}
                         className="text-gray-400 hover:text-blue-600 p-1.5 hover:bg-blue-50 rounded-lg transition-colors"
@@ -276,7 +277,7 @@ export default function RoommateMatching() {
           </div>
         )}
 
-        {/* 🔥 ĐÃ THÊM: Modal Pop-up hiện ra ăn mừng khi 2 bên tương thích và quẹt trúng nhau (Match 2 chiều) */}
+        {/* 🔥 Modal Pop-up hiện ra ăn mừng khi 2 bên tương thích và quẹt trúng nhau (Match 2 chiều) */}
         {matchNotification && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
             <div className="bg-white rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl border border-emerald-100 relative overflow-hidden transform transition-all scale-100">

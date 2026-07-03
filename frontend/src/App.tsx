@@ -16,9 +16,9 @@ import { AuthProvider, useAuth } from './contexts/AuthContext'
 // Import các trang mới từ nhánh main của bạn cùng nhóm
 import MainLayout from './components/Layout/MainLayout'
 import HomePage from './pages/HomePage'
-import ProfileLayout from './components/Layout/ProfileLayout';
-import PostListingPage from './pages/PostListingPage';
-import SavedRoomListings from './pages/SavedRoomListings';
+import ProfileLayout from './components/Layout/ProfileLayout'
+import PostListingPage from './pages/PostListingPage'
+import SavedRoomListings from './pages/SavedRoomListings'
 import ListingDetailPage from './pages/ListingDetailPage'
 import SearchResultsPage from './pages/SearchResultsPage'
 import ResetPassword from './pages/ResetPassword'
@@ -62,17 +62,25 @@ function AppRoutes() {
             3. CORE DỰ ÁN BỌC TRONG MAIN LAYOUT CHUNG
            ========================================== */}
         <Route element={<MainLayout />}>
-          {/* Trang chủ: Nếu chưa đăng nhập thì xem HomePage công khai, đăng nhập rồi xem bản DashHome */}
+          {/* Trang chủ công khai / Dashboard */}
           <Route path="/" element={user ? <Home /> : <HomePage />} />
           
-          {/* Các trang tìm kiếm phòng trọ của bạn nhóm */}
+          {/* Các trang tìm kiếm chung */}
           <Route path="/tim-kiem" element={<SearchResultsPage />} />
           <Route path="/phong/:id" element={<ListingDetailPage />} />
-          <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
           <Route path="/chat" element={user ? <Chat /> : <Navigate to="/login" />} />
           <Route path="/test-review" element={<TestReview />} />
-          <Route path="/dang-tin" element={<PostListingPage />} />
-          <Route path="/profile/saved-rooms" element={<SavedRoomListings />} />
+          <Route path="/dang-tin" element={user ? <PostListingPage /> : <Navigate to="/login" />} />
+
+          {/* 🔥 CỤM TRANG HỒ SƠ (ĐƯỢC BỌC TRONG PROFILE LAYOUT ĐỂ HẾT LỖI) */}
+          <Route path="/profile" element={user ? <ProfileLayout /> : <Navigate to="/login" />}>
+            {/* Trang thông tin cá nhân mặc định (/profile) */}
+            <Route index element={<Profile />} />
+            
+            {/* Các trang con nằm trong Sidebar (/profile/saved-rooms, /profile/listings) */}
+            <Route path="saved-rooms" element={<SavedRoomListings />} />
+            <Route path="listings" element={<PostListingPage />} />
+          </Route>
         </Route>
 
         {/* Fallback Route: Tự động đá về trang chủ nếu gõ bậy URL */}
