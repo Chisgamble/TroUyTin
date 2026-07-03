@@ -83,15 +83,29 @@ export async function updateProfile(
 }
 
 export async function uploadAvatar(userId: string, file: File): Promise<string> {
-  const fileExt = file.name.split('.').pop();
-  const filePath = `avatars/${userId}.${fileExt}`;
+  const filePath = `avatars/${userId}`;
 
-  const { error: uploadError } = await supabase.storage
+  const { error } = await supabase.storage
     .from('avatars')
-    .upload(filePath, file, { upsert: true });
+    .upload(filePath, file, {
+      upsert: true,
+      contentType: file.type,
+    });
 
-  if (uploadError) throw uploadError;
+  if (error) throw error;
 
-  const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
-  return data.publicUrl;
+  const { data } = supabase.storage
+    .from('avatars')
+    .getPublicUrl(filePath);
+
+  const avatarUrl = data.publicUrl;
+
+  const { error: updateError } = await supabase
+    .from('profiles')
+    .update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() })
+    .eq('id', userId);
+
+  if (updateError) throw updateError;
+
+  return avatarUrl;
 }

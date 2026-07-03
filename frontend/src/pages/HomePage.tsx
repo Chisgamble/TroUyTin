@@ -1,15 +1,43 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ListingCard from '../components/ListingCard';
-import type { RoomListing } from '../data/mockData';
-import { SAVED_LISTINGS } from '../data/mockData';
+import { useAuth } from "../contexts/AuthContext";
+import type { RoomListing } from "../services/roomListing";
+import {
+  getSavedListingIds,
+  getListingsByLandlord,
+  saveListing,
+  unsaveListing,
+} from "../services/roomListing";
+import { supabase } from "../services/supabase";
 import './HomePage.css';
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [heroQuery, setHeroQuery] = useState('');
-  const [savedIds, setSavedIds] = useState<number[]>(SAVED_LISTINGS.map((s) => s.listing_id));
+  const [savedIds, setSavedIds] = useState<number[]>([]);
   const [rooms, setRooms] = useState<RoomListing[]>([]);
+
+  useEffect(() => {
+    if (!user) {
+      setSavedIds([]);
+      return;
+    }
+
+    async function fetchSaved() {
+      try {
+        const ids = await getSavedListingIds(user.id);
+        setSavedIds(ids);
+      } catch (err) {
+        console.error(err);
+      }
+
+        setSavedIds(data.map(x => x.listing_id));
+    }
+
+    fetchSaved();
+  }, [user]);
 
   useEffect(() => {
     fetch('http://localhost:3000/api/rooms')
@@ -20,10 +48,24 @@ export default function HomePage() {
 
   const featuredListings = rooms.filter((l) => l.status === 'AVAILABLE' && l.is_verified).slice(0, 4);
 
-  const toggleSave = (id: number) => {
-    setSavedIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
-  };
+  const toggleSave = async (id: number) => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
 
+    try {
+      if (savedIds.includes(id)) {
+        await unsaveListing(user.id, id);
+        setSavedIds(prev => prev.filter(x => x !== id));
+      } else {
+        await saveListing(user.id, id);
+        setSavedIds(prev => [...prev, id]);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     navigate(`/tim-kiem?q=${encodeURIComponent(heroQuery.trim())}`);
