@@ -8,6 +8,9 @@ import {
   CheckCircle2, ChevronRight, Shield, CreditCard,
   Pencil, Loader2, AlertCircle, Check, MessageCircle
 } from 'lucide-react'
+import ProfileLayout from '../components/Layout/ProfileLayout';
+import { useOutletContext } from 'react-router-dom';
+
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -60,53 +63,21 @@ function DefaultAvatar({ name, size = 'lg' }: { name: string; size?: 'sm' | 'lg'
     </div>
   )
 }
-
-// ─── Sidebar ─────────────────────────────────────────────────────────────────
-
-function Sidebar({ profile, activeKey }: { profile: Profile | null; activeKey: string }) {
-  const navigate = useNavigate()
-
-  const visibleItems = SIDEBAR_ITEMS.filter(item =>
-    !item.landlordOnly || profile?.role === 'LANDLORD'
-  )
-
-  return (
-    <aside className="w-56 shrink-0 pt-10">
-      <nav className="space-y-0.5">
-        {visibleItems.map(item => {
-          const Icon = item.icon
-          const active = activeKey === item.key
-          return (
-            <button
-              key={item.key}
-              onClick={() => item.key !== 'profile' && navigate(item.path)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-left ${
-                active
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-              }`}
-            >
-              <Icon className="w-4 h-4 shrink-0" />
-              {item.label}
-            </button>
-          )
-        })}
-      </nav>
-    </aside>
-  )
-}
-
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function ProfilePage() {
   const { user } = useAuth()
-  const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [successMsg, setSuccessMsg] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const { profile, setProfile } = useOutletContext<{
+    profile: Profile;
+    setProfile: React.Dispatch<React.SetStateAction<Profile | null>>;
+  }>();
 
   const {
     register,
@@ -207,177 +178,164 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-20" style={{ fontFamily: "'Inter', sans-serif" }}>
-      {/* ── Layout wrapper ── */}
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex gap-6 items-start">
+    <div className=" space-y-4">
+      {/* Cover + Avatar header card */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        {/* Cover photo */}
+        <div className="h-36 bg-gradient-to-r from-blue-600 via-indigo-500 to-violet-500 relative">
+          {/* <button className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/30 hover:bg-black/50 text-white text-xs font-medium rounded-lg backdrop-blur-sm transition-all">
+            <Camera className="w-3.5 h-3.5" />
+            Chỉnh sửa ảnh bìa
+          </button> */}
+        </div>
 
-          {/* ── Sidebar ── */}
-          <Sidebar profile={profile} activeKey="profile" />
-
-          {/* ── Main content ── */}
-          <div className="flex-1 min-w-0 space-y-5">
-
-            {/* Cover + Avatar header card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-              {/* Cover photo */}
-              <div className="h-36 bg-gradient-to-r from-blue-600 via-indigo-500 to-violet-500 relative">
-                {/* <button className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/30 hover:bg-black/50 text-white text-xs font-medium rounded-lg backdrop-blur-sm transition-all">
-                  <Camera className="w-3.5 h-3.5" />
-                  Chỉnh sửa ảnh bìa
-                </button> */}
+        {/* Avatar row */}
+        <div className="px-6 pb-5">
+          <div className="flex items-end gap-4 -mt-12 mb-4">
+            {/* Avatar */}
+            <div className="relative shrink-0">
+              <div className="w-24 h-24 rounded-full border-4 border-white shadow-md overflow-hidden bg-white">
+                {profile.avatarUrl ? (
+                  <img
+                    src={profile.avatarUrl}
+                    alt={profile.fullName ?? 'Avatar'}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <DefaultAvatar name={profile.fullName ?? profile.email ?? ''} />
+                )}
               </div>
-
-              {/* Avatar row */}
-              <div className="px-6 pb-5">
-                <div className="flex items-end gap-4 -mt-12 mb-4">
-                  {/* Avatar */}
-                  <div className="relative shrink-0">
-                    <div className="w-24 h-24 rounded-full border-4 border-white shadow-md overflow-hidden bg-white">
-                      {profile.avatarUrl ? (
-                        <img
-                          src={profile.avatarUrl}
-                          alt={profile.fullName ?? 'Avatar'}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <DefaultAvatar name={profile.fullName ?? profile.email ?? ''} />
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={uploadingAvatar}
-                      className="absolute bottom-0.5 right-0.5 w-7 h-7 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center shadow transition-colors disabled:opacity-60"
-                    >
-                      {uploadingAvatar
-                        ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        : <Pencil className="w-3.5 h-3.5" />
-                      }
-                    </button>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      className="hidden"
-                      onChange={handleAvatarChange}
-                    />
-                  </div>
-
-                  {/* Name + meta */}
-                  <div className="pb-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h1 className="text-lg font-bold text-slate-900">
-                        {profile.fullName || profile.username || 'Chưa cập nhật tên'}
-                      </h1>
-                      {profile.isVerified && (
-                        <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-xs font-semibold px-2 py-0.5 rounded-full border border-emerald-200">
-                          <CheckCircle2 className="w-3 h-3" />
-                          Đã xác minh
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Gia nhập từ {formatJoinDate(profile.createdAt)}
-                      {' · '}
-                      {ROLE_LABELS[profile.role] ?? profile.role}
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingAvatar}
+                className="absolute bottom-0.5 right-0.5 w-7 h-7 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center shadow transition-colors disabled:opacity-60"
+              >
+                {uploadingAvatar
+                  ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  : <Pencil className="w-3.5 h-3.5" />
+                }
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={handleAvatarChange}
+              />
             </div>
 
-            {/* Alerts */}
-            {successMsg && (
-              <div className="flex items-center gap-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm rounded-xl px-4 py-3">
-                <Check className="w-4 h-4 shrink-0" />
-                {successMsg}
+            {/* Name + meta */}
+            <div className="pb-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-lg font-bold text-slate-900">
+                  {profile.fullName || profile.username || 'Chưa cập nhật tên'}
+                </h1>
+                {profile.isVerified && (
+                  <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-xs font-semibold px-2 py-0.5 rounded-full border border-emerald-200">
+                    <CheckCircle2 className="w-3 h-3" />
+                    Đã xác minh
+                  </span>
+                )}
               </div>
-            )}
-            {errorMsg && (
-              <div className="flex items-center gap-2.5 bg-rose-50 border border-rose-200 text-rose-700 text-sm rounded-xl px-4 py-3">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                {errorMsg}
-              </div>
-            )}
-
-            {/* Form card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="text-base font-semibold text-slate-800">Thông tin cá nhân</h2>
-              </div>
-
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                {/* Row 1: Full name + Phone */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField label="Họ và tên" error={errors.fullName?.message}>
-                    <input
-                      type="text"
-                      {...register('fullName', { required: 'Vui lòng nhập họ và tên' })}
-                      placeholder="Nguyễn Văn A"
-                      className={inputCls}
-                    />
-                  </FormField>
-                  <FormField label="Số điện thoại" error={errors.phone?.message}>
-                    <input
-                      type="tel"
-                      {...register('phone', {
-                        pattern: { value: /^[0-9]{9,11}$/, message: 'Số điện thoại không hợp lệ' },
-                      })}
-                      placeholder="090 123 4567"
-                      className={inputCls}
-                    />
-                  </FormField>
-                </div>
-
-                {/* Row 2: Email (read-only) + Role */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField label="Email" hint="Không thể thay đổi">
-                    <input
-                      type="email"
-                      value={profile.email ?? ''}
-                      disabled
-                      className={inputCls + ' opacity-60 cursor-not-allowed'}
-                    />
-                  </FormField>
-                  <FormField label="Vai trò">
-                    <div className="relative">
-                      <select
-                        {...register('role')}
-                        className={inputCls + ' appearance-none pr-8'}
-                      >
-                        <option value="TENANT">Người đi thuê</option>
-                        <option value="LANDLORD">Chủ cho thuê</option>
-                      </select>
-                      <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 rotate-90 w-4 h-4 text-slate-400 pointer-events-none" />
-                    </div>
-                  </FormField>
-                </div>
-
-                {/* Bio */}
-                <FormField label="Giới thiệu bản thân" error={errors.bio?.message}>
-                  <textarea
-                    {...register('bio', { maxLength: { value: 300, message: 'Tối đa 300 ký tự' } })}
-                    rows={3}
-                    placeholder="Mô tả ngắn về bản thân, thói quen sinh hoạt, yêu cầu khi ở ghép..."
-                    className={inputCls + ' resize-none'}
-                  />
-                </FormField>
-
-                <div className="flex justify-end pt-1">
-                  <button
-                    type="submit"
-                    disabled={saving || !isDirty}
-                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-                    {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
-                  </button>
-                </div>
-              </form>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Gia nhập từ {formatJoinDate(profile.createdAt)}
+                {' · '}
+                {ROLE_LABELS[profile.role] ?? profile.role}
+              </p>
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Alerts */}
+      {successMsg && (
+        <div className="flex items-center gap-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm rounded-xl px-4 py-3">
+          <Check className="w-4 h-4 shrink-0" />
+          {successMsg}
+        </div>
+      )}
+      {errorMsg && (
+        <div className="flex items-center gap-2.5 bg-rose-50 border border-rose-200 text-rose-700 text-sm rounded-xl px-4 py-3">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          {errorMsg}
+        </div>
+      )}
+
+      {/* Form card */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-base font-semibold text-slate-800">Thông tin cá nhân</h2>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* Row 1: Full name + Phone */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FormField label="Họ và tên" error={errors.fullName?.message}>
+              <input
+                type="text"
+                {...register('fullName', { required: 'Vui lòng nhập họ và tên' })}
+                placeholder="Nguyễn Văn A"
+                className={inputCls}
+              />
+            </FormField>
+            <FormField label="Số điện thoại" error={errors.phone?.message}>
+              <input
+                type="tel"
+                {...register('phone', {
+                  pattern: { value: /^[0-9]{9,11}$/, message: 'Số điện thoại không hợp lệ' },
+                })}
+                placeholder="090 123 4567"
+                className={inputCls}
+              />
+            </FormField>
+          </div>
+
+          {/* Row 2: Email (read-only) + Role */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FormField label="Email" hint="Không thể thay đổi">
+              <input
+                type="email"
+                value={profile.email ?? ''}
+                disabled
+                className={inputCls + ' opacity-60 cursor-not-allowed'}
+              />
+            </FormField>
+            <FormField label="Vai trò">
+              <div className="relative">
+                <select
+                  {...register('role')}
+                  className={inputCls + ' appearance-none pr-8'}
+                >
+                  <option value="TENANT">Người đi thuê</option>
+                  <option value="LANDLORD">Chủ cho thuê</option>
+                </select>
+                <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 rotate-90 w-4 h-4 text-slate-400 pointer-events-none" />
+              </div>
+            </FormField>
+          </div>
+
+          {/* Bio */}
+          <FormField label="Giới thiệu bản thân" error={errors.bio?.message}>
+            <textarea
+              {...register('bio', { maxLength: { value: 300, message: 'Tối đa 300 ký tự' } })}
+              rows={3}
+              placeholder="Mô tả ngắn về bản thân, thói quen sinh hoạt, yêu cầu khi ở ghép..."
+              className={inputCls + ' resize-none'}
+            />
+          </FormField>
+
+          <div className="flex justify-end pt-1">
+            <button
+              type="submit"
+              disabled={saving || !isDirty}
+              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+              {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   )

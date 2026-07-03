@@ -53,6 +53,9 @@ export type RoomListing = {
   createdAt: string;
   updatedAt: string;
   // Joined fields
+  wardName?: string;
+  districtId?: number;
+  districtName?: string;
   amenities?: Amenity[];
   imageUrls?: string[];
   imagePath?: string[];
@@ -73,8 +76,17 @@ export type CreateListingPayload = {
   imagePaths?: string[];
 };
 
-// ─── Amenities ────────────────────────────────────────────────────────────────
+export type ListingSearchParams = {
+  query?: string;
+  districtId?: number;
+  roomType?: RoomType;
+  minPrice?: number;
+  maxPrice?: number;
+  minArea?: number;
+  maxArea?: number;
+};
 
+// ─── Amenities ────────────────────────────────────────────────────────────────
 export async function getAmenities(): Promise<Amenity[]> {
   const { data, error } = await supabase
     .from('amenities')
@@ -139,6 +151,74 @@ export async function getWards(districtId: number): Promise<Ward[]> {
 }
 
 // ─── Listings ─────────────────────────────────────────────────────────────────
+
+export async function searchListings(
+  params: ListingSearchParams
+): Promise<RoomListing[]> {
+
+  let query = supabase
+    .from("room_listings")
+    .select(`
+      *,
+      wards (
+        id,
+        name,
+        district_id,
+        districts (
+          id,
+          name
+        )
+      ),
+      listing_amenities (
+        amenities (
+          id,
+          name,
+          icon
+        )
+      ),
+      listing_images (
+        image_url,
+        display_order
+      )
+    `)
+    .eq("status", "AVAILABLE");
+
+  if (params.roomType) {
+    query = query.eq("room_type", params.roomType);
+  }
+
+  if (params.districtId) {
+    query = query.eq("wards.district_id", params.districtId);
+  }
+
+  if (params.minPrice != null)
+    query = query.gte("price", params.minPrice);
+
+  if (params.maxPrice != null && params.maxPrice !== Infinity)
+    query = query.lt("price", params.maxPrice);
+
+  if (params.minArea != null)
+    query = query.gte("area", params.minArea);
+
+  if (params.maxArea != null && params.maxArea !== Infinity)
+    query = query.lt("area", params.maxArea);
+
+  if (params.query?.trim()) {
+    query = query.or(
+      `title.ilike.%${params.query}%,
+       description.ilike.%${params.query}%,
+       address_detail.ilike.%${params.query}%`
+    );
+  }
+
+  const { data, error } = await query.order("created_at", {
+    ascending: false,
+  });
+
+  if (error) throw error;
+
+  return (data ?? []).map(mapListingWithRelations);
+}
 
 export async function createListing(payload: CreateListingPayload): Promise<RoomListing> {
   // 1. Insert the listing row
@@ -289,6 +369,9 @@ function mapListingWithRelations(row: Record<string, unknown>): RoomListing {
 
   return {
     ...base,
+    wardName: row.wards?.name,
+    districtId: row.wards?.district_id,
+    districtName: row.wards?.districts?.name,
     amenities: amenityRows
       .filter(r => r.amenities)
       .map(r => ({

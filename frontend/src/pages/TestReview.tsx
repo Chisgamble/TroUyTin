@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ReviewModal } from '../components/ReviewModal';
+import '../components/ui/Button.css';
 
 export const TestReview: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
