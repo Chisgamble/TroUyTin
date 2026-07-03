@@ -2,8 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import ListingCard from "../components/ListingCard";
 import OpenMapView from "../components/OpenMapView";
-import type { RoomListing } from "../data/mockData";
-import { SAVED_LISTINGS } from "../data/mockData";
+import type { RoomListing } from "../types";
 import {
   parseSearchQueryWithLLM,
   searchRoomsWithFilter,
@@ -23,9 +22,7 @@ export default function RoomSearchLLM() {
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<number | string | null>(null);
   const [isFallback, setIsFallback] = useState(false); // test all room.
-  const [savedIds, setSavedIds] = useState<number[]>(
-    SAVED_LISTINGS.map((s) => s.listing_id),
-  );
+  const [savedIds, setSavedIds] = useState<number[]>([]);
 
   const runSearch = useCallback(async (searchText: string) => {
     if (!searchText.trim()) {

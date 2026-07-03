@@ -1,65 +1,211 @@
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import StarRating from '../components/StarRating';
-import ReviewCard from '../components/ReviewCard';
-import type { RoomListing } from '../data/mockData';
-import {
-  getReviewsByListingId,
-  getAmenitiesByIds,
-  formatPriceVND,
-  USERS,
-  REVIEWS,
-} from '../data/mockData';
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import StarRating from "../components/StarRating";
+import ReviewCard from "../components/ReviewCard";
+import { supabase } from "../services/supabase";
+import type { Amenity, Profile, RoomListing } from "../types";
+import { formatPriceVND } from "../utils/formatters";
+
+interface ListingDetailDbRow {
+  id: number;
+  landlord_id: string;
+  title: string;
+  description: string | null;
+  price: number | string;
+  deposit: number | string | null;
+  area: number;
+  room_type: string;
+  ward_id: number | null;
+  address_detail: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  status: string;
+  is_verified: boolean;
+  view_count: number;
+  created_at: string;
+  updated_at: string;
+  listing_images: { image_url: string; display_order: number }[] | null;
+  landlord_info: Profile | null;
+  listing_amenities: { amenities: Amenity }[] | null;
+}
+
+function mapListingRow(row: ListingDetailDbRow): RoomListing {
+  const images =
+    row.listing_images
+      ?.slice()
+      .sort((a, b) => a.display_order - b.display_order)
+      .map((image) => image.image_url) ?? [];
+
+  return {
+    id: row.id,
+    landlord_id: row.landlord_id,
+    title: row.title,
+    description: row.description ?? "",
+    price: typeof row.price === "string" ? Number(row.price) : row.price,
+    deposit:
+      row.deposit == null
+        ? 0
+        : typeof row.deposit === "string"
+          ? Number(row.deposit)
+          : row.deposit,
+    area: row.area,
+    room_type: row.room_type as RoomListing["room_type"],
+    ward_id: row.ward_id ?? 0,
+    address_detail: row.address_detail ?? "",
+    latitude: row.latitude ?? 0,
+    longitude: row.longitude ?? 0,
+    status:
+      row.status === "AVAILABLE"
+        ? "AVAILABLE"
+        : (row.status as RoomListing["status"]),
+    is_verified: row.is_verified,
+    view_count: row.view_count,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    images:
+      images.length > 0
+        ? images
+        : ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267"],
+    amenity_ids: row.listing_amenities?.map((item) => item.amenities.id) ?? [],
+    district_name: row.wards?.districts?.name ?? "",
+    ward_name: row.wards?.name ?? "",
+    landlord: row.landlord_info ?? undefined,
+    amenities: row.listing_amenities?.map((item) => item.amenities) ?? [],
+  };
+}
 
 export default function ListingDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [listing, setListing] = useState<RoomListing | null>(null);
+  const [reviews, setReviews] = useState<
+    Array<{
+      id: number;
+      rating: number;
+      comment: string;
+      reviewer?: Profile;
+      created_at: string;
+    }>
+  >([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState(0);
 
   useEffect(() => {
-    if (id) {
+    async function loadListing() {
+      if (!id) {
+        setError("ID phòng không hợp lệ");
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
-      fetch(`http://localhost:3000/api/rooms/${id}`)
-        .then(res => {
-          if (!res.ok) throw new Error('Room not found');
-          return res.json();
-        })
-        .then(data => setListing(data))
-        .catch(err => console.error(err))
-        .finally(() => setLoading(false));
+      setError(null);
+
+      const { data, error: fetchError } = await supabase
+        .from<ListingDetailDbRow>("room_listings")
+        .select(
+          `*, listing_images(image_url, display_order), landlord_info:profiles(*), listing_amenities(amenities(id, name, icon))`,
+        )
+        .eq("id", Number(id))
+        .single();
+
+      if (fetchError) {
+        setError(fetchError.message);
+        setLoading(false);
+        return;
+      }
+
+      if (!data) {
+        setError("Không tìm thấy phòng");
+        setLoading(false);
+        return;
+      }
+
+      setListing(mapListingRow(data));
+      setLoading(false);
     }
+
+    loadListing();
   }, [id]);
 
+  useEffect(() => {
+    if (!listing) return;
+
+    async function loadReviews() {
+      const { data, error: reviewError } = await supabase
+        .from("reviews")
+        .select("*, reviewer:profiles(id, full_name, avatar_url)")
+        .eq("listing_id", listing.id)
+        .order("created_at", { ascending: false });
+
+      if (reviewError) {
+        console.error(reviewError);
+        return;
+      }
+
+      setReviews(
+        (data ?? []).map((item: any) => ({
+          id: item.id,
+          rating: item.rating,
+          comment: item.comment,
+          created_at: item.created_at,
+          reviewer: item.reviewer ?? undefined,
+        })),
+      );
+    }
+
+    loadReviews();
+  }, [listing]);
+
   if (loading) {
-    return <div className="detail-page"><div className="detail-layout"><h2>Đang tải thông tin phòng...</h2></div></div>;
+    return (
+      <div className="detail-page">
+        <div className="detail-layout">
+          <h2>Đang tải thông tin phòng...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="not-found-page">
+        <h2>{error}</h2>
+        <a href="/" className="btn-primary">
+          Về trang chủ
+        </a>
+      </div>
+    );
   }
 
   if (!listing) {
     return (
       <div className="not-found-page">
         <h2>Không tìm thấy phòng</h2>
-        <a href="/" className="btn-primary">Về trang chủ</a>
+        <a href="/" className="btn-primary">
+          Về trang chủ
+        </a>
       </div>
     );
   }
 
-  const reviews = getReviewsByListingId(listing.id);
-  const amenities = getAmenitiesByIds(listing.amenity_ids);
-  const landlord = listing.landlord || USERS.find((u) => u.id === listing.landlord_id);
-
-  const landlordReviews = REVIEWS.filter((r) => r.reviewee_id === listing.landlord_id);
-  const avgRating = landlordReviews.length
-    ? landlordReviews.reduce((s, r) => s + r.rating, 0) / landlordReviews.length
+  const amenities = listing.amenities ?? [];
+  const landlord = listing.landlord;
+  const avgRating = reviews.length
+    ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
     : 0;
   const responseRate = 98;
   const yearsActive = landlord
-    ? Math.max(1, Math.floor((Date.now() - new Date(landlord.created_at).getTime()) / (365.25 * 24 * 60 * 60 * 1000)))
+    ? Math.max(
+        1,
+        Math.floor(
+          (Date.now() -
+            new Date(landlord.created_at ?? Date.now().toString()).getTime()) /
+            (365.25 * 24 * 60 * 60 * 1000),
+        ),
+      )
     : 1;
-
   const depositMonths = listing.deposit / listing.price;
-
-  // Only show first 4 thumbnails, last one gets "+N" overlay
   const thumbsToShow = listing.images.slice(0, 4);
   const remainingCount = listing.images.length - 4;
 
@@ -67,9 +213,7 @@ export default function ListingDetailPage() {
     <div className="legacy-page-wrapper">
       <div className="detail-page">
         <div className="detail-layout">
-          {/* Left Column */}
           <div className="detail-main">
-            {/* Image Gallery */}
             <div className="detail-gallery">
               <div className="detail-gallery-main">
                 <img
@@ -79,7 +223,12 @@ export default function ListingDetailPage() {
                 />
                 {listing.is_verified && (
                   <span className="detail-verified-badge">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
                       <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                     </svg>
                     Đã xác minh
@@ -87,64 +236,77 @@ export default function ListingDetailPage() {
                 )}
               </div>
 
-              {/* Thumbnails + Title overlay area */}
               <div className="detail-thumbs-overlay">
                 <div className="detail-gallery-thumbs">
                   {thumbsToShow.map((img, i) => (
                     <button
                       key={i}
-                      className={`detail-thumb ${activeImage === i ? 'active' : ''}`}
+                      className={`detail-thumb ${activeImage === i ? "active" : ""}`}
                       onClick={() => setActiveImage(i)}
                     >
                       <img src={img} alt={`Ảnh ${i + 1}`} />
                       {i === 3 && remainingCount > 0 && (
-                        <span className="detail-thumb-more">+{remainingCount}</span>
+                        <span className="detail-thumb-more">
+                          +{remainingCount}
+                        </span>
                       )}
                     </button>
                   ))}
                 </div>
 
-                {/* Title & Address overlay */}
                 <div className="detail-title-overlay">
                   <h1 className="detail-title">{listing.title}</h1>
                   <div className="detail-address">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
                       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                       <circle cx="12" cy="10" r="3" />
                     </svg>
-                    <span>{listing.address_detail}, {listing.ward_name}, {listing.district_name}, TP.HCM</span>
-                    <a href="#" className="detail-map-link">Xem bản đồ</a>
+                    <span>
+                      {listing.address_detail}, {listing.ward_name},{" "}
+                      {listing.district_name}, TP.HCM
+                    </span>
+                    <a href="#" className="detail-map-link">
+                      Xem bản đồ
+                    </a>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Description */}
             <div className="detail-description">
               <p>{listing.description}</p>
             </div>
 
-            {/* Reviews */}
             {reviews.length > 0 && (
               <div className="detail-reviews">
                 <div className="detail-reviews-header">
                   <h2>Đánh giá từ người thuê trước</h2>
                   <div className="detail-reviews-summary">
-                    <StarRating rating={avgRating} size="md" showValue count={reviews.length} />
+                    <StarRating
+                      rating={avgRating}
+                      size="md"
+                      showValue
+                      count={reviews.length}
+                    />
                   </div>
                 </div>
                 <div className="detail-reviews-grid">
                   {reviews.slice(0, 3).map((review) => (
-                    <ReviewCard key={review.id} review={review} />
+                    <ReviewCard key={review.id} review={review as any} />
                   ))}
                 </div>
               </div>
             )}
           </div>
 
-          {/* Right Column - Sidebar */}
           <div className="detail-sidebar">
-            {/* Price Card */}
             <div className="detail-price-card">
               <div className="detail-price">
                 {formatPriceVND(listing.price)}
@@ -153,7 +315,14 @@ export default function ListingDetailPage() {
 
               <div className="detail-specs">
                 <div className="detail-spec">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <rect x="3" y="3" width="18" height="18" rx="2" />
                     <path d="M3 9h18M9 3v18" />
                   </svg>
@@ -163,17 +332,36 @@ export default function ListingDetailPage() {
                   </div>
                 </div>
                 <div className="detail-spec">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <rect x="2" y="7" width="20" height="14" rx="2" />
                     <path d="M16 7V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v3" />
                   </svg>
                   <div>
                     <span className="detail-spec-label">Đặt cọc</span>
-                    <span className="detail-spec-value">{depositMonths % 1 === 0 ? depositMonths : depositMonths.toFixed(1)} tháng</span>
+                    <span className="detail-spec-value">
+                      {depositMonths % 1 === 0
+                        ? depositMonths
+                        : depositMonths.toFixed(1)}{" "}
+                      tháng
+                    </span>
                   </div>
                 </div>
                 <div className="detail-spec">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
                   </svg>
                   <div>
@@ -182,7 +370,14 @@ export default function ListingDetailPage() {
                   </div>
                 </div>
                 <div className="detail-spec">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
                   </svg>
                   <div>
@@ -193,20 +388,33 @@ export default function ListingDetailPage() {
               </div>
 
               <button className="btn-primary btn-full detail-call-btn">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                 </svg>
                 Gọi điện
               </button>
               <button className="btn-outline btn-full detail-chat-btn">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                 </svg>
                 Chat ngay
               </button>
             </div>
 
-            {/* Landlord Card */}
             <div className="detail-landlord-card">
               <h3 className="detail-landlord-title">THÔNG TIN CHỦ NHÀ</h3>
               <div className="detail-landlord-info">
@@ -219,7 +427,13 @@ export default function ListingDetailPage() {
                   <div className="detail-landlord-name">
                     {landlord?.full_name}
                     {landlord?.is_verified && (
-                      <svg className="detail-landlord-verified" width="18" height="18" viewBox="0 0 24 24" fill="#1d4ed8">
+                      <svg
+                        className="detail-landlord-verified"
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="#1d4ed8"
+                      >
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
                       </svg>
                     )}
@@ -229,21 +443,26 @@ export default function ListingDetailPage() {
               </div>
               <div className="detail-landlord-stats">
                 <div className="detail-landlord-stat">
-                  <span className="detail-landlord-stat-value">{responseRate}%</span>
+                  <span className="detail-landlord-stat-value">
+                    {responseRate}%
+                  </span>
                   <span className="detail-landlord-stat-label">Phản hồi</span>
                 </div>
                 <div className="detail-landlord-stat">
-                  <span className="detail-landlord-stat-value">{avgRating.toFixed(1)}</span>
+                  <span className="detail-landlord-stat-value">
+                    {avgRating.toFixed(1)}
+                  </span>
                   <span className="detail-landlord-stat-label">Đánh giá</span>
                 </div>
                 <div className="detail-landlord-stat">
-                  <span className="detail-landlord-stat-value">{yearsActive} năm</span>
+                  <span className="detail-landlord-stat-value">
+                    {yearsActive} năm
+                  </span>
                   <span className="detail-landlord-stat-label">Hoạt động</span>
                 </div>
               </div>
             </div>
 
-            {/* Amenities Card */}
             <div className="detail-amenities-card">
               <h3 className="detail-amenities-title">Tiện ích</h3>
               <div className="detail-amenities-grid">

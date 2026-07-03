@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react';
-import maplibregl from '@openmapvn/openmapvn-gl';
-import '@openmapvn/openmapvn-gl/dist/maplibre-gl.css';
-import type { RoomListing } from '../data/mockData';
+import { useEffect, useRef } from "react";
+import maplibregl from "@openmapvn/openmapvn-gl";
+import "@openmapvn/openmapvn-gl/dist/maplibre-gl.css";
+import type { RoomListing } from "../types";
 
 type MapMarker = {
   id: number | string;
@@ -29,7 +29,11 @@ function toMarkers(rooms: RoomListing[]): MapMarker[] {
     }));
 }
 
-export default function OpenMapView({ rooms, selectedId, onSelectRoom }: OpenMapViewProps) {
+export default function OpenMapView({
+  rooms,
+  selectedId,
+  onSelectRoom,
+}: OpenMapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
@@ -39,12 +43,12 @@ export default function OpenMapView({ rooms, selectedId, onSelectRoom }: OpenMap
 
     mapRef.current = new maplibregl.Map({
       container: containerRef.current,
-      style: 'https://tiles.openmap.vn/styles/day-v1/style.json',
+      style: "https://tiles.openmap.vn/styles/day-v1/style.json",
       center: HCMC_CENTER,
       zoom: 12,
     });
 
-    mapRef.current.addControl(new maplibregl.NavigationControl(), 'top-right');
+    mapRef.current.addControl(new maplibregl.NavigationControl(), "top-right");
 
     return () => {
       markersRef.current.forEach((m) => m.remove());
@@ -64,13 +68,13 @@ export default function OpenMapView({ rooms, selectedId, onSelectRoom }: OpenMap
     const markers = toMarkers(rooms);
 
     markers.forEach((room) => {
-      const el = document.createElement('button');
-      el.type = 'button';
-      el.className = `openmap-marker${selectedId === room.id ? ' openmap-marker--active' : ''}`;
+      const el = document.createElement("button");
+      el.type = "button";
+      el.className = `openmap-marker${selectedId === room.id ? " openmap-marker--active" : ""}`;
       el.title = room.title;
-      el.setAttribute('aria-label', room.title);
+      el.setAttribute("aria-label", room.title);
 
-      el.addEventListener('click', (e) => {
+      el.addEventListener("click", (e) => {
         e.stopPropagation();
         onSelectRoom?.(room.id);
       });
@@ -83,7 +87,10 @@ export default function OpenMapView({ rooms, selectedId, onSelectRoom }: OpenMap
     });
 
     if (markers.length === 1) {
-      map.flyTo({ center: [markers[0].longitude, markers[0].latitude], zoom: 14 });
+      map.flyTo({
+        center: [markers[0].longitude, markers[0].latitude],
+        zoom: 14,
+      });
     } else if (markers.length > 1) {
       const bounds = new maplibregl.LngLatBounds();
       markers.forEach((m) => bounds.extend([m.longitude, m.latitude]));
@@ -95,7 +102,10 @@ export default function OpenMapView({ rooms, selectedId, onSelectRoom }: OpenMap
     if (selectedId == null || !mapRef.current) return;
     const room = rooms.find((r) => r.id === selectedId);
     if (room?.latitude && room?.longitude) {
-      mapRef.current.flyTo({ center: [room.longitude, room.latitude], zoom: 15 });
+      mapRef.current.flyTo({
+        center: [room.longitude, room.latitude],
+        zoom: 15,
+      });
     }
   }, [selectedId, rooms]);
 

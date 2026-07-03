@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import type { RoomListing } from "../data/mockData";
+import type { RoomListing } from "../types";
 
 export type RoomSearchFilter = {
   district_name: string | null;

@@ -1,24 +1,86 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import ListingCard from "../components/ListingCard";
-import type { RoomListing } from "../data/mockData";
-import { SAVED_LISTINGS } from "../data/mockData";
 import { Sparkles } from "lucide-react";
+import { supabase } from "../services/supabase";
+import type { RoomListing, RoomListingDbRow } from "../types";
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const [heroQuery, setHeroQuery] = useState("");
-  const [savedIds, setSavedIds] = useState<number[]>(
-    SAVED_LISTINGS.map((s) => s.listing_id),
-  );
+  const [savedIds, setSavedIds] = useState<number[]>([]);
   const [rooms, setRooms] = useState<RoomListing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  function mapRowToListing(row: RoomListingDbRow): RoomListing {
+    const images =
+      row.listing_images
+        ?.slice()
+        .sort((a, b) => a.display_order - b.display_order)
+        .map((image) => image.image_url) ?? [];
+
+    return {
+      id: row.id,
+      landlord_id: row.landlord_id,
+      title: row.title,
+      description: row.description ?? "",
+      price: typeof row.price === "string" ? Number(row.price) : row.price,
+      deposit:
+        row.deposit == null
+          ? 0
+          : typeof row.deposit === "string"
+            ? Number(row.deposit)
+            : row.deposit,
+      area: row.area,
+      room_type: row.room_type as RoomListing["room_type"],
+      ward_id: row.ward_id ?? 0,
+      address_detail: row.address_detail ?? "",
+      latitude: row.latitude ?? 0,
+      longitude: row.longitude ?? 0,
+      status:
+        row.status === "AVAILABLE"
+          ? "AVAILABLE"
+          : (row.status as RoomListing["status"]),
+      is_verified: row.is_verified,
+      view_count: row.view_count,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      images:
+        images.length > 0
+          ? images
+          : ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267"],
+      amenity_ids: [],
+      district_name: row.wards?.districts?.name ?? "",
+      ward_name: row.wards?.name ?? "",
+    };
+  }
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/rooms")
-      .then((res) => res.json())
-      .then((data) => setRooms(data))
-      .catch((err) => console.error("Failed to fetch rooms:", err));
+    async function loadRooms() {
+      setLoading(true);
+      setError(null);
+
+      const { data, error: fetchError } = await supabase
+        .from<RoomListingDbRow>("room_listings")
+        .select(
+          "*, listing_images(image_url, display_order), wards(name, districts(name))",
+        )
+        .eq("status", "AVAILABLE")
+        .order("created_at", { ascending: false });
+
+      if (fetchError) {
+        setError(fetchError.message);
+        setLoading(false);
+        return;
+      }
+
+      setRooms((data ?? []).map(mapRowToListing));
+      setLoading(false);
+    }
+
+    loadRooms();
   }, []);
 
   const featuredListings = rooms

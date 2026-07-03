@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { NOTIFICATIONS } from "../../data/mockData";
+import { supabase } from "../../services/supabase";
+import type { Notification } from "../../types";
 import { useAuth } from "../../contexts/AuthContext";
 import { getProfile, type Profile } from "../../services/profiles";
 
@@ -9,6 +10,7 @@ export default function Navbar() {
   const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -22,7 +24,31 @@ export default function Navbar() {
     }
   }, [user]);
 
-  const unreadCount = NOTIFICATIONS.filter((n) => !n.is_read).length;
+  useEffect(() => {
+    async function loadNotifications() {
+      if (!user?.id) {
+        setNotifications([]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from<Notification>("notifications")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      setNotifications(data ?? []);
+    }
+
+    loadNotifications();
+  }, [user?.id]);
+
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -141,7 +167,7 @@ export default function Navbar() {
                     <h3>Thông báo</h3>
                   </div>
                   <div className="dropdown-list">
-                    {NOTIFICATIONS.map((notif) => (
+                    {notifications.map((notif) => (
                       <div
                         key={notif.id}
                         className={`dropdown-item ${!notif.is_read ? "unread" : ""}`}

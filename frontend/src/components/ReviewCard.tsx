@@ -1,5 +1,5 @@
-import type { Review } from '../data/mockData';
-import StarRating from './StarRating';
+import type { Review } from "../types";
+import StarRating from "./StarRating";
 
 type ReviewCardProps = {
   review: Review;
@@ -13,7 +13,7 @@ export default function ReviewCard({ review }: ReviewCardProps) {
     <div className="review-card">
       <div className="review-card-header">
         <img
-          src={review.reviewer?.avatar_url || 'https://i.pravatar.cc/150?img=0'}
+          src={review.reviewer?.avatar_url || "https://i.pravatar.cc/150?img=0"}
           alt={review.reviewer?.full_name}
           className="review-card-avatar"
         />
