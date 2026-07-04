@@ -37,9 +37,16 @@ export default function RoommateMatching() {
       setLoading(true);
       const res = await roommateService.getDiscover();
       setCandidates(res.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error:", error);
-      alert("Lỗi khi tải danh sách ứng viên");
+      
+      // 🔥 BẮT LỖI 400 CHUẨN XÁC: Nếu chưa có hồ sơ, tự động đá sang trang Onboarding
+      if (error.response?.status === 400) {
+        alert("Bạn cần hoàn thiện hồ sơ thói quen sinh hoạt của mình trước khi tìm bạn ở ghép nhé!");
+        navigate("/roommate-onboarding");
+      } else {
+        alert("Lỗi khi tải danh sách ứng viên");
+      }
     } finally {
       setLoading(false);
     }

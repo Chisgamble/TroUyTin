@@ -19,11 +19,12 @@ export default function RoommateOnboarding() {
     schoolOrJob: "",
     budgetMin: "",
     budgetMax: "",
+    // Đã sửa các giá trị mặc định khớp với Enum DB
     smoking: "NO",
     drinking: "NO",
-    sleepSchedule: "10PM-6AM",
-    tidiness: "MEDIUM",
-    cleaningFreq: "SOMETIMES",
+    sleepSchedule: "FLEXIBLE", 
+    tidiness: "MODERATE",
+    cleaningFreq: "WEEKLY", 
     hasPet: false,
     allowOvernightGuest: false,
     hasRoom: false,
@@ -202,9 +203,9 @@ export default function RoommateOnboarding() {
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { value: "8PM-5AM", label: "Sớm" },
-                    { value: "10PM-6AM", label: "Chuẩn" },
-                    { value: "12AM-8AM", label: "Cú đêm" },
+                    { value: "EARLY", label: "Sớm" },
+                    { value: "FLEXIBLE", label: "Linh hoạt" },
+                    { value: "LATE", label: "Cú đêm" },
                   ].map((item) => (
                     <button
                       type="button"
@@ -229,9 +230,9 @@ export default function RoommateOnboarding() {
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { value: "LOW", label: "Thả lỏng" },
-                    { value: "MEDIUM", label: "Vừa phải" },
-                    { value: "HIGH", label: "Kỹ tính" },
+                    { value: "MESSY", label: "Thả lỏng" },
+                    { value: "MODERATE", label: "Vừa phải" },
+                    { value: "VERY_TIDY", label: "Kỹ tính" },
                   ].map((item) => (
                     <button
                       type="button"
@@ -257,7 +258,7 @@ export default function RoommateOnboarding() {
                 <div className="grid grid-cols-3 gap-2">
                   {[
                     { value: "NO", label: "Không" },
-                    { value: "SOMETIMES", label: "Ít/Lễ hội" },
+                    { value: "OCCASIONALLY", label: "Ít/Lễ hội" },
                     { value: "YES", label: "Thường xuyên" },
                   ].map((item) => (
                     <button
@@ -284,7 +285,7 @@ export default function RoommateOnboarding() {
                 <div className="grid grid-cols-3 gap-2">
                   {[
                     { value: "NO", label: "Không" },
-                    { value: "SOMETIMES", label: "Thỉnh thoảng" },
+                    { value: "OCCASIONALLY", label: "Thỉnh thoảng" },
                     { value: "YES", label: "Hay nhậu" },
                   ].map((item) => (
                     <button

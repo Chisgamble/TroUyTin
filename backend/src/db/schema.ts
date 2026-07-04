@@ -9,7 +9,8 @@ import {
   real,
   numeric,
   timestamp,
-  unique
+  unique,
+  uniqueIndex
 } from "drizzle-orm/pg-core";
 
 export const roleEnum = pgEnum("role", [
@@ -55,6 +56,16 @@ export const targetTypeEnum = pgEnum("target_type", [
   "ROOMMATE",
 ]);
 
+export const cleaningFreqEnum = pgEnum("cleaning_freq", ["DAILY", "WEEKLY", "BIWEEKLY"]);
+
+export const cookingFreqEnum = pgEnum("cooking_freq", ["NEVER", "SOMETIMES", "OFTEN", "DAILY"]);
+export const frequencyEnum = pgEnum("frequency", ["YES", "NO", "OCCASIONALLY"]);
+export const genderEnum = pgEnum("gender", ["MALE", "FEMALE", "OTHER"]);
+export const notificationTypeEnum = pgEnum("notification_type", ["NEW_MESSAGE", "MATCH", "LISTING_UPDATE", "REPORT", "SYSTEM"]);
+export const otpPurposeEnum = pgEnum("otp_purpose", ["REGISTER", "LOGIN", "PHONE_VERIFY", "PASSWORD_RESET", "EMAIL_VERIFY"]);
+export const sleepScheduleEnum = pgEnum("sleep_schedule", ["EARLY", "LATE", "FLEXIBLE"]);
+export const tidinessEnum = pgEnum("tidiness", ["VERY_TIDY", "MODERATE", "MESSY"]);
+export const watchlistTypeEnum = pgEnum("watchlist_type", ["ROOM", "ROOMMATE"]);
 
 export const profiles = pgTable("profiles", {
   id: uuid("id").primaryKey(),
@@ -146,23 +157,24 @@ export const roommateProfiles = pgTable(
   {
     id: serial("id").primaryKey(),
     userId: uuid("user_id").notNull().references(() => profiles.id),
-    gender: text("gender"),
+    
+    gender: genderEnum("gender"),
     age: integer("age"),
     hometown: text("hometown"),
     schoolOrJob: text("school_or_job"),
     budgetMin: numeric("budget_min"),
     budgetMax: numeric("budget_max"),
     preferredDistrictId: integer("preferred_district_id").references(() => districts.id),
-    smoking: text("smoking"),
-    drinking: text("drinking"),
-    sleepSchedule: text("sleep_schedule"),
-    tidiness: text("tidiness"),
-    cleaningFreq: text("cleaning_freq"),
+    smoking: frequencyEnum("smoking"),
+    drinking: frequencyEnum("drinking"),
+    sleepSchedule: sleepScheduleEnum("sleep_schedule"),
+    tidiness: tidinessEnum("tidiness"),
+    cleaningFreq: cleaningFreqEnum("cleaning_freq"),
     hasPet: boolean("has_pet").default(false).notNull(),
     allowOvernightGuest: boolean("allow_overnight_guest").default(false).notNull(),
-    cookingFreq: text("cooking_freq"),
+    cookingFreq: cookingFreqEnum("cooking_freq"),
     hasRoom: boolean("has_room").default(false).notNull(),
-    isLookingForRoommate: boolean("is_looking_for_roommate").default(true).notNull(),
+    
     vectorEmbedding: text("vector_embedding"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -220,13 +232,19 @@ export const savedRoommates = pgTable(
   "saved_roommates",
   {
     id: serial("id").primaryKey(),
-    userId: uuid("user_id").notNull().references(() => profiles.id),
-    savedRoommateId: uuid("saved_roommate_id").notNull().references(() => profiles.id),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    savedRoommateId: uuid("saved_roommate_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  (table) => [
-    unique("saved_roommates_user_saved_unique").on(table.userId, table.savedRoommateId),
-  ]
+  (table) => {
+    return {
+      uniqueSave: uniqueIndex("saved_roommates_unique_pair").on(table.userId, table.savedRoommateId),
+    };
+  }
 );
 
 export const chatConversations = pgTable("chat_conversations", {
