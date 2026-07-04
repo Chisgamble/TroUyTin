@@ -1,7 +1,7 @@
 import type { RoomType } from "../types";
 
-export function formatPriceVND(price: number): string {
-  return price.toLocaleString("vi-VN");
+export function formatPriceVND(price: number | string): string {
+  return Number(price).toLocaleString("vi-VN");
 }
 
 export function getRoomTypeLabel(type: RoomType | string): string {

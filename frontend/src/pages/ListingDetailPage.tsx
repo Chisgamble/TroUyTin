@@ -16,6 +16,7 @@ import type { Amenity, Profile, Review, RoomListing } from "../types";
 import { formatPriceVND } from "../utils/formatters";
 import "./ListingDetailPage.css";
 import "../components/ui/Button.css";
+import { getIcon } from "../utils/iconMap";
 
 const DEFAULT_AVATAR =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%239ca3af'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E";
@@ -256,7 +257,11 @@ export default function ListingDetailPage() {
   }
 
   const amenities = listing.amenities ?? [];
-  const landlord = listing.landlord as (Profile & { phone?: string | null }) | undefined;
+  console.log("RAW listing:", listing);
+  console.log("amenities:", listing?.amenities);
+  const landlord = listing.landlord as
+    | (Profile & { phone?: string | null })
+    | undefined;
   const listingAvgRating = reviews.length
     ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
     : 0;
@@ -388,7 +393,7 @@ export default function ListingDetailPage() {
                     ))}
                   </div>
 
-                  <div className="detail-title-overlay">
+                  <div className="detail-title-overlay mt-80">
                     <h1 className="detail-title">{listing.title}</h1>
                     <div className="detail-address">
                       <svg
@@ -462,7 +467,9 @@ export default function ListingDetailPage() {
                     </svg>
                     <div>
                       <span className="detail-spec-label">Diện tích</span>
-                      <span className="detail-spec-value">{listing.area} m²</span>
+                      <span className="detail-spec-value">
+                        {listing.area} m²
+                      </span>
                     </div>
                   </div>
                   <div className="detail-spec">
@@ -563,9 +570,7 @@ export default function ListingDetailPage() {
                     }}
                   >
                     <Heart
-                      size={18}
-                      fill={isSaved ? "currentColor" : "none"}
-                      strokeWidth={2}
+                      className={isSaved ? "text-red-500 fill-red-500" : "text-gray-400"}
                     />
                   </button>
                 </div>
@@ -614,7 +619,9 @@ export default function ListingDetailPage() {
                     <span className="detail-landlord-stat-value">
                       {yearsActive} năm
                     </span>
-                    <span className="detail-landlord-stat-label">Hoạt động</span>
+                    <span className="detail-landlord-stat-label">
+                      Hoạt động
+                    </span>
                   </div>
                 </div>
               </div>
@@ -626,7 +633,11 @@ export default function ListingDetailPage() {
                     <div className="detail-landlord-avg-score">
                       {avgRating.toFixed(1)}
                     </div>
-                    <StarRating rating={avgRating} size="sm" showValue={false} />
+                    <StarRating
+                      rating={avgRating}
+                      size="sm"
+                      showValue={false}
+                    />
                     <div className="detail-landlord-avg-count">
                       {landlordReviews.length} đánh giá
                     </div>
@@ -772,12 +783,18 @@ export default function ListingDetailPage() {
               <div className="detail-amenities-card">
                 <h3 className="detail-amenities-title">Tiện ích</h3>
                 <div className="detail-amenities-grid">
-                  {amenities.slice(0, 6).map((amenity) => (
-                    <div key={amenity.id} className="detail-amenity">
-                      <span className="detail-amenity-icon">{amenity.icon}</span>
-                      <span className="detail-amenity-name">{amenity.name}</span>
+                  {amenities.slice(0, 6).map((amenity) => {
+                    const Icon = getIcon(amenity.icon);
+
+                    return <div key={amenity.id} className="detail-amenity">
+                        <span className="detail-amenity-icon">
+                          <Icon size={18} />
+                        </span>
+                      <span className="detail-amenity-name">
+                        {amenity.name}
+                      </span>
                     </div>
-                  ))}
+                  })}
                 </div>
               </div>
             </div>

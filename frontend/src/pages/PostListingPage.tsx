@@ -652,21 +652,23 @@ export default function PostListingPage() {
         .finally(() => setCheckingRole(false));
     }, [user, navigate]);
 
-    if (checkingRole) {
-    return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-        </div>
-    );
-    }
-
-  const patch = useCallback((p: Partial<FormData>) => setForm(f => ({ ...f, ...p })), []);
+    const patch = useCallback((p: Partial<FormData>) => {
+      setForm(f => ({ ...f, ...p }));
+    }, []);
 
   // Load amenities on mount
   useEffect(() => {
     getAmenities().then(setAmenities).catch(() => {});
     getProvinces().then(setProvinces).catch(() => {});
   }, []);
+
+  if (checkingRole) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
 
   const handleProvinceChange = async (provinceId: string) => {
     if (!provinceId) { setDistricts([]); setWards([]); return; }

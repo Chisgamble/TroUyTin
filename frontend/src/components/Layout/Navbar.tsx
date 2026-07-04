@@ -4,6 +4,7 @@ import { supabase } from "../../services/supabase";
 import type { Notification } from "../../types";
 import { useAuth } from "../../contexts/AuthContext";
 import { getProfile, type Profile } from "../../services/profiles";
+import { Heart } from "lucide-react";
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -180,17 +181,12 @@ export default function Navbar() {
               )}
             </div>
 
-            <button className="navbar-icon-btn" aria-label="Đã lưu">
-              <svg
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-              </svg>
+            <button
+              className="navbar-icon-btn"
+              aria-label="Đã lưu"
+              onClick={() => navigate("/profile/saved-rooms")}
+            >
+              <Heart size={22} />
             </button>
 
             {user ? (

@@ -1,5 +1,5 @@
-﻿@import "tailwindcss";
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+﻿@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+@import "tailwindcss";
 
 /* ============================================================
    DESIGN TOKENS
@@ -692,23 +692,6 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-
-  /* Title overlay on top of thumbnails */
-  .detail-title-overlay {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 40px 16px 12px;
-    background: linear-gradient(transparent, rgba(255, 255, 255, 0.95) 40%);
-  }
-
-  .detail-title {
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--gray-900);
-    margin-bottom: 6px;
   }
 
   .detail-address {

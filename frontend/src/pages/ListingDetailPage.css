@@ -92,11 +92,12 @@
 
 /* Title overlay on top of thumbnails */
 .detail-title-overlay {
-  position: absolute;
+  position: relative;
+  margin-top: 16px;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 40px 16px 12px;
+  padding: 0px;
   background: linear-gradient(transparent, rgba(255, 255, 255, 0.95) 40%);
 }
 
