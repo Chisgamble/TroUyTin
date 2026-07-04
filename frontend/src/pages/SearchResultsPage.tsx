@@ -1,55 +1,70 @@
-import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import ListingCard from '../components/ListingCard';
-import type { RoomListing } from '../data/mockData';
-import { DISTRICTS, SAVED_LISTINGS, getRoomTypeLabel } from '../data/mockData';
-import './SearchResultsPage.css';
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import ListingCard from "../components/ListingCard";
+import type { RoomListing } from "../types";
+import { getRoomTypeLabel } from "../utils/formatters";
+import "./SearchResultsPage.css";
 
-const ROOM_TYPES = ['PHONG_TRO', 'CAN_HO_MINI', 'KTX', 'NGUYEN_CAN'] as const;
+const ROOM_TYPES = ["PHONG_TRO", "CAN_HO_MINI", "KTX", "NGUYEN_CAN"] as const;
 const PRICE_RANGES = [
-  { label: 'Tất cả mức giá', min: 0, max: Infinity },
-  { label: 'Dưới 2 triệu', min: 0, max: 2000000 },
-  { label: '2 – 4 triệu', min: 2000000, max: 4000000 },
-  { label: '4 – 6 triệu', min: 4000000, max: 6000000 },
-  { label: 'Trên 6 triệu', min: 6000000, max: Infinity },
+  { label: "Tất cả mức giá", min: 0, max: Infinity },
+  { label: "Dưới 2 triệu", min: 0, max: 2000000 },
+  { label: "2 – 4 triệu", min: 2000000, max: 4000000 },
+  { label: "4 – 6 triệu", min: 4000000, max: 6000000 },
+  { label: "Trên 6 triệu", min: 6000000, max: Infinity },
 ];
 const AREA_RANGES = [
-  { label: 'Tất cả diện tích', min: 0, max: Infinity },
-  { label: 'Dưới 20 m²', min: 0, max: 20 },
-  { label: '20 – 30 m²', min: 20, max: 30 },
-  { label: '30 – 50 m²', min: 30, max: 50 },
-  { label: 'Trên 50 m²', min: 50, max: Infinity },
+  { label: "Tất cả diện tích", min: 0, max: Infinity },
+  { label: "Dưới 20 m²", min: 0, max: 20 },
+  { label: "20 – 30 m²", min: 20, max: 30 },
+  { label: "30 – 50 m²", min: 30, max: 50 },
+  { label: "Trên 50 m²", min: 50, max: Infinity },
+];
+
+const DISTRICTS = [
+  { id: 1, province_id: 1, name: "Quận 1" },
+  { id: 2, province_id: 1, name: "Quận 3" },
+  { id: 3, province_id: 1, name: "Quận 7" },
+  { id: 4, province_id: 1, name: "Quận Bình Thạnh" },
+  { id: 5, province_id: 1, name: "Quận Phú Nhuận" },
+  { id: 6, province_id: 1, name: "Quận Tân Bình" },
+  { id: 7, province_id: 1, name: "Quận Gò Vấp" },
+  { id: 8, province_id: 1, name: "TP. Thủ Đức" },
 ];
 
 export default function SearchResultsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialQuery = searchParams.get('q') || '';
+  const initialQuery = searchParams.get("q") || "";
 
   const [query, setQuery] = useState(initialQuery);
   const [districtId, setDistrictId] = useState(0);
-  const [roomType, setRoomType] = useState('');
+  const [roomType, setRoomType] = useState("");
   const [priceIdx, setPriceIdx] = useState(0);
   const [areaIdx, setAreaIdx] = useState(0);
-  const [savedIds, setSavedIds] = useState<number[]>(SAVED_LISTINGS.map((s) => s.listing_id));
+  const [savedIds, setSavedIds] = useState<number[]>([]);
   const [rooms, setRooms] = useState<RoomListing[]>([]);
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/rooms')
-      .then(res => res.json())
-      .then(data => setRooms(data))
-      .catch(err => console.error('Failed to fetch rooms:', err));
+    fetch("http://localhost:3000/api/rooms")
+      .then((res) => res.json())
+      .then((data) => setRooms(data))
+      .catch((err) => console.error("Failed to fetch rooms:", err));
   }, []);
 
   const results = rooms.filter((l) => {
-    if (l.status !== 'AVAILABLE') return false;
+    if (l.status !== "AVAILABLE") return false;
     // Text search
     const q = query.toLowerCase();
-    if (q && !(
-      (l.title || '').toLowerCase().includes(q) ||
-      (l.description || '').toLowerCase().includes(q) ||
-      (l.address_detail || '').toLowerCase().includes(q) ||
-      (l.district_name || '').toLowerCase().includes(q)
-    )) return false;
+    if (
+      q &&
+      !(
+        (l.title || "").toLowerCase().includes(q) ||
+        (l.description || "").toLowerCase().includes(q) ||
+        (l.address_detail || "").toLowerCase().includes(q) ||
+        (l.district_name || "").toLowerCase().includes(q)
+      )
+    )
+      return false;
     // District
     if (districtId > 0) {
       const d = DISTRICTS.find((d) => d.id === districtId);
@@ -67,7 +82,9 @@ export default function SearchResultsPage() {
   });
 
   const toggleSave = (id: number) => {
-    setSavedIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+    setSavedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -77,12 +94,13 @@ export default function SearchResultsPage() {
 
   const clearFilters = () => {
     setDistrictId(0);
-    setRoomType('');
+    setRoomType("");
     setPriceIdx(0);
     setAreaIdx(0);
   };
 
-  const hasFilters = districtId > 0 || roomType !== '' || priceIdx > 0 || areaIdx > 0;
+  const hasFilters =
+    districtId > 0 || roomType !== "" || priceIdx > 0 || areaIdx > 0;
 
   return (
     <>
@@ -92,7 +110,14 @@ export default function SearchResultsPage() {
           <aside className="search-sidebar">
             <div className="search-sidebar-header">
               <h3>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <line x1="4" y1="6" x2="20" y2="6" />
                   <line x1="4" y1="12" x2="14" y2="12" />
                   <line x1="4" y1="18" x2="10" y2="18" />
@@ -100,13 +125,22 @@ export default function SearchResultsPage() {
                 Bộ lọc
               </h3>
               {hasFilters && (
-                <button className="search-clear-btn" onClick={clearFilters}>Xóa lọc</button>
+                <button className="search-clear-btn" onClick={clearFilters}>
+                  Xóa lọc
+                </button>
               )}
             </div>
 
             {/* Search within filters */}
             <form className="search-filter-search" onSubmit={handleSearch}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <circle cx="11" cy="11" r="8" />
                 <path d="m21 21-4.35-4.35" />
               </svg>
@@ -128,7 +162,9 @@ export default function SearchResultsPage() {
               >
                 <option value={0}>Tất cả khu vực</option>
                 {DISTRICTS.map((d) => (
-                  <option key={d.id} value={d.id}>{d.name}</option>
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -138,15 +174,19 @@ export default function SearchResultsPage() {
               <label className="search-filter-label">Loại phòng</label>
               <div className="search-filter-chips">
                 <button
-                  className={`search-chip ${roomType === '' ? 'active' : ''}`}
-                  onClick={() => setRoomType('')}
-                >Tất cả</button>
+                  className={`search-chip ${roomType === "" ? "active" : ""}`}
+                  onClick={() => setRoomType("")}
+                >
+                  Tất cả
+                </button>
                 {ROOM_TYPES.map((t) => (
                   <button
                     key={t}
-                    className={`search-chip ${roomType === t ? 'active' : ''}`}
-                    onClick={() => setRoomType(roomType === t ? '' : t)}
-                  >{getRoomTypeLabel(t)}</button>
+                    className={`search-chip ${roomType === t ? "active" : ""}`}
+                    onClick={() => setRoomType(roomType === t ? "" : t)}
+                  >
+                    {getRoomTypeLabel(t)}
+                  </button>
                 ))}
               </div>
             </div>
@@ -191,8 +231,10 @@ export default function SearchResultsPage() {
           {/* Results */}
           <div className="search-results">
             <div className="search-results-header">
-              <h1>{query ? `Kết quả: "${query}"` : 'Tất cả phòng trọ'}</h1>
-              <span className="search-results-count">{results.length} phòng</span>
+              <h1>{query ? `Kết quả: "${query}"` : "Tất cả phòng trọ"}</h1>
+              <span className="search-results-count">
+                {results.length} phòng
+              </span>
             </div>
 
             {results.length > 0 ? (
@@ -208,7 +250,14 @@ export default function SearchResultsPage() {
               </div>
             ) : (
               <div className="search-empty">
-                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <svg
+                  width="56"
+                  height="56"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                >
                   <circle cx="11" cy="11" r="8" />
                   <path d="m21 21-4.35-4.35" />
                 </svg>
@@ -218,7 +267,7 @@ export default function SearchResultsPage() {
             )}
           </div>
         </div>
-          </div>
+      </div>
     </>
   );
 }

@@ -21,7 +21,7 @@ export const roleEnum = pgEnum("role", [
 
 export const listingStatusEnum = pgEnum("listing_status", [
   "PENDING",
-  "APPROVED",
+  "AVAILABLE",
   "REJECTED",
   "RENTED",
 ]);
@@ -136,7 +136,6 @@ export const listingImages = pgTable("listing_images", {
   imageUrl: text("image_url").notNull(),
   displayOrder: integer("display_order").default(0).notNull(),
   uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
-
   imagePath: text("image_path"),
 });
 
@@ -153,11 +152,10 @@ export const listingAmenities = pgTable(
 );
 
 export const roommateProfiles = pgTable(
-  "roommate_profiles", 
+  "roommate_profiles",
   {
     id: serial("id").primaryKey(),
     userId: uuid("user_id").notNull().references(() => profiles.id),
-    
     gender: genderEnum("gender"),
     age: integer("age"),
     hometown: text("hometown"),
@@ -174,7 +172,6 @@ export const roommateProfiles = pgTable(
     allowOvernightGuest: boolean("allow_overnight_guest").default(false).notNull(),
     cookingFreq: cookingFreqEnum("cooking_freq"),
     hasRoom: boolean("has_room").default(false).notNull(),
-    
     vectorEmbedding: text("vector_embedding"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -212,8 +209,8 @@ export const roommatePosts = pgTable("roommate_posts", {
   latitude: real("latitude"),
   longitude: real("longitude"),
   availableFrom: timestamp("available_from"),
-  amenities: text("amenities"), 
-  rules: text("rules"), 
+  amenities: text("amenities"),
+  rules: text("rules"),
   status: listingStatusEnum("status").default("PENDING").notNull(),
   viewCount: integer("view_count").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -281,7 +278,6 @@ export const savedListings = pgTable("saved_listings", {
   savedListingsUnique: unique("saved_listings_user_listing_unique").on(table.userId, table.listingId),
 }));
 
-
 export const reviews = pgTable("reviews", {
   id: serial("id").primaryKey(),
   reviewerId: uuid("reviewer_id").notNull().references(() => profiles.id),
@@ -289,19 +285,14 @@ export const reviews = pgTable("reviews", {
   listingId: integer("listing_id").references(() => roomListings.id),
   rating: integer("rating").notNull(),
   comment: text("comment"),
-
-  createdAt: timestamp("created_at")
-    .defaultNow()
-    .notNull(),
-  },
-  (table) => [
-    unique("reviews_reviewer_reviewee_listing_unique").on(
-      table.reviewerId,
-      table.revieweeId,
-      table.listingId
-    ),
-  ]
-);
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  unique("reviews_reviewer_reviewee_listing_unique").on(
+    table.reviewerId,
+    table.revieweeId,
+    table.listingId,
+  ),
+]);
 
 export const notifications = pgTable("notifications", {
   id: serial("id").primaryKey(),

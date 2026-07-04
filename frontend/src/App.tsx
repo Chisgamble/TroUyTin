@@ -1,19 +1,17 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { 
-  Home, 
-  Login, 
-  Profile, 
-  RoommateOnboarding, 
-  RoommateMatching, 
-  SavedRoommates, 
-  RoommatePostCreate, 
-  RoommatePostList 
+import {
+  Home,
+  Login,
+  Profile,
+  RoommateOnboarding,
+  RoommateMatching,
+  SavedRoommates,
+  RoommatePostCreate,
+  RoommatePostList
 } from './pages'
 import { TestReview } from './pages/TestReview'
 import { Chat } from './pages/Chat'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
-
-// Import các trang mới từ nhánh main của bạn cùng nhóm
 import MainLayout from './components/Layout/MainLayout'
 import HomePage from './pages/HomePage'
 import ProfileLayout from './components/Layout/ProfileLayout'
@@ -21,6 +19,7 @@ import PostListingPage from './pages/PostListingPage'
 import SavedRoomListings from './pages/SavedRoomListings'
 import ListingDetailPage from './pages/ListingDetailPage'
 import SearchResultsPage from './pages/SearchResultsPage'
+import RoomSearchLLM from './pages/RoomSearchLLM'
 import ResetPassword from './pages/ResetPassword'
 
 function AppRoutes() {
@@ -52,7 +51,7 @@ function AppRoutes() {
         <Route path="/roommate-onboarding" element={user ? <RoommateOnboarding /> : <Navigate to="/login" />} />
         <Route path="/roommate-matching" element={user ? <RoommateMatching /> : <Navigate to="/login" />} />
         <Route path="/saved-roommates" element={user ? <SavedRoommates /> : <Navigate to="/login" />} />
-        
+
         {/* Roommate Post CRUD */}
         <Route path="/roommate-posts" element={user ? <RoommatePostList /> : <Navigate to="/login" />} />
         <Route path="/roommate-posts/create" element={user ? <RoommatePostCreate /> : <Navigate to="/login" />} />
@@ -64,9 +63,10 @@ function AppRoutes() {
         <Route element={<MainLayout />}>
           {/* Trang chủ công khai / Dashboard */}
           <Route path="/" element={user ? <Home /> : <HomePage />} />
-          
+
           {/* Các trang tìm kiếm chung */}
           <Route path="/tim-kiem" element={<SearchResultsPage />} />
+          <Route path="/tim-kiem-ai" element={<RoomSearchLLM />} />
           <Route path="/phong/:id" element={<ListingDetailPage />} />
           <Route path="/chat" element={user ? <Chat /> : <Navigate to="/login" />} />
           <Route path="/test-review" element={<TestReview />} />
@@ -76,7 +76,7 @@ function AppRoutes() {
           <Route path="/profile" element={user ? <ProfileLayout /> : <Navigate to="/login" />}>
             {/* Trang thông tin cá nhân mặc định (/profile) */}
             <Route index element={<Profile />} />
-            
+
             {/* Các trang con nằm trong Sidebar (/profile/saved-rooms, /profile/listings) */}
             <Route path="saved-rooms" element={<SavedRoomListings />} />
             <Route path="listings" element={<PostListingPage />} />

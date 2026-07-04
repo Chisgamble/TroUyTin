@@ -90,12 +90,8 @@
           "name": "chat_conversations_participant_1_id_profiles_id_fk",
           "tableFrom": "chat_conversations",
           "tableTo": "profiles",
-          "columnsFrom": [
-            "participant_1_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["participant_1_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -103,12 +99,8 @@
           "name": "chat_conversations_participant_2_id_profiles_id_fk",
           "tableFrom": "chat_conversations",
           "tableTo": "profiles",
-          "columnsFrom": [
-            "participant_2_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["participant_2_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -116,12 +108,8 @@
           "name": "chat_conversations_listing_id_room_listings_id_fk",
           "tableFrom": "chat_conversations",
           "tableTo": "room_listings",
-          "columnsFrom": [
-            "listing_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["listing_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -129,12 +117,8 @@
           "name": "chat_conversations_roommate_match_id_roommate_matches_id_fk",
           "tableFrom": "chat_conversations",
           "tableTo": "roommate_matches",
-          "columnsFrom": [
-            "roommate_match_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["roommate_match_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -144,11 +128,7 @@
         "chat_conversation_listing_unique": {
           "name": "chat_conversation_listing_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "participant_1_id",
-            "participant_2_id",
-            "listing_id"
-          ]
+          "columns": ["participant_1_id", "participant_2_id", "listing_id"]
         },
         "chat_conversation_match_unique": {
           "name": "chat_conversation_match_unique",
@@ -193,12 +173,8 @@
           "name": "districts_province_id_provinces_id_fk",
           "tableFrom": "districts",
           "tableTo": "provinces",
-          "columnsFrom": [
-            "province_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["province_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -238,12 +214,8 @@
           "name": "listing_amenities_listing_id_room_listings_id_fk",
           "tableFrom": "listing_amenities",
           "tableTo": "room_listings",
-          "columnsFrom": [
-            "listing_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["listing_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -251,12 +223,8 @@
           "name": "listing_amenities_amenity_id_amenities_id_fk",
           "tableFrom": "listing_amenities",
           "tableTo": "amenities",
-          "columnsFrom": [
-            "amenity_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["amenity_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -266,10 +234,7 @@
         "listing_amenities_listing_amenity_unique": {
           "name": "listing_amenities_listing_amenity_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "listing_id",
-            "amenity_id"
-          ]
+          "columns": ["listing_id", "amenity_id"]
         }
       },
       "policies": {},
@@ -319,12 +284,8 @@
           "name": "listing_images_listing_id_room_listings_id_fk",
           "tableFrom": "listing_images",
           "tableTo": "room_listings",
-          "columnsFrom": [
-            "listing_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["listing_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -392,12 +353,8 @@
           "name": "messages_conversation_id_chat_conversations_id_fk",
           "tableFrom": "messages",
           "tableTo": "chat_conversations",
-          "columnsFrom": [
-            "conversation_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["conversation_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -405,12 +362,8 @@
           "name": "messages_sender_id_profiles_id_fk",
           "tableFrom": "messages",
           "tableTo": "profiles",
-          "columnsFrom": [
-            "sender_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["sender_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -482,12 +435,8 @@
           "name": "notifications_user_id_profiles_id_fk",
           "tableFrom": "notifications",
           "tableTo": "profiles",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -595,9 +544,7 @@
         "profiles_username_unique": {
           "name": "profiles_username_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "username"
-          ]
+          "columns": ["username"]
         }
       },
       "policies": {},
@@ -683,12 +630,8 @@
           "name": "reviews_reviewer_id_profiles_id_fk",
           "tableFrom": "reviews",
           "tableTo": "profiles",
-          "columnsFrom": [
-            "reviewer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["reviewer_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -696,12 +639,8 @@
           "name": "reviews_reviewee_id_profiles_id_fk",
           "tableFrom": "reviews",
           "tableTo": "profiles",
-          "columnsFrom": [
-            "reviewee_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["reviewee_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -709,12 +648,8 @@
           "name": "reviews_listing_id_room_listings_id_fk",
           "tableFrom": "reviews",
           "tableTo": "room_listings",
-          "columnsFrom": [
-            "listing_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["listing_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -724,11 +659,7 @@
         "reviews_reviewer_reviewee_listing_unique": {
           "name": "reviews_reviewer_reviewee_listing_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "reviewer_id",
-            "reviewee_id",
-            "listing_id"
-          ]
+          "columns": ["reviewer_id", "reviewee_id", "listing_id"]
         }
       },
       "policies": {},
@@ -855,12 +786,8 @@
           "name": "room_listings_landlord_id_profiles_id_fk",
           "tableFrom": "room_listings",
           "tableTo": "profiles",
-          "columnsFrom": [
-            "landlord_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["landlord_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -868,12 +795,8 @@
           "name": "room_listings_ward_id_wards_id_fk",
           "tableFrom": "room_listings",
           "tableTo": "wards",
-          "columnsFrom": [
-            "ward_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ward_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -955,12 +878,8 @@
           "name": "roommate_matches_requester_id_profiles_id_fk",
           "tableFrom": "roommate_matches",
           "tableTo": "profiles",
-          "columnsFrom": [
-            "requester_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["requester_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -968,12 +887,8 @@
           "name": "roommate_matches_target_id_profiles_id_fk",
           "tableFrom": "roommate_matches",
           "tableTo": "profiles",
-          "columnsFrom": [
-            "target_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["target_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -983,10 +898,7 @@
         "roommate_matches_requester_target_unique": {
           "name": "roommate_matches_requester_target_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "requester_id",
-            "target_id"
-          ]
+          "columns": ["requester_id", "target_id"]
         }
       },
       "policies": {},
@@ -1135,12 +1047,8 @@
           "name": "roommate_profiles_user_id_profiles_id_fk",
           "tableFrom": "roommate_profiles",
           "tableTo": "profiles",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1148,12 +1056,8 @@
           "name": "roommate_profiles_preferred_district_id_districts_id_fk",
           "tableFrom": "roommate_profiles",
           "tableTo": "districts",
-          "columnsFrom": [
-            "preferred_district_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["preferred_district_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1163,9 +1067,7 @@
         "roommate_profiles_user_unique": {
           "name": "roommate_profiles_user_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id"
-          ]
+          "columns": ["user_id"]
         }
       },
       "policies": {},
@@ -1208,12 +1110,8 @@
           "name": "saved_listings_user_id_profiles_id_fk",
           "tableFrom": "saved_listings",
           "tableTo": "profiles",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1221,12 +1119,8 @@
           "name": "saved_listings_listing_id_room_listings_id_fk",
           "tableFrom": "saved_listings",
           "tableTo": "room_listings",
-          "columnsFrom": [
-            "listing_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["listing_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1236,10 +1130,7 @@
         "saved_listings_user_listing_unique": {
           "name": "saved_listings_user_listing_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "listing_id"
-          ]
+          "columns": ["user_id", "listing_id"]
         }
       },
       "policies": {},
@@ -1275,12 +1166,8 @@
           "name": "wards_district_id_districts_id_fk",
           "tableFrom": "wards",
           "tableTo": "districts",
-          "columnsFrom": [
-            "district_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["district_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1340,12 +1227,8 @@
           "name": "watchlists_user_id_profiles_id_fk",
           "tableFrom": "watchlists",
           "tableTo": "profiles",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1353,12 +1236,8 @@
           "name": "watchlists_target_listing_id_room_listings_id_fk",
           "tableFrom": "watchlists",
           "tableTo": "room_listings",
-          "columnsFrom": [
-            "target_listing_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["target_listing_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1366,12 +1245,8 @@
           "name": "watchlists_target_roommate_id_profiles_id_fk",
           "tableFrom": "watchlists",
           "tableTo": "profiles",
-          "columnsFrom": [
-            "target_roommate_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["target_roommate_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1381,18 +1256,12 @@
         "watchlists_user_listing_unique": {
           "name": "watchlists_user_listing_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "target_listing_id"
-          ]
+          "columns": ["user_id", "target_listing_id"]
         },
         "watchlists_user_roommate_unique": {
           "name": "watchlists_user_roommate_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "target_roommate_id"
-          ]
+          "columns": ["user_id", "target_roommate_id"]
         }
       },
       "policies": {},
@@ -1404,66 +1273,37 @@
     "public.content_type": {
       "name": "content_type",
       "schema": "public",
-      "values": [
-        "TEXT",
-        "IMAGE",
-        "FILE"
-      ]
+      "values": ["TEXT", "IMAGE", "FILE"]
     },
     "public.listing_status": {
       "name": "listing_status",
       "schema": "public",
-      "values": [
-        "PENDING",
-        "APPROVED",
-        "REJECTED",
-        "RENTED"
-      ]
+      "values": ["PENDING", "APPROVED", "REJECTED", "RENTED"]
     },
     "public.match_action": {
       "name": "match_action",
       "schema": "public",
-      "values": [
-        "PENDING",
-        "LIKE",
-        "PASS"
-      ]
+      "values": ["PENDING", "LIKE", "PASS"]
     },
     "public.match_status": {
       "name": "match_status",
       "schema": "public",
-      "values": [
-        "PENDING",
-        "MATCHED",
-        "REJECTED"
-      ]
+      "values": ["PENDING", "MATCHED", "REJECTED"]
     },
     "public.role": {
       "name": "role",
       "schema": "public",
-      "values": [
-        "TENANT",
-        "LANDLORD",
-        "ADMIN"
-      ]
+      "values": ["TENANT", "LANDLORD", "ADMIN"]
     },
     "public.room_type": {
       "name": "room_type",
       "schema": "public",
-      "values": [
-        "PHONG_TRO",
-        "CAN_HO_MINI",
-        "KTX",
-        "NGUYEN_CAN"
-      ]
+      "values": ["PHONG_TRO", "CAN_HO_MINI", "KTX", "NGUYEN_CAN"]
     },
     "public.target_type": {
       "name": "target_type",
       "schema": "public",
-      "values": [
-        "LISTING",
-        "ROOMMATE"
-      ]
+      "values": ["LISTING", "ROOMMATE"]
     }
   },
   "schemas": {},
