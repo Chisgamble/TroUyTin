@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { NavLink, Link, useNavigate } from "react-router-dom";
 import { supabase } from "../../services/supabase";
 import type { Notification } from "../../types";
 import { useAuth } from "../../contexts/AuthContext";
@@ -103,18 +103,42 @@ export default function Navbar() {
           </form>
 
           <div className="navbar-links">
-            <Link to="/" className="navbar-link active">
+            <NavLink
+              to="/"
+              end
+              className={({ isActive }) =>
+                `navbar-link ${isActive ? "active" : ""}`
+              }
+            >
               Tìm phòng
-            </Link>
-            <Link to="/roommate-matching" className="navbar-link">
+            </NavLink>
+
+            <NavLink
+              to="/roommate-matching"
+              className={({ isActive }) =>
+                `navbar-link ${isActive ? "active" : ""}`
+              }
+            >
               Tìm ở ghép
-            </Link>
-            <Link to="#" className="navbar-link">
+            </NavLink>
+
+            <NavLink
+              to="/news"
+              className={({ isActive }) =>
+                `navbar-link ${isActive ? "active" : ""}`
+              }
+            >
               Tin tức
-            </Link>
-            <Link to="#" className="navbar-link">
+            </NavLink>
+
+            <NavLink
+              to="/about"
+              className={({ isActive }) =>
+                `navbar-link ${isActive ? "active" : ""}`
+              }
+            >
               Về chúng tôi
-            </Link>
+            </NavLink>
           </div>
 
           <div className="navbar-actions">

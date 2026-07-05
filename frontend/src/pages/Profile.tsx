@@ -262,23 +262,6 @@ export default function ProfilePage() {
               )}
             </div>
           )}
-
-          {/* QUICK NAVIGATION TILES */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div 
-              onClick={() => navigate('/chat')}
-              className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-col items-start gap-2 hover:border-blue-300 hover:shadow-md transition cursor-pointer group"
-            >
-              <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-100 transition">
-                <MessageSquare className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-800">Lịch sử Chat</p>
-                <p className="text-xs text-gray-400 mt-0.5">Tin nhắn trao đổi</p>
-              </div>
-            </div>
-          </div>
-
           {/* Form card */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
             <div className="flex items-center justify-between mb-5">

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+﻿import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import {
   Home,
   Login,
@@ -45,17 +45,7 @@ function AppRoutes() {
         <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
-        {/* ==========================================
-            2. ROOMMATE MATCHING MODULE (CẦN CHECK AUTH)
-           ========================================== */}
-        <Route path="/roommate-onboarding" element={user ? <RoommateOnboarding /> : <Navigate to="/login" />} />
-        <Route path="/roommate-matching" element={user ? <RoommateMatching /> : <Navigate to="/login" />} />
-        <Route path="/saved-roommates" element={user ? <SavedRoommates /> : <Navigate to="/login" />} />
-
-        {/* Roommate Post CRUD */}
-        <Route path="/roommate-posts" element={user ? <RoommatePostList /> : <Navigate to="/login" />} />
-        <Route path="/roommate-posts/create" element={user ? <RoommatePostCreate /> : <Navigate to="/login" />} />
-        <Route path="/roommate-posts/:postId/edit" element={user ? <RoommatePostCreate /> : <Navigate to="/login" />} />
+        
 
         {/* ==========================================
             3. CORE DỰ ÁN BỌC TRONG MAIN LAYOUT CHUNG
@@ -71,6 +61,18 @@ function AppRoutes() {
           <Route path="/chat" element={user ? <Chat /> : <Navigate to="/login" />} />
           <Route path="/test-review" element={<TestReview />} />
           <Route path="/dang-tin" element={user ? <PostListingPage /> : <Navigate to="/login" />} />
+
+          {/* ==========================================
+            2. ROOMMATE MATCHING MODULE (CẦN CHECK AUTH)
+          ========================================== */}
+          <Route path="/roommate-onboarding" element={user ? <RoommateOnboarding /> : <Navigate to="/login" />} />
+          <Route path="/roommate-matching" element={user ? <RoommateMatching /> : <Navigate to="/login" />} />
+          <Route path="/saved-roommates" element={user ? <SavedRoommates /> : <Navigate to="/login" />} />
+
+          {/* Roommate Post CRUD */}
+          <Route path="/roommate-posts" element={user ? <RoommatePostList /> : <Navigate to="/login" />} />
+          <Route path="/roommate-posts/create" element={user ? <RoommatePostCreate /> : <Navigate to="/login" />} />
+          <Route path="/roommate-posts/:postId/edit" element={user ? <RoommatePostCreate /> : <Navigate to="/login" />} />
 
           {/* 🔥 CỤM TRANG HỒ SƠ (ĐƯỢC BỌC TRONG PROFILE LAYOUT ĐỂ HẾT LỖI) */}
           <Route path="/profile" element={user ? <ProfileLayout /> : <Navigate to="/login" />}>
