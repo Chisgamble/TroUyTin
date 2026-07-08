@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { Heart } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { chatService } from "../services/chatService";
@@ -578,14 +578,14 @@ export default function ListingDetailPage() {
 
               <div className="detail-landlord-card">
                 <h3 className="detail-landlord-title">THÔNG TIN CHỦ NHÀ</h3>
-                <div className="detail-landlord-info">
+                <Link to={`/user/${listing.landlord_id}`} className="detail-landlord-info-link hover:opacity-80 transition-opacity flex items-center gap-3">
                   <img
                     src={landlord?.avatar_url || DEFAULT_AVATAR}
                     alt={landlord?.full_name || "Chủ nhà"}
                     className="detail-landlord-avatar"
                   />
                   <div>
-                    <div className="detail-landlord-name">
+                    <div className="detail-landlord-name flex items-center gap-1">
                       {landlord?.full_name}
                       {landlord?.is_verified && (
                         <svg
@@ -601,7 +601,7 @@ export default function ListingDetailPage() {
                     </div>
                     <div className="detail-landlord-role">Chủ nhà</div>
                   </div>
-                </div>
+                </Link>
                 <div className="detail-landlord-stats">
                   <div className="detail-landlord-stat">
                     <span className="detail-landlord-stat-value">

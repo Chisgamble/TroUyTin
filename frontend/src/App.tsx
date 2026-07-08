@@ -1,4 +1,4 @@
-﻿import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import {
   Home,
   Login,
@@ -7,7 +7,8 @@ import {
   RoommateMatching,
   SavedRoommates,
   RoommatePostCreate,
-  RoommatePostList
+  RoommatePostList,
+  PublicProfilePage
 } from './pages'
 import { TestReview } from './pages/TestReview'
 import { Chat } from './pages/Chat'
@@ -21,6 +22,7 @@ import ListingDetailPage from './pages/ListingDetailPage'
 import SearchResultsPage from './pages/SearchResultsPage'
 import RoomSearchLLM from './pages/RoomSearchLLM'
 import ResetPassword from './pages/ResetPassword'
+import MyListingsPage from './pages/MyListingsPage'
 
 function AppRoutes() {
   const { user, loading } = useAuth()
@@ -61,6 +63,7 @@ function AppRoutes() {
           <Route path="/chat" element={user ? <Chat /> : <Navigate to="/login" />} />
           <Route path="/test-review" element={<TestReview />} />
           <Route path="/dang-tin" element={user ? <PostListingPage /> : <Navigate to="/login" />} />
+          <Route path="/user/:userId" element={<PublicProfilePage />} />
 
           {/* ==========================================
             2. ROOMMATE MATCHING MODULE (CẦN CHECK AUTH)
@@ -81,7 +84,7 @@ function AppRoutes() {
 
             {/* Các trang con nằm trong Sidebar (/profile/saved-rooms, /profile/listings) */}
             <Route path="saved-rooms" element={<SavedRoomListings />} />
-            <Route path="listings" element={<PostListingPage />} />
+            <Route path="listings" element={<MyListingsPage />} />
           </Route>
         </Route>
 

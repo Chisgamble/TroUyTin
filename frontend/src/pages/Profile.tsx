@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { getProfile, updateProfile, uploadAvatar, type Profile } from '../services/profiles'
 import {
   User, Heart, Building2, Settings, Camera,
-  CheckCircle2, ChevronRight, Shield, CreditCard,
+  BadgeCheck, ChevronRight, Shield, CreditCard,
   Pencil, Loader2, AlertCircle, Check, MessageCircle, Users, Bookmark, MessageSquare
 } from 'lucide-react'
 import ProfileLayout from '../components/Layout/ProfileLayout'
@@ -223,15 +223,17 @@ export default function ProfilePage() {
           </div>
 
           <div className="pb-1">
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <h1 className="text-lg font-bold text-slate-900">
                 {profile.fullName || profile.username || 'Chưa cập nhật tên'}
               </h1>
               {profile.isVerified && (
-                <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-xs font-semibold px-2 py-0.5 rounded-full border border-emerald-200">
-                  <CheckCircle2 className="w-3 h-3" />
-                  Đã xác minh
-                </span>
+                <BadgeCheck
+                  className="text-blue-500 shrink-0"
+                  size={20}
+                  strokeWidth={2.5}
+                  aria-label="Đã xác thực"
+                />
               )}
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
@@ -335,35 +337,6 @@ export default function ProfilePage() {
                 </button>
               </div>
             </form>
-          </div>
-
-          {/* Account info tiles */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-5 py-4 flex items-center justify-between hover:border-blue-200 transition cursor-pointer group">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-100 transition">
-                  <Shield className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-800">Bảo mật tài khoản</p>
-                  <p className="text-xs text-gray-400">Xác thực 2 lớp đang bật</p>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors shrink-0" />
-            </div>
-
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-5 py-4 flex items-center justify-between hover:border-blue-200 transition cursor-pointer group">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-green-50 flex items-center justify-center text-green-600 group-hover:bg-green-100 transition">
-                  <CreditCard className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-800">Phương thức thanh toán</p>
-                  <p className="text-xs text-gray-400">Liên kết với MoMo, ZaloPay</p>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors shrink-0" />
-            </div>
           </div>
 
         </div>
