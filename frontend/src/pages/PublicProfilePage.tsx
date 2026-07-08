@@ -8,7 +8,7 @@ import { formatPriceVND } from '../utils/formatters'
 import {
   BadgeCheck, Calendar, MapPin, MessageSquare,
   UserPlus, Building2, Star, ChevronLeft, ChevronRight,
-  Wifi, AirVent
+  Wifi, AirVent, Briefcase, Sparkles
 } from 'lucide-react'
 import type { Profile, Review } from '../types'
 
@@ -74,6 +74,8 @@ export default function PublicProfilePage() {
   const [activeTab, setActiveTab] = useState<'listings' | 'reviews'>('listings')
   const [listingPage, setListingPage] = useState(1)
   const [reviewPage, setReviewPage] = useState(1)
+  const [roommateProfile, setRoommateProfile] = useState<any | null>(null)
+  const [myRoommateProfile, setMyRoommateProfile] = useState<any | null>(null)
 
   // ── Fetch profile + listings + reviews ──
   useEffect(() => {
@@ -85,11 +87,12 @@ export default function PublicProfilePage() {
       getListingsByLandlord(userId),
       supabase
         .from('reviews')
-        .select('*, reviewer:profiles(id, full_name, avatar_url)')
+        .select('*, reviewer:profiles!reviews_reviewer_id_fkey(id, full_name, avatar_url)')
         .eq('reviewee_id', userId)
         .order('created_at', { ascending: false }),
+      supabase.from('roommate_profiles').select('*').eq('user_id', userId).maybeSingle(),
     ])
-      .then(([profileRes, listingsData, reviewsRes]) => {
+      .then(([profileRes, listingsData, reviewsRes, roommateRes]) => {
         if (profileRes.data) {
           const d = profileRes.data
           setProfile({
@@ -106,10 +109,192 @@ export default function PublicProfilePage() {
         }
         setListings(listingsData.filter(l => l.status === 'AVAILABLE'))
         if (reviewsRes.data) setReviews(reviewsRes.data as Review[])
+        if (roommateRes.data) setRoommateProfile(roommateRes.data)
       })
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [userId])
+
+  useEffect(() => {
+    console.log("Effect 1");
+
+    if (!user?.id) return;
+
+    const fetchProfile = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('roommate_profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (data) {
+          setMyRoommateProfile(data);
+        }
+
+        console.log(data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
+
+  const getLifestyleTags = (rp: any) => {
+    if (!rp) return []
+
+    const tags = []
+
+    // Hút thuốc (frequency: YES | NO | OCCASIONALLY)
+    if (rp.smoking === 'NO') {
+      tags.push({
+        label: 'Không hút thuốc',
+        icon: '🚭',
+        color: 'bg-blue-50 text-blue-700 border-blue-100',
+      })
+    } else if (rp.smoking === 'OCCASIONALLY') {
+      tags.push({
+        label: 'Thỉnh thoảng hút thuốc',
+        icon: '🚬',
+        color: 'bg-amber-50 text-amber-700 border-amber-100',
+      })
+    } else if (rp.smoking === 'YES') {
+      tags.push({
+        label: 'Có hút thuốc',
+        icon: '🚬',
+        color: 'bg-rose-50 text-rose-700 border-rose-100',
+      })
+    }
+
+    // Rượu bia (frequency: YES | NO | OCCASIONALLY)
+    if (rp.drinking === 'NO') {
+      tags.push({
+        label: 'Không rượu bia',
+        icon: '🍺',
+        color: 'bg-blue-50 text-blue-700 border-blue-100',
+      })
+    } else if (rp.drinking === 'OCCASIONALLY') {
+      tags.push({
+        label: 'Thỉnh thoảng uống',
+        icon: '🍻',
+        color: 'bg-amber-50 text-amber-700 border-amber-100',
+      })
+    } else if (rp.drinking === 'YES') {
+      tags.push({
+        label: 'Có uống rượu bia',
+        icon: '🍺',
+        color: 'bg-rose-50 text-rose-700 border-rose-100',
+      })
+    }
+
+    // Giờ ngủ (EARLY | LATE | FLEXIBLE)
+    if (rp.sleep_schedule === 'EARLY') {
+      tags.push({
+        label: 'Ngủ sớm, dậy sớm',
+        icon: '🌅',
+        color: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+      })
+    } else if (rp.sleep_schedule === 'LATE') {
+      tags.push({
+        label: 'Ngủ muộn',
+        icon: '🦉',
+        color: 'bg-purple-50 text-purple-700 border-purple-100',
+      })
+    } else if (rp.sleep_schedule === 'FLEXIBLE') {
+      tags.push({
+        label: 'Giờ giấc linh hoạt',
+        icon: '⏰',
+        color: 'bg-slate-50 text-slate-700 border-slate-100',
+      })
+    }
+
+    // Mức độ gọn gàng (VERY_TIDY | MODERATE | MESSY)
+    if (rp.tidiness === 'VERY_TIDY') {
+      tags.push({
+        label: 'Rất gọn gàng',
+        icon: '✨',
+        color: 'bg-teal-50 text-teal-700 border-teal-100',
+      })
+    } else if (rp.tidiness === 'MODERATE') {
+      tags.push({
+        label: 'Gọn gàng vừa phải',
+        icon: '🧹',
+        color: 'bg-slate-50 text-slate-700 border-slate-100',
+      })
+    } else if (rp.tidiness === 'MESSY') {
+      tags.push({
+        label: 'Khá bừa bộn',
+        icon: '📦',
+        color: 'bg-amber-50 text-amber-700 border-amber-100',
+      })
+    }
+
+    // Thú cưng
+    if (rp.has_pet) {
+      tags.push({
+        label: 'Nuôi thú cưng',
+        icon: '🐾',
+        color: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+      })
+    }
+
+    // Khách qua đêm
+    if (rp.allow_overnight_guest) {
+      tags.push({
+        label: 'Cho phép khách qua đêm',
+        icon: '👥',
+        color: 'bg-indigo-50 text-indigo-700 border-indigo-100',
+      })
+    }
+
+    // Nấu ăn (NEVER | SOMETIMES | OFTEN | DAILY)
+    if (rp.cooking_freq === 'DAILY') {
+      tags.push({
+        label: 'Nấu ăn hằng ngày',
+        icon: '🍳',
+        color: 'bg-orange-50 text-orange-700 border-orange-100',
+      })
+    } else if (rp.cooking_freq === 'OFTEN') {
+      tags.push({
+        label: 'Thường xuyên nấu ăn',
+        icon: '🍳',
+        color: 'bg-orange-50 text-orange-700 border-orange-100',
+      })
+    } else if (rp.cooking_freq === 'SOMETIMES') {
+      tags.push({
+        label: 'Thỉnh thoảng nấu ăn',
+        icon: '🥘',
+        color: 'bg-yellow-50 text-yellow-700 border-yellow-100',
+      })
+    } else if (rp.cooking_freq === 'NEVER') {
+      tags.push({
+        label: 'Không nấu ăn',
+        icon: '🥡',
+        color: 'bg-gray-50 text-gray-700 border-gray-100',
+      })
+    }
+
+    return tags
+  }
+
+  const calculateCompatibility = (p1: any, p2: any) => {
+    if (!p1 || !p2) return 85; // Mặc định 85%
+    let score = 0;
+    let total = 0;
+    if (p1.gender && p2.gender) { total++; if (p1.gender === p2.gender) score++; }
+    if (p1.smoking && p2.smoking) { total++; if (p1.smoking === p2.smoking) score++; }
+    if (p1.drinking && p2.drinking) { total++; if (p1.drinking === p2.drinking) score++; }
+    if (p1.sleep_schedule && p2.sleep_schedule) { total++; if (p1.sleep_schedule === p2.sleep_schedule) score++; }
+    if (p1.tidiness && p2.tidiness) { total++; if (p1.tidiness === p2.tidiness) score++; }
+    if (p1.has_pet !== undefined && p2.has_pet !== undefined) { total++; if (p1.has_pet === p2.has_pet) score++; }
+    if (p1.allow_overnight_guest !== undefined && p2.allow_overnight_guest !== undefined) { total++; if (p1.allow_overnight_guest === p2.allow_overnight_guest) score++; }
+    return total > 0 ? Math.round((score / total) * 100) : 85;
+  }
+
+  const compatibilityPct = calculateCompatibility(myRoommateProfile, roommateProfile)
 
   const handleChat = async () => {
     if (!user) { navigate('/login'); return }
@@ -164,7 +349,8 @@ export default function PublicProfilePage() {
       </div>
     )
   }
-
+  console.log("roommateProfile", roommateProfile);
+  console.log(getLifestyleTags(roommateProfile));
   return (
     <div className="min-h-screen bg-slate-50">
 
@@ -242,10 +428,73 @@ export default function PublicProfilePage() {
         <aside className="space-y-4">
 
           {/* Giới thiệu */}
-          {profile.bio && (
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+            <div>
               <h2 className="text-sm font-semibold text-slate-700 mb-2">Giới thiệu</h2>
-              <p className="text-sm text-slate-600 leading-relaxed">{profile.bio}</p>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                {profile.bio || 'Chưa cập nhật giới thiệu.'}
+              </p>
+            </div>
+
+            {roommateProfile?.school_or_job && (
+              <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+                  <Briefcase className="text-blue-500" size={20} />
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400">Ngành học/Công việc</p>
+                  <p className="text-sm font-bold text-slate-800">{roommateProfile.school_or_job}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Compatibility score circle */}
+            {user && roommateProfile && (
+              <div className="flex items-center gap-4 pt-3 border-t border-slate-100">
+                <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
+                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                    <path
+                      className="text-slate-100"
+                      strokeWidth="3.5"
+                      stroke="currentColor"
+                      fill="none"
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                    <path
+                      className="text-emerald-500 transition-all duration-500"
+                      strokeDasharray={`${compatibilityPct}, 100`}
+                      strokeWidth="3.5"
+                      strokeLinecap="round"
+                      stroke="currentColor"
+                      fill="none"
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                  </svg>
+                  <span className="absolute text-[10px] font-bold text-slate-700">{compatibilityPct}%</span>
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-800">Độ phù hợp lối sống</p>
+                  <p className="text-xs text-slate-400">Dựa trên thói quen sinh hoạt</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Thói quen sinh hoạt */}
+          {roommateProfile && getLifestyleTags(roommateProfile).length > 0 && (
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+              <h2 className="text-sm font-semibold text-slate-700 mb-3">Thói quen sinh hoạt</h2>
+              <div className="flex flex-wrap gap-2">
+                {getLifestyleTags(roommateProfile).map((tag, idx) => (
+                  <span
+                    key={idx}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${tag.color}`}
+                  >
+                    <span>{tag.icon}</span>
+                    {tag.label}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
 
@@ -287,11 +536,10 @@ export default function PublicProfilePage() {
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key as 'listings' | 'reviews')}
-                  className={`px-4 py-4 text-sm font-semibold border-b-2 transition -mb-px ${
-                    activeTab === tab.key
+                  className={`px-4 py-4 text-sm font-semibold border-b-2 transition -mb-px ${activeTab === tab.key
                       ? 'border-blue-600 text-blue-600'
                       : 'border-transparent text-slate-500 hover:text-slate-700'
-                  }`}
+                    }`}
                 >
                   {tab.label}
                 </button>
@@ -387,11 +635,10 @@ export default function PublicProfilePage() {
                             <button
                               key={p}
                               onClick={() => setListingPage(p)}
-                              className={`w-8 h-8 rounded-lg text-sm font-semibold transition ${
-                                p === listingPage
+                              className={`w-8 h-8 rounded-lg text-sm font-semibold transition ${p === listingPage
                                   ? 'bg-blue-600 text-white'
                                   : 'border border-slate-200 text-slate-600 hover:bg-slate-100'
-                              }`}
+                                }`}
                             >
                               {p}
                             </button>
@@ -485,11 +732,10 @@ export default function PublicProfilePage() {
                             <button
                               key={p}
                               onClick={() => setReviewPage(p)}
-                              className={`w-8 h-8 rounded-lg text-sm font-semibold transition ${
-                                p === reviewPage
+                              className={`w-8 h-8 rounded-lg text-sm font-semibold transition ${p === reviewPage
                                   ? 'bg-blue-600 text-white'
                                   : 'border border-slate-200 text-slate-600 hover:bg-slate-100'
-                              }`}
+                                }`}
                             >
                               {p}
                             </button>
