@@ -8,6 +8,8 @@ const router = Router();
 // GET /api/rooms - Get all rooms
 router.get("/", async (req, res) => {
   try {
+    res.set("Cache-Control", "no-store");
+
     const roomsQuery = await db.select({
       room: roomListings,
       wardName: wards.name,
@@ -23,17 +25,30 @@ router.get("/", async (req, res) => {
 
     const roomIds = roomsQuery.map(r => r.room.id);
 
-    // Fetch images
-    const images = await db.select().from(listingImages).where(inArray(listingImages.listingId, roomIds));
-    
-    // Fetch amenities
-    const amenitiesData = await db.select().from(listingAmenities).where(inArray(listingAmenities.listingId, roomIds));
+    const [images, amenitiesData] = await Promise.all([
+      db.select().from(listingImages).where(inArray(listingImages.listingId, roomIds)),
+      db.select().from(listingAmenities).where(inArray(listingAmenities.listingId, roomIds)),
+    ]);
+
+    const imagesByListingId = new Map<number, string[]>();
+    for (const image of images) {
+      const roomImages = imagesByListingId.get(image.listingId) || [];
+      roomImages.push(image.imageUrl);
+      imagesByListingId.set(image.listingId, roomImages);
+    }
+
+    const amenitiesByListingId = new Map<number, number[]>();
+    for (const amenity of amenitiesData) {
+      const roomAmenities = amenitiesByListingId.get(amenity.listingId) || [];
+      roomAmenities.push(amenity.amenityId);
+      amenitiesByListingId.set(amenity.listingId, roomAmenities);
+    }
 
     // Combine
     const formattedRooms = roomsQuery.map(row => {
       const room = row.room;
-      const roomImages = images.filter(img => img.listingId === room.id).map(img => img.imageUrl);
-      const roomAmenityIds = amenitiesData.filter(am => am.listingId === room.id).map(am => am.amenityId);
+      const roomImages = imagesByListingId.get(room.id) || [];
+      const roomAmenityIds = amenitiesByListingId.get(room.id) || [];
       
       return {
         ...room,

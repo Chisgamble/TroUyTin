@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import ListingCard from "../components/ListingCard";
 import type { RoomListing } from "../types";
@@ -32,6 +33,18 @@ const DISTRICTS = [
   { id: 8, province_id: 1, name: "TP. Thủ Đức" },
 ];
 
+async function fetchRooms(): Promise<RoomListing[]> {
+  const res = await fetch("http://localhost:3000/api/rooms", {
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch rooms");
+  }
+
+  return res.json();
+}
+
 export default function SearchResultsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
@@ -42,14 +55,15 @@ export default function SearchResultsPage() {
   const [priceIdx, setPriceIdx] = useState(0);
   const [areaIdx, setAreaIdx] = useState(0);
   const [savedIds, setSavedIds] = useState<number[]>([]);
-  const [rooms, setRooms] = useState<RoomListing[]>([]);
-
-  useEffect(() => {
-    fetch("http://localhost:3000/api/rooms")
-      .then((res) => res.json())
-      .then((data) => setRooms(data))
-      .catch((err) => console.error("Failed to fetch rooms:", err));
-  }, []);
+  const {
+    data: rooms = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["rooms"],
+    queryFn: fetchRooms,
+    staleTime: 60_000,
+  });
 
   const results = rooms.filter((l) => {
     if (l.status !== "AVAILABLE") return false;
@@ -237,7 +251,15 @@ export default function SearchResultsPage() {
               </span>
             </div>
 
-            {results.length > 0 ? (
+            {isLoading ? (
+              <div className="search-empty">
+                <h3>Đang tải danh sách phòng</h3>
+              </div>
+            ) : isError ? (
+              <div className="search-empty">
+                <h3>Không thể tải danh sách phòng</h3>
+              </div>
+            ) : results.length > 0 ? (
               <div className="search-grid">
                 {results.map((listing) => (
                   <ListingCard
