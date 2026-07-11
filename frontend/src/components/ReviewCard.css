@@ -24,6 +24,16 @@
   object-fit: cover;
 }
 
+.review-card-avatar-fallback {
+  align-items: center;
+  background: var(--brand-50);
+  color: var(--brand-700);
+  display: flex;
+  font-size: 13px;
+  font-weight: 700;
+  justify-content: center;
+}
+
 .review-card-name {
   font-weight: 600;
   font-size: 14px;
@@ -42,4 +52,3 @@
   line-height: 1.7;
   font-style: italic;
 }
-
