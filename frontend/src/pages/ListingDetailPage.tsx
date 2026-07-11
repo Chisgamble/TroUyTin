@@ -49,10 +49,6 @@ interface ListingDetailDbRow {
   } | null;
 }
 
-type LandlordReview = Review & {
-  reviewer_name?: string;
-};
-
 function normalizeReview(review: Review): Review {
   return {
     ...review,
@@ -61,25 +57,9 @@ function normalizeReview(review: Review): Review {
   };
 }
 
-function normalizeLandlordReview(review: Review): LandlordReview {
-  const normalized = normalizeReview(review);
-
-  return {
-    ...normalized,
-    reviewer_name: normalized.reviewer?.full_name,
-  };
-}
-
 async function fetchListingReviews(listingId: number) {
   const { data } = await api.get<Review[]>(`/api/reviews/listing/${listingId}`);
   return data.map(normalizeReview);
-}
-
-async function fetchLandlordReviews(landlordId: string) {
-  const { data } = await api.get<Review[]>(
-    `/api/reviews/reviewee/${landlordId}`,
-  );
-  return data.map(normalizeLandlordReview);
 }
 
 const MS_PER_YEAR = 365.25 * 24 * 60 * 60 * 1000;
@@ -154,7 +134,6 @@ export default function ListingDetailPage() {
   const { user } = useAuth();
   const [listing, setListing] = useState<RoomListing | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [landlordReviews, setLandlordReviews] = useState<LandlordReview[]>([]);
   const [loading, setLoading] = useState(true);
   const [chatLoading, setChatLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -164,7 +143,6 @@ export default function ListingDetailPage() {
   const [isSaved, setIsSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const currentListingId = listing?.id;
-  const currentLandlordId = listing?.landlord_id;
 
   useEffect(() => {
     async function loadListing() {
@@ -243,26 +221,6 @@ export default function ListingDetailPage() {
     };
   }, [currentListingId]);
 
-  useEffect(() => {
-    if (!currentLandlordId) return;
-    const landlordId = currentLandlordId;
-    let ignore = false;
-
-    async function loadLandlordReviews() {
-      try {
-        const revieweeReviews = await fetchLandlordReviews(landlordId);
-        if (!ignore) setLandlordReviews(revieweeReviews);
-      } catch (err) {
-        console.error(err);
-      }
-    }
-
-    loadLandlordReviews();
-
-    return () => {
-      ignore = true;
-    };
-  }, [currentLandlordId]);
   if (loading) {
     return (
       <div className="legacy-page-wrapper">
@@ -305,15 +263,12 @@ export default function ListingDetailPage() {
   const landlord = listing.landlord as
     | (Profile & { phone?: string | null })
     | undefined;
-  const listingAvgRating = reviews.length
-    ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
-    : 0;
-  const landlordReviewCount = landlordReviews.length;
-  const avgRating = landlordReviewCount
-    ? landlordReviews.reduce((sum, review) => sum + review.rating, 0) /
-      landlordReviewCount
+  const listingReviewCount = reviews.length;
+  const listingAvgRating = listingReviewCount
+    ? reviews.reduce((sum, review) => sum + review.rating, 0) /
+      listingReviewCount
     : null;
-  const starRatingValue = avgRating ?? 0;
+  const starRatingValue = listingAvgRating ?? 0;
 
   const handleToggleSave = async () => {
     if (!user) {
@@ -378,13 +333,8 @@ export default function ListingDetailPage() {
   };
 
   const handleReviewSubmitted = async () => {
-    const [updatedListingReviews, updatedLandlordReviews] = await Promise.all([
-      fetchListingReviews(listing.id),
-      landlord ? fetchLandlordReviews(landlord.id) : Promise.resolve([]),
-    ]);
-
+    const updatedListingReviews = await fetchListingReviews(listing.id);
     setReviews(updatedListingReviews);
-    setLandlordReviews(updatedLandlordReviews);
   };
 
   const responseRate = 98;
@@ -474,10 +424,10 @@ export default function ListingDetailPage() {
                   <div className="detail-reviews-summary">
                     {reviews.length > 0 ? (
                       <StarRating
-                        rating={listingAvgRating}
+                        rating={starRatingValue}
                         size="md"
                         showValue
-                        count={reviews.length}
+                        count={listingReviewCount}
                       />
                     ) : (
                       <span className="detail-reviews-count">
@@ -666,9 +616,11 @@ export default function ListingDetailPage() {
                   </div>
                   <div className="detail-landlord-stat">
                     <span className="detail-landlord-stat-value">
-                      {formatAverageRating(avgRating)}
+                      {listingReviewCount}
                     </span>
-                    <span className="detail-landlord-stat-label">Đánh giá</span>
+                    <span className="detail-landlord-stat-label">
+                      Đánh giá phòng
+                    </span>
                   </div>
                   <div className="detail-landlord-stat">
                     <span className="detail-landlord-stat-value">
@@ -682,11 +634,11 @@ export default function ListingDetailPage() {
               </div>
 
               <div className="detail-landlord-reviews-card">
-                <h3 className="detail-amenities-title">Đánh giá độ uy tín</h3>
+                <h3 className="detail-amenities-title">Đánh giá phòng trọ</h3>
                 <div className="detail-landlord-reviews-content">
                   <div className="detail-landlord-avg-box">
                     <div className="detail-landlord-avg-score">
-                      {formatAverageRating(avgRating)}
+                      {formatAverageRating(listingAvgRating)}
                     </div>
                     <StarRating
                       rating={starRatingValue}
@@ -694,7 +646,7 @@ export default function ListingDetailPage() {
                       showValue={false}
                     />
                     <div className="detail-landlord-avg-count">
-                      {landlordReviewCount} đánh giá
+                      {listingReviewCount} đánh giá
                     </div>
                   </div>
 
@@ -703,11 +655,11 @@ export default function ListingDetailPage() {
                     style={{ marginTop: "8px", width: "100%" }}
                   >
                     {[5, 4, 3, 2, 1].map((star) => {
-                      const count = landlordReviews.filter(
+                      const count = reviews.filter(
                         (review) => review.rating === star,
                       ).length;
-                      const pct = landlordReviewCount
-                        ? (count / landlordReviewCount) * 100
+                      const pct = listingReviewCount
+                        ? (count / listingReviewCount) * 100
                         : 0;
                       return (
                         <div
@@ -748,7 +700,7 @@ export default function ListingDetailPage() {
                     })}
                   </div>
 
-                  {landlordReviews.filter(
+                  {reviews.filter(
                     (review) => review.rating >= 4 && review.comment,
                   ).length > 0 && (
                     <div
@@ -769,7 +721,7 @@ export default function ListingDetailPage() {
                       >
                         Nhận xét tiêu biểu:
                       </div>
-                      {landlordReviews
+                      {reviews
                         .filter(
                           (review) => review.rating >= 4 && review.comment,
                         )
@@ -800,7 +752,8 @@ export default function ListingDetailPage() {
                                   color: "var(--gray-700)",
                                 }}
                               >
-                                {review.reviewer_name || "Người dùng ẩn danh"}
+                                {review.reviewer?.full_name ||
+                                  "Người dùng ẩn danh"}
                               </span>
                               <span style={{ color: "#fbbf24" }}>
                                 {"★".repeat(review.rating)}

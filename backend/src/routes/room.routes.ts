@@ -130,20 +130,6 @@ router.get("/:id", async (req, res) => {
     .leftJoin(profiles, eq(reviews.reviewerId, profiles.id))
     .where(eq(reviews.listingId, roomId));
 
-    // Fetch landlord reviews
-    let landlordReviews: any[] = [];
-    if (landlord) {
-      landlordReviews = await db.select({
-        id: reviews.id,
-        rating: reviews.rating,
-        comment: reviews.comment,
-        reviewer_name: profiles.fullName
-      })
-      .from(reviews)
-      .leftJoin(profiles, eq(reviews.reviewerId, profiles.id))
-      .where(eq(reviews.revieweeId, landlord.id));
-    }
-
     // Origin/main fetched landlordProfile here, but we already joined landlord above so we can remove this block.
 
     const formattedRoom = {
@@ -174,7 +160,6 @@ router.get("/:id", async (req, res) => {
       } : null,
       amenities: amenitiesData,
       reviews: listingReviews,
-      landlordReviews: landlordReviews
     };
 
     return res.status(200).json(formattedRoom);
