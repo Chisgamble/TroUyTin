@@ -12,9 +12,15 @@
   align-items: start;
 }
 
+.detail-main {
+  min-width: 0;
+}
+
 /* Gallery */
 .detail-gallery {
   margin-bottom: 20px;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .detail-gallery-main {
@@ -48,17 +54,41 @@
 /* Thumbnail + Title overlay area (matches prototype) */
 .detail-thumbs-overlay {
   position: relative;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .detail-gallery-thumbs {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: clamp(8px, 0.8vw, 10px);
   margin-top: 10px;
+  max-width: 100%;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  padding-bottom: 8px;
+  scroll-snap-type: x proximity;
+  scrollbar-gutter: stable;
+  -webkit-overflow-scrolling: touch;
+}
+
+.detail-gallery-thumbs::-webkit-scrollbar {
+  height: 8px;
+}
+
+.detail-gallery-thumbs::-webkit-scrollbar-track {
+  background: var(--gray-100);
+  border-radius: 999px;
+}
+
+.detail-gallery-thumbs::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 999px;
 }
 
 .detail-thumb {
   position: relative;
+  flex: 0 0 clamp(128px, 15vw, 176px);
   aspect-ratio: 4/3;
   border-radius: var(--radius-sm);
   overflow: hidden;
@@ -66,6 +96,8 @@
   transition: border-color 0.2s;
   padding: 0;
   cursor: pointer;
+  scroll-snap-align: start;
+  background: white;
 }
 
 .detail-thumb.active {
@@ -76,18 +108,6 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-.detail-thumb-more {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  color: white;
-  font-weight: 700;
-  font-size: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 /* Title overlay on top of thumbnails */
@@ -155,10 +175,25 @@
   font-weight: 700;
 }
 
+.detail-reviews-count {
+  color: var(--gray-500);
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .detail-reviews-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 14px;
+}
+
+.detail-reviews-empty {
+  border: 1px dashed var(--gray-200);
+  border-radius: var(--radius-md);
+  color: var(--gray-500);
+  font-size: 14px;
+  padding: 18px;
+  text-align: center;
 }
 
 /* Sidebar Cards */
@@ -358,7 +393,7 @@
   .detail-layout { grid-template-columns: 1fr; }
 }
 @media (max-width: 768px) {
-  .detail-gallery-thumbs { grid-template-columns: repeat(2, 1fr); }
+  .detail-thumb { flex-basis: clamp(126px, 40vw, 156px); }
 }
 
 /* Phone Modal */

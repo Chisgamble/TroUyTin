@@ -6,6 +6,7 @@ import { chatService } from "../services/chatService";
 import StarRating from "../components/StarRating";
 import ReviewCard from "../components/ReviewCard";
 import { ReviewModal } from "../components/ReviewModal";
+import { api } from "../lib/axios";
 import { supabase } from "../services/supabase";
 import {
   isListingSaved,
@@ -51,6 +52,56 @@ interface ListingDetailDbRow {
 type LandlordReview = Review & {
   reviewer_name?: string;
 };
+
+function normalizeReview(review: Review): Review {
+  return {
+    ...review,
+    comment: review.comment ?? "",
+    reviewer: review.reviewer ?? undefined,
+  };
+}
+
+function normalizeLandlordReview(review: Review): LandlordReview {
+  const normalized = normalizeReview(review);
+
+  return {
+    ...normalized,
+    reviewer_name: normalized.reviewer?.full_name,
+  };
+}
+
+async function fetchListingReviews(listingId: number) {
+  const { data } = await api.get<Review[]>(`/api/reviews/listing/${listingId}`);
+  return data.map(normalizeReview);
+}
+
+async function fetchLandlordReviews(landlordId: string) {
+  const { data } = await api.get<Review[]>(
+    `/api/reviews/reviewee/${landlordId}`,
+  );
+  return data.map(normalizeLandlordReview);
+}
+
+const MS_PER_YEAR = 365.25 * 24 * 60 * 60 * 1000;
+
+function getFullYearsSince(dateValue?: string | null) {
+  if (!dateValue) return null;
+
+  const timestamp = new Date(dateValue).getTime();
+  if (Number.isNaN(timestamp) || timestamp > Date.now()) return null;
+
+  return Math.floor((Date.now() - timestamp) / MS_PER_YEAR);
+}
+
+function formatYearsActive(years: number | null) {
+  if (years === null) return "—";
+  if (years === 0) return "Dưới 1 năm";
+  return `${years} năm`;
+}
+
+function formatAverageRating(rating: number | null) {
+  return rating === null ? "—" : rating.toFixed(1);
+}
 
 function mapListingRow(row: ListingDetailDbRow): RoomListing {
   const images =
@@ -112,6 +163,8 @@ export default function ListingDetailPage() {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const currentListingId = listing?.id;
+  const currentLandlordId = listing?.landlord_id;
 
   useEffect(() => {
     async function loadListing() {
@@ -125,7 +178,7 @@ export default function ListingDetailPage() {
       setError(null);
 
       const { data, error: fetchError } = await supabase
-        .from<ListingDetailDbRow>("room_listings")
+        .from("room_listings")
         .select(
           `*, listing_images(image_url, display_order), wards(name, districts(name)), landlord_info:profiles(*), listing_amenities(amenities(id, name, icon))`,
         )
@@ -144,7 +197,8 @@ export default function ListingDetailPage() {
         return;
       }
 
-      setListing(mapListingRow(data));
+      setActiveImage(0);
+      setListing(mapListingRow(data as ListingDetailDbRow));
       setLoading(false);
     }
 
@@ -153,10 +207,12 @@ export default function ListingDetailPage() {
 
   useEffect(() => {
     if (!user || !id) return;
+    const currentUserId = user.id;
+    const listingId = Number(id);
 
     async function loadSaved() {
       try {
-        const saved = await isListingSaved(user.id, Number(id));
+        const saved = await isListingSaved(currentUserId, listingId);
         setIsSaved(saved);
       } catch (err) {
         console.error(err);
@@ -167,57 +223,46 @@ export default function ListingDetailPage() {
   }, [user, id]);
 
   useEffect(() => {
-    if (!listing) return;
+    if (!currentListingId) return;
+    const listingId = currentListingId;
+    let ignore = false;
 
     async function loadReviews() {
-      const { data, error: reviewError } = await supabase
-        .from("reviews")
-        .select("*, reviewer:profiles(id, full_name, avatar_url)")
-        .eq("listing_id", listing.id)
-        .order("created_at", { ascending: false });
-
-      if (reviewError) {
-        console.error(reviewError);
-        return;
+      try {
+        const listingReviews = await fetchListingReviews(listingId);
+        if (!ignore) setReviews(listingReviews);
+      } catch (err) {
+        console.error(err);
       }
-
-      setReviews(
-        (data ?? []).map((item: Review) => ({
-          ...item,
-          reviewer: item.reviewer ?? undefined,
-        })),
-      );
     }
 
     loadReviews();
-  }, [listing]);
+
+    return () => {
+      ignore = true;
+    };
+  }, [currentListingId]);
 
   useEffect(() => {
-    if (!listing?.landlord_id) return;
+    if (!currentLandlordId) return;
+    const landlordId = currentLandlordId;
+    let ignore = false;
 
     async function loadLandlordReviews() {
-      const { data, error: reviewError } = await supabase
-        .from("reviews")
-        .select("*, reviewer:profiles(id, full_name, avatar_url)")
-        .eq("reviewee_id", listing.landlord_id)
-        .order("created_at", { ascending: false });
-
-      if (reviewError) {
-        console.error(reviewError);
-        return;
+      try {
+        const revieweeReviews = await fetchLandlordReviews(landlordId);
+        if (!ignore) setLandlordReviews(revieweeReviews);
+      } catch (err) {
+        console.error(err);
       }
-
-      setLandlordReviews(
-        (data ?? []).map((item: LandlordReview) => ({
-          ...item,
-          reviewer_name: item.reviewer?.full_name,
-        })),
-      );
     }
 
     loadLandlordReviews();
-  }, [listing?.landlord_id]);
 
+    return () => {
+      ignore = true;
+    };
+  }, [currentLandlordId]);
   if (loading) {
     return (
       <div className="legacy-page-wrapper">
@@ -257,18 +302,18 @@ export default function ListingDetailPage() {
   }
 
   const amenities = listing.amenities ?? [];
-  console.log("RAW listing:", listing);
-  console.log("amenities:", listing?.amenities);
   const landlord = listing.landlord as
     | (Profile & { phone?: string | null })
     | undefined;
   const listingAvgRating = reviews.length
     ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
     : 0;
-  const avgRating = landlordReviews.length
+  const landlordReviewCount = landlordReviews.length;
+  const avgRating = landlordReviewCount
     ? landlordReviews.reduce((sum, review) => sum + review.rating, 0) /
-      landlordReviews.length
-    : 0;
+      landlordReviewCount
+    : null;
+  const starRatingValue = avgRating ?? 0;
 
   const handleToggleSave = async () => {
     if (!user) {
@@ -332,20 +377,23 @@ export default function ListingDetailPage() {
     }
   };
 
+  const handleReviewSubmitted = async () => {
+    const [updatedListingReviews, updatedLandlordReviews] = await Promise.all([
+      fetchListingReviews(listing.id),
+      landlord ? fetchLandlordReviews(landlord.id) : Promise.resolve([]),
+    ]);
+
+    setReviews(updatedListingReviews);
+    setLandlordReviews(updatedLandlordReviews);
+  };
+
   const responseRate = 98;
-  const yearsActive = landlord
-    ? Math.max(
-        1,
-        Math.floor(
-          (Date.now() -
-            new Date(landlord.created_at ?? Date.now().toString()).getTime()) /
-            (365.25 * 24 * 60 * 60 * 1000),
-        ),
-      )
-    : 1;
+  const yearsActive = getFullYearsSince(landlord?.created_at);
   const depositMonths = listing.deposit / listing.price;
-  const thumbsToShow = listing.images.slice(0, 4);
-  const remainingCount = listing.images.length - 4;
+  const displayedActiveImage = Math.min(
+    activeImage,
+    Math.max(listing.images.length - 1, 0),
+  );
 
   return (
     <>
@@ -356,7 +404,7 @@ export default function ListingDetailPage() {
               <div className="detail-gallery">
                 <div className="detail-gallery-main">
                   <img
-                    src={listing.images[activeImage]}
+                    src={listing.images[displayedActiveImage]}
                     alt={listing.title}
                     className="detail-gallery-hero"
                   />
@@ -377,18 +425,15 @@ export default function ListingDetailPage() {
 
                 <div className="detail-thumbs-overlay">
                   <div className="detail-gallery-thumbs">
-                    {thumbsToShow.map((img, i) => (
+                    {listing.images.map((img, i) => (
                       <button
                         key={i}
-                        className={`detail-thumb ${activeImage === i ? "active" : ""}`}
+                        type="button"
+                        className={`detail-thumb ${displayedActiveImage === i ? "active" : ""}`}
                         onClick={() => setActiveImage(i)}
+                        aria-label={`Xem ảnh ${i + 1}`}
                       >
                         <img src={img} alt={`Ảnh ${i + 1}`} />
-                        {i === 3 && remainingCount > 0 && (
-                          <span className="detail-thumb-more">
-                            +{remainingCount}
-                          </span>
-                        )}
                       </button>
                     ))}
                   </div>
@@ -423,26 +468,36 @@ export default function ListingDetailPage() {
                 <p>{listing.description}</p>
               </div>
 
-              {reviews.length > 0 && (
-                <div className="detail-reviews">
-                  <div className="detail-reviews-header">
-                    <h2>Đánh giá từ người thuê trước</h2>
-                    <div className="detail-reviews-summary">
+              <div className="detail-reviews">
+                <div className="detail-reviews-header">
+                  <h2>Đánh giá từ người thuê trước</h2>
+                  <div className="detail-reviews-summary">
+                    {reviews.length > 0 ? (
                       <StarRating
                         rating={listingAvgRating}
                         size="md"
                         showValue
                         count={reviews.length}
                       />
-                    </div>
+                    ) : (
+                      <span className="detail-reviews-count">
+                        Chưa có đánh giá
+                      </span>
+                    )}
                   </div>
+                </div>
+                {reviews.length > 0 ? (
                   <div className="detail-reviews-grid">
-                    {reviews.slice(0, 3).map((review) => (
+                    {reviews.map((review) => (
                       <ReviewCard key={review.id} review={review} />
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="detail-reviews-empty">
+                    Phòng này chưa có đánh giá từ người thuê.
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="detail-sidebar">
@@ -611,13 +666,13 @@ export default function ListingDetailPage() {
                   </div>
                   <div className="detail-landlord-stat">
                     <span className="detail-landlord-stat-value">
-                      {avgRating.toFixed(1)}
+                      {formatAverageRating(avgRating)}
                     </span>
                     <span className="detail-landlord-stat-label">Đánh giá</span>
                   </div>
                   <div className="detail-landlord-stat">
                     <span className="detail-landlord-stat-value">
-                      {yearsActive} năm
+                      {formatYearsActive(yearsActive)}
                     </span>
                     <span className="detail-landlord-stat-label">
                       Hoạt động
@@ -631,15 +686,15 @@ export default function ListingDetailPage() {
                 <div className="detail-landlord-reviews-content">
                   <div className="detail-landlord-avg-box">
                     <div className="detail-landlord-avg-score">
-                      {avgRating.toFixed(1)}
+                      {formatAverageRating(avgRating)}
                     </div>
                     <StarRating
-                      rating={avgRating}
+                      rating={starRatingValue}
                       size="sm"
                       showValue={false}
                     />
                     <div className="detail-landlord-avg-count">
-                      {landlordReviews.length} đánh giá
+                      {landlordReviewCount} đánh giá
                     </div>
                   </div>
 
@@ -651,8 +706,8 @@ export default function ListingDetailPage() {
                       const count = landlordReviews.filter(
                         (review) => review.rating === star,
                       ).length;
-                      const pct = landlordReviews.length
-                        ? (count / landlordReviews.length) * 100
+                      const pct = landlordReviewCount
+                        ? (count / landlordReviewCount) * 100
                         : 0;
                       return (
                         <div
@@ -844,6 +899,7 @@ export default function ListingDetailPage() {
         <ReviewModal
           isOpen={showReviewModal}
           onClose={() => setShowReviewModal(false)}
+          onSubmitted={handleReviewSubmitted}
           revieweeId={landlord.id}
           listingId={listing.id}
         />

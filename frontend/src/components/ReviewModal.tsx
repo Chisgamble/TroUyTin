@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import type { AxiosError } from 'axios';
 import './ui/Button.css';
 import { api } from '../lib/axios';
 
 interface ReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSubmitted?: () => void | Promise<void>;
   revieweeId: string;
   listingId: number;
 }
@@ -15,7 +17,11 @@ interface ReviewFormInputs {
   comment: string;
 }
 
-export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, revieweeId, listingId }) => {
+type ReviewErrorResponse = {
+  error?: string;
+};
+
+export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, onSubmitted, revieweeId, listingId }) => {
   const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<ReviewFormInputs>({
     defaultValues: {
       rating: 0,
@@ -40,14 +46,20 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, revie
         rating: data.rating,
         comment: data.comment,
       });
+      try {
+        await onSubmitted?.();
+      } catch (refreshError) {
+        console.error(refreshError);
+      }
       setSuccessMsg('Đánh giá thành công!');
       setTimeout(() => {
         reset();
         onClose();
         setSuccessMsg('');
       }, 2000);
-    } catch (err: any) {
-      setErrorMsg(err.response?.data?.error || 'Đã xảy ra lỗi khi gửi đánh giá');
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<ReviewErrorResponse>;
+      setErrorMsg(axiosError.response?.data?.error || 'Đã xảy ra lỗi khi gửi đánh giá');
     } finally {
       setIsSubmitting(false);
     }
