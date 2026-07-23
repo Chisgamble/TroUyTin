@@ -137,7 +137,6 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, onSub
                 placeholder="Chia sẻ thêm về phòng trọ và chủ nhà nhé..."
                 {...register('comment', {
                   required: 'Vui lòng nhập nhận xét',
-                  minLength: { value: 20, message: 'Nhận xét phải có ít nhất 20 ký tự' },
                   maxLength: { value: 500, message: 'Nhận xét không được vượt quá 500 ký tự' }
                 })}
               ></textarea>
