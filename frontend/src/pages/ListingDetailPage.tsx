@@ -319,7 +319,7 @@ export default function ListingDetailPage() {
         String(user.id),
         String(landlord.id),
       );
-      navigate("/profile/messages", {
+      navigate("/chat", {
         state: { conversationId, participantId: landlord.id },
       });
     } catch (error: unknown) {
