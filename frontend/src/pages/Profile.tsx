@@ -4,11 +4,12 @@ import { useNavigate, useOutletContext } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { getProfile, updateProfile, uploadAvatar, type Profile } from '../services/profiles'
 import {
-  User, Heart, Building2, Settings, Camera,
-  BadgeCheck, ChevronRight, Shield, CreditCard,
-  Pencil, Loader2, AlertCircle, Check, MessageCircle, Users, Bookmark, MessageSquare
+  Camera,
+  BadgeCheck, ChevronRight, Shield, CreditCard, Star,
+  Pencil, Loader2, AlertCircle, Check
 } from 'lucide-react'
 import ProfileLayout from '../components/Layout/ProfileLayout'
+import { getRevieweeReviews } from "../services/reviews";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -76,6 +77,8 @@ export default function ProfilePage() {
   const [successMsg, setSuccessMsg] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [averageRating, setAverageRating] = useState(0);
+  const [reviewCount, setReviewCount] = useState(0);
 
   const { profile, setProfile } = useOutletContext<{
     profile: Profile;
@@ -108,6 +111,26 @@ export default function ProfilePage() {
       .finally(() => setLoading(false))
   }, [user, reset])
 
+  useEffect(() => {
+    if (!user) return;
+
+    getRevieweeReviews(user.id)
+      .then((reviews) => {
+        setReviewCount(reviews.length);
+
+        if (reviews.length === 0) {
+          setAverageRating(0);
+          return;
+        }
+
+        const avg =
+          reviews.reduce((sum, r) => sum + r.rating, 0) /
+          reviews.length;
+
+        setAverageRating(avg);
+      })
+      .catch(console.error);
+  }, [user]);
   const onSubmit = async (values: ProfileFormValues) => {
     if (!user) return
     setSaving(true)
@@ -241,6 +264,20 @@ export default function ProfilePage() {
               {' · '}
               {ROLE_LABELS[profile.role] ?? profile.role}
             </p>
+            <div className="flex items-center gap-2 mt-2">
+              <div className="flex items-center gap-1">
+                <Star
+                  className="w-4 h-4 fill-yellow-400 text-yellow-400"
+                />
+                <span className="text-sm font-semibold text-slate-700">
+                  {reviewCount > 0 ? averageRating.toFixed(1) : "--"}
+                </span>
+              </div>
+
+              <span className="text-sm text-slate-500">
+                ({reviewCount} đánh giá)
+              </span>
+            </div>
           </div>
         </div>
 
@@ -338,7 +375,6 @@ export default function ProfilePage() {
               </div>
             </form>
           </div>
-
         </div>
       </div>
     </div>

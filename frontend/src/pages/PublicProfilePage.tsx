@@ -10,8 +10,8 @@ import {
   UserPlus, Building2, Star, ChevronLeft, ChevronRight,
   Wifi, AirVent, Briefcase, Sparkles
 } from 'lucide-react'
-import type { Profile, Review } from '../types'
-
+import type { Profile } from '../types'
+import { getRevieweeReviews, type Review } from '../services/reviews'
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const ROOM_TYPE_LABELS: Record<string, string> = {
@@ -85,14 +85,14 @@ export default function PublicProfilePage() {
     Promise.all([
       supabase.from('profiles').select('*').eq('id', userId).single(),
       getListingsByLandlord(userId),
+      getRevieweeReviews(userId),
       supabase
-        .from('reviews')
-        .select('*, reviewer:profiles!reviews_reviewer_id_fkey(id, full_name, avatar_url)')
-        .eq('reviewee_id', userId)
-        .order('created_at', { ascending: false }),
-      supabase.from('roommate_profiles').select('*').eq('user_id', userId).maybeSingle(),
+        .from('roommate_profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle(),
     ])
-      .then(([profileRes, listingsData, reviewsRes, roommateRes]) => {
+      .then(([profileRes, listingsData, reviewsData, roommateRes]) => {
         if (profileRes.data) {
           const d = profileRes.data
           setProfile({
@@ -108,7 +108,7 @@ export default function PublicProfilePage() {
           })
         }
         setListings(listingsData.filter(l => l.status === 'AVAILABLE'))
-        if (reviewsRes.data) setReviews(reviewsRes.data as Review[])
+        setReviews(reviewsData);
         if (roommateRes.data) setRoommateProfile(roommateRes.data)
       })
       .catch(console.error)
