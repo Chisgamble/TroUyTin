@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { roommatePostService } from "../services/roommates";
 import { Loader, ChevronRight, ChevronLeft, Check, Plus, Trash2, MapPin, ListPlus, ShieldAlert, Image } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function RoommatePostCreate() {
   const { user } = useAuth();
@@ -29,28 +30,35 @@ export default function RoommatePostCreate() {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleAddImage = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAddImage = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!imageInput.trim()) return;
     
     if (images.length < 20) {
       setImages([...images, imageInput.trim()]);
       setImageInput("");
+      toast.success("Đã thêm ảnh vào danh sách!");
     } else {
-      alert("Hệ thống giới hạn tối đa 20 ảnh đầu vào.");
+      toast.error("Hệ thống giới hạn tối đa 20 ảnh đầu vào.");
     }
   };
 
   const handleRemoveImage = (index: number) => {
     setImages(images.filter((_, i) => i !== index));
+    toast.success("Đã xóa ảnh");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // BẢO VỆ 1: Tuyệt đối không cho submit nếu chưa ở bước cuối cùng (Bước 4)
+    if (currentStep < 4) {
+      return;
+    }
+
     // HTML Validation bổ sung cho bước cuối cùng
     if (!form.title || !form.pricePerMonth) {
-      alert("Vui lòng điền đầy đủ thông tin bắt buộc trước khi đăng!");
+      toast.error("Vui lòng điền đầy đủ các thông tin bắt buộc!");
       return;
     }
 
@@ -70,12 +78,11 @@ export default function RoommatePostCreate() {
         await roommatePostService.uploadImage(postId, images[i], i);
       }
 
-      alert("Bài đăng tuyển ở ghép đã được tạo thành công!");
-      // SỬA: Điều hướng chuẩn xác về Route danh sách bài đăng có trong App.tsx
+      toast.success("Bài đăng tuyển ở ghép đã được tạo thành công!");
       navigate("/roommate-posts");
     } catch (error) {
       console.error("Error:", error);
-      alert("Lỗi hệ thống khi tạo bài đăng");
+      toast.error("Lỗi hệ thống khi tạo bài đăng. Vui lòng thử lại!");
     } finally {
       setLoading(false);
     }
@@ -235,13 +242,13 @@ export default function RoommatePostCreate() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase mb-2">Địa chỉ chi tiết viết tay</label>
+                <label className="block text-xs font-bold text-gray-600 uppercase mb-2">Địa chỉ chi tiết</label>
                 <input
                   type="text"
                   value={form.addressDetail}
                   onChange={(e) => handleChange("addressDetail", e.target.value)}
                   className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-none transition-all"
-                  placeholder="Số nhà, tên hẻm, tên đường, tên tòa nhà thương mại..."
+                  placeholder="Số nhà, tên hẻm, tên đường, tên tòa nhà..."
                 />
               </div>
             </div>
@@ -291,7 +298,7 @@ export default function RoommatePostCreate() {
                   value={form.rules}
                   onChange={(e) => handleChange("rules", e.target.value)}
                   className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-none transition-all h-28 resize-none"
-                  placeholder="VD: Không tụ tập bạn bè nhậu nhẹt sau 11h đêm, giữ vệ sinh chung luân phiên dọn dẹp hàng tuần..."
+                  placeholder="VD: Không tụ tập bạn bè nhậu nhẹt sau 11h đêm, giữ vệ sinh chung..."
                 />
               </div>
             </div>
@@ -309,19 +316,25 @@ export default function RoommatePostCreate() {
                     type="text"
                     value={imageInput}
                     onChange={(e) => setImageInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault(); // Ngăn submit form khi nhấn Enter ở đây
+                        handleAddImage();
+                      }
+                    }}
                     placeholder="Dán mã liên kết HTTP/HTTPS của ảnh vào đây"
                     className="flex-1 border border-gray-200 bg-white rounded-xl p-3 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-none transition-all"
                   />
                   <button
                     type="button"
-                    onClick={handleAddImage}
+                    onClick={(e) => handleAddImage(e)}
                     className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 rounded-xl flex items-center justify-center transition-colors shadow-sm"
                     title="Thêm ảnh vào danh sách chờ"
                   >
                     <Plus size={18} />
                   </button>
                 </div>
-                <p className="text-[10px] text-gray-400 mt-2">Mẹo: Bạn có thể nhập mã link ảnh mẫu CDN rồi ấn dấu cộng hoặc bấm phím Enter để kích hoạt lưu danh sách tạm.</p>
+                <p className="text-[10px] text-gray-400 mt-2">Mẹo: Dán link ảnh rồi nhấn Enter hoặc bấm nút + để lưu vào danh sách xem trước.</p>
               </div>
 
               {/* Render Images Gallery Preview */}

@@ -53,6 +53,7 @@ router.post("/", auth, async (req, res) => {
         availableFrom: availableFrom ? new Date(availableFrom) : null,
         amenities: amenities ? JSON.stringify(amenities) : null,
         rules,
+        status: "APPROVED", // AUTO-APPROVE CHO DEMO MVP
       })
       .returning();
 
@@ -63,7 +64,6 @@ router.post("/", auth, async (req, res) => {
   }
 });
 
-// 🔥 ĐÃ ĐỔI VỊ TRÍ: Đưa Route tĩnh này lên TRƯỚC Route động /:postId để tránh bị bắt nhầm tham số trùng lặp
 // 2. GET /roommate-posts/user/my-posts - Lấy bài đăng của user hiện tại
 router.get("/user/my-posts", auth, async (req, res) => {
   try {
@@ -80,7 +80,6 @@ router.get("/user/my-posts", auth, async (req, res) => {
   }
 });
 
-// 🔥 ĐÃ HOÀN THIỆN: Logic filter khoảng giá (minPrice, maxPrice) và diện tích (minArea, maxArea)
 // 3. GET /roommate-posts - Lấy danh sách bài đăng (có filter)
 router.get("/", async (req, res) => {
   try {
@@ -103,7 +102,7 @@ router.get("/", async (req, res) => {
     if (status) filters.push(eq(roommatePosts.status, status as string));
     if (roomType) filters.push(eq(roommatePosts.roomType, roomType as string));
 
-    // Bộ lọc khoảng giá (Sử dụng gte và lte của Drizzle)
+    // Bộ lọc khoảng giá
     if (minPrice) filters.push(gte(roommatePosts.pricePerMonth, minPrice as string));
     if (maxPrice) filters.push(lte(roommatePosts.pricePerMonth, maxPrice as string));
 

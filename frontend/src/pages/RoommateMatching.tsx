@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { roommateService } from "../services/roommates";
 import { Heart, X, ThumbsUp, Loader, MessageSquare, Sparkles, Bookmark } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface RoommateCandidate {
   id: number;
@@ -22,6 +23,7 @@ export default function RoommateMatching() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [candidates, setCandidates] = useState<RoommateCandidate[]>([]);
+  const [savedUserIds, setSavedUserIds] = useState<string[]>([]); // Quản lý danh sách ID đã lưu local
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   
@@ -40,12 +42,11 @@ export default function RoommateMatching() {
     } catch (error: any) {
       console.error("Error:", error);
       
-      // 🔥 BẮT LỖI 400 CHUẨN XÁC: Nếu chưa có hồ sơ, tự động đá sang trang Onboarding
       if (error.response?.status === 400) {
-        alert("Bạn cần hoàn thiện hồ sơ thói quen sinh hoạt của mình trước khi tìm bạn ở ghép nhé!");
+        toast.error("Bạn cần hoàn thiện hồ sơ thói quen sinh hoạt trước khi tìm bạn ở ghép!");
         navigate("/roommate-onboarding");
       } else {
-        alert("Lỗi khi tải danh sách ứng viên");
+        toast.error("Lỗi khi tải danh sách ứng viên");
       }
     } finally {
       setLoading(false);
@@ -62,29 +63,43 @@ export default function RoommateMatching() {
       setActionLoading(`${targetUserId}-${action}`);
 
       if (action === "SAVE") {
-        await roommateService.saveRoommate(targetUserId);
-        alert("Đã lưu hồ sơ ứng viên thành công!");
+        const isAlreadySaved = savedUserIds.includes(targetUserId);
+
+        if (isAlreadySaved) {
+          // Trạng thái toggle: Bỏ lưu
+          setSavedUserIds((prev) => prev.filter((id) => id !== targetUserId));
+          toast.success("Đã bỏ lưu hồ sơ!");
+        } else {
+          // Trạng thái toggle: Lưu mới
+          await roommateService.saveRoommate(targetUserId);
+          setSavedUserIds((prev) => [...prev, targetUserId]);
+          toast.success("Đã lưu hồ sơ ứng viên!");
+        }
       } else {
         const matchAction = action === "LIKE" ? "LIKE" : "PASS";
         const res = await roommateService.createMatch(targetUserId, matchAction);
         
-        // Kiểm tra xem phản hồi từ Backend có trả về trạng thái MATCHED hay không (Cả 2 cùng LIKE nhau)
         if (action === "LIKE" && res.data?.status === "MATCHED") {
           setMatchNotification({
             userName: candidateName || "Bạn cùng phòng",
             avatarUrl: candidateAvatar
           });
+        } else if (action === "LIKE") {
+          toast.success("Đã gửi yêu cầu kết nối!");
+        } else {
+          toast("Đã bỏ qua ứng viên", { icon: "👋" });
         }
+
+        // Với PASS hoặc LIKE thì ẩn thẻ khỏi màn hình tìm kiếm
+        setCandidates(candidates.filter((c) => c.userId !== targetUserId));
       }
 
-      // Loại bỏ ứng viên ra khỏi danh sách hiển thị hiện tại sau khi đã tương tác
-      setCandidates(candidates.filter((c) => c.userId !== targetUserId));
     } catch (error: any) {
       if (error.response?.status === 409) {
-        alert("Đã tương tác với người này rồi!");
+        toast.error("Đã tương tác với người này rồi!");
         setCandidates(candidates.filter((c) => c.userId !== targetUserId));
       } else {
-        alert("Lỗi hệ thống, vui lòng thử lại sau");
+        toast.error("Lỗi hệ thống, vui lòng thử lại sau");
       }
     } finally {
       setActionLoading(null);
@@ -102,7 +117,7 @@ export default function RoommateMatching() {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
-          <Loader className="animate-spin mx-auto mb-3 text-emerald-600" size={40} />
+          <Loader className="animate-spin mx-auto mb-3 text-[var(--brand-600)]" size={40} />
           <div className="text-gray-600 font-medium">Đang tìm kiếm các ứng viên phù hợp...</div>
         </div>
       </div>
@@ -113,20 +128,19 @@ export default function RoommateMatching() {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto">
         
-        {/* 🚀 HEADER CỦA TRANG TÌM Ở GHÉP ĐÃ ĐƯỢC CẬP NHẬT */}
+        {/* HEADER CỦA TRANG TÌM Ở GHÉP */}
         <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Khám phá bạn cùng phòng</h1>
             <p className="text-sm text-gray-500 mt-1">Hệ thống đã chọn lọc những người có độ tương thích cao nhất với bạn</p>
           </div>
           
-          {/* Nút chuyển sang trang Hồ sơ đã lưu */}
           <button
             onClick={() => navigate('/saved-roommates')}
-            className="flex items-center gap-2 px-5 py-2.5 bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-xl hover:bg-yellow-100 transition-all font-medium shadow-sm shrink-0"
+            className="flex items-center gap-2 px-5 py-2.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl hover:bg-amber-100 transition-all font-semibold shadow-sm shrink-0 text-sm"
           >
-            <Bookmark className="w-5 h-5 fill-yellow-700" />
-            Hồ sơ đã lưu
+            <Bookmark className="w-4 h-4 fill-amber-700" />
+            Hồ sơ đã lưu ({savedUserIds.length})
           </button>
         </div>
 
@@ -140,7 +154,7 @@ export default function RoommateMatching() {
             </p>
             <button
               onClick={loadCandidates}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 px-6 rounded-xl shadow-sm transition-colors text-sm"
+              className="bg-[var(--brand-600)] hover:bg-[var(--brand-700)] text-white font-semibold py-2.5 px-6 rounded-xl shadow-sm transition-colors text-sm"
             >
               Cập nhật lại danh sách
             </button>
@@ -148,148 +162,155 @@ export default function RoommateMatching() {
         ) : (
           /* Candidates Grid */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {candidates.map((candidate) => (
-              <div
-                key={candidate.userId}
-                className="bg-white rounded-2xl shadow-sm hover:shadow-md border border-gray-100 transition duration-200 overflow-hidden flex flex-col"
-              >
-                {/* Visual Header Section */}
-                <div className="h-44 bg-gradient-to-br from-emerald-500 to-teal-400 flex items-center justify-center relative shrink-0">
-                  {candidate.avatarUrl ? (
-                    <img 
-                      src={candidate.avatarUrl} 
-                      alt={candidate.fullName} 
-                      className="w-24 h-24 rounded-full border-4 border-white object-cover shadow-sm"
-                    />
-                  ) : (
-                    <div className="w-24 h-24 rounded-full border-4 border-white bg-emerald-100 flex items-center justify-center text-4xl shadow-sm select-none">
-                      👤
-                    </div>
-                  )}
+            {candidates.map((candidate) => {
+              const isSaved = savedUserIds.includes(candidate.userId);
 
-                  {/* Compatibility Circular Badge */}
-                  <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-2xl p-2 min-w-[56px] text-center shadow-md border border-emerald-50">
-                    <p className="text-lg font-black text-emerald-600 leading-none">
-                      {candidate.compatibilityPct}%
-                    </p>
-                    <p className="text-[10px] font-bold text-gray-400 mt-0.5 uppercase tracking-wider">Hợp gu</p>
-                  </div>
-                </div>
-
-                {/* Body Content Section */}
-                <div className="p-5 flex-1 flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <h3 className="text-lg font-bold text-gray-900 truncate">
-                        {candidate.fullName || "Sinh viên ẩn danh"}
-                      </h3>
-                      
-                      {/* 🔥 Nút Chat nội bộ nhanh ngay tại góc thẻ hồ sơ theo nốt họp */}
-                      <button
-                        onClick={() => navigate("/chat")}
-                        className="text-gray-400 hover:text-blue-600 p-1.5 hover:bg-blue-50 rounded-lg transition-colors"
-                        title={`Nhắn tin ngay với ${candidate.fullName || 'ứng viên'}`}
-                      >
-                        <MessageSquare size={18} />
-                      </button>
-                    </div>
-
-                    <p className="text-xs font-semibold text-emerald-600 bg-emerald-50 inline-block px-2 py-0.5 rounded-md mb-4">
-                      {candidate.age} tuổi • {candidate.gender === "MALE" ? "Nam" : candidate.gender === "FEMALE" ? "Nữ" : candidate.gender}
-                    </p>
-
-                    <div className="space-y-2 text-sm text-gray-600 mb-4">
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-400 shrink-0">📍</span>
-                        <span className="truncate">Quê quán: {candidate.hometown || "Chưa cập nhật"}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-400 shrink-0">🎓</span>
-                        <span className="line-clamp-1">Học vấn/Công việc: {candidate.schoolOrJob || "Chưa cập nhật"}</span>
-                      </div>
-                    </div>
-
-                    {/* Behavior Tags */}
-                    {getTags(candidate).length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mb-2">
-                        {getTags(candidate).map((tag, i) => (
-                          <span
-                            key={i}
-                            className={`text-[11px] font-medium px-2.5 py-0.5 rounded-md ${
-                              tag.type === "error"
-                                ? "bg-rose-50 text-rose-700 border border-rose-100"
-                                : "bg-blue-50 text-blue-700 border border-blue-100"
-                            }`}
-                          >
-                            {tag.label}
-                          </span>
-                        ))}
+              return (
+                <div
+                  key={candidate.userId}
+                  className="bg-white rounded-2xl shadow-sm hover:shadow-md border border-gray-100 transition duration-200 overflow-hidden flex flex-col"
+                >
+                  {/* Visual Header Section */}
+                  <div className="h-44 bg-gradient-to-br from-[var(--brand-800)] via-[var(--brand-600)] to-[#7c3aed] flex items-center justify-center relative shrink-0">
+                    {candidate.avatarUrl ? (
+                      <img 
+                        src={candidate.avatarUrl} 
+                        alt={candidate.fullName} 
+                        className="w-24 h-24 rounded-full border-4 border-white object-cover shadow-sm"
+                      />
+                    ) : (
+                      <div className="w-24 h-24 rounded-full border-4 border-white bg-blue-100 flex items-center justify-center text-4xl shadow-sm select-none">
+                        👤
                       </div>
                     )}
+
+                    {/* Compatibility Circular Badge */}
+                    <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-2xl p-2 min-w-[56px] text-center shadow-md border border-blue-100">
+                      <p className="text-lg font-black text-[var(--brand-600)] leading-none">
+                        {candidate.compatibilityPct}%
+                      </p>
+                      <p className="text-[10px] font-bold text-gray-400 mt-0.5 uppercase tracking-wider">Hợp gu</p>
+                    </div>
                   </div>
 
-                  {/* Core Action Footer Buttons */}
-                  <div className="flex gap-2 pt-4 border-t border-gray-100 mt-4">
-                    {/* Pass Action */}
-                    <button
-                      onClick={() => handleAction(candidate.userId, "PASS")}
-                      disabled={!!actionLoading}
-                      className="flex-1 bg-gray-50 hover:bg-gray-100 disabled:opacity-50 text-gray-600 py-2 rounded-xl flex items-center justify-center gap-1 transition-colors font-semibold text-xs border border-gray-200"
-                    >
-                      {actionLoading === `${candidate.userId}-PASS` ? (
-                        <Loader size={14} className="animate-spin" />
-                      ) : (
-                        <>
-                          <X size={14} />
-                          Bỏ qua
-                        </>
-                      )}
-                    </button>
+                  {/* Body Content Section */}
+                  <div className="p-5 flex-1 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <h3 className="text-lg font-bold text-gray-900 truncate">
+                          {candidate.fullName || "Sinh viên ẩn danh"}
+                        </h3>
+                        
+                        <button
+                          onClick={() => navigate("/chat")}
+                          className="text-gray-400 hover:text-blue-600 p-1.5 hover:bg-blue-50 rounded-lg transition-colors"
+                          title={`Nhắn tin ngay với ${candidate.fullName || 'ứng viên'}`}
+                        >
+                          <MessageSquare size={18} />
+                        </button>
+                      </div>
 
-                    {/* Save Action */}
-                    <button
-                      onClick={() => handleAction(candidate.userId, "SAVE")}
-                      disabled={!!actionLoading}
-                      className="flex-1 bg-amber-50 hover:bg-amber-100/80 disabled:opacity-50 text-amber-700 py-2 rounded-xl flex items-center justify-center gap-1 transition-colors font-semibold text-xs border border-amber-100"
-                    >
-                      {actionLoading === `${candidate.userId}-SAVE` ? (
-                        <Loader size={14} className="animate-spin" />
-                      ) : (
-                        <>
-                          <Heart size={14} />
-                          Lưu
-                        </>
-                      )}
-                    </button>
+                      <p className="text-xs font-semibold text-[var(--brand-600)] bg-blue-50 inline-block px-2 py-0.5 rounded-md mb-4">
+                        {candidate.age} tuổi • {candidate.gender === "MALE" ? "Nam" : candidate.gender === "FEMALE" ? "Nữ" : candidate.gender}
+                      </p>
 
-                    {/* Like/Connect Action */}
-                    <button
-                      onClick={() => handleAction(candidate.userId, "LIKE", candidate.fullName, candidate.avatarUrl)}
-                      disabled={!!actionLoading}
-                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white py-2 rounded-xl flex items-center justify-center gap-1 transition-colors font-semibold text-xs shadow-sm shadow-emerald-100"
-                    >
-                      {actionLoading === `${candidate.userId}-LIKE` ? (
-                        <Loader size={14} className="animate-spin" />
-                      ) : (
-                        <>
-                          <ThumbsUp size={14} />
-                          Kết nối
-                        </>
+                      <div className="space-y-2 text-sm text-gray-600 mb-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-400 shrink-0">📍</span>
+                          <span className="truncate">Quê quán: {candidate.hometown || "Chưa cập nhật"}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-400 shrink-0">🎓</span>
+                          <span className="line-clamp-1">Học vấn/Công việc: {candidate.schoolOrJob || "Chưa cập nhật"}</span>
+                        </div>
+                      </div>
+
+                      {/* Behavior Tags */}
+                      {getTags(candidate).length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mb-2">
+                          {getTags(candidate).map((tag, i) => (
+                            <span
+                              key={i}
+                              className={`text-[11px] font-medium px-2.5 py-0.5 rounded-md ${
+                                tag.type === "error"
+                                  ? "bg-rose-50 text-rose-700 border border-rose-100"
+                                  : "bg-blue-50 text-blue-700 border border-blue-100"
+                              }`}
+                            >
+                              {tag.label}
+                            </span>
+                          ))}
+                        </div>
                       )}
-                    </button>
+                    </div>
+
+                    {/* Core Action Footer Buttons */}
+                    <div className="flex gap-2 pt-4 border-t border-gray-100 mt-4">
+                      {/* Pass Action */}
+                      <button
+                        onClick={() => handleAction(candidate.userId, "PASS")}
+                        disabled={!!actionLoading}
+                        className="flex-1 bg-gray-50 hover:bg-gray-100 disabled:opacity-50 text-gray-600 py-2 rounded-xl flex items-center justify-center gap-1 transition-colors font-semibold text-xs border border-gray-200"
+                      >
+                        {actionLoading === `${candidate.userId}-PASS` ? (
+                          <Loader size={14} className="animate-spin" />
+                        ) : (
+                          <>
+                            <X size={14} />
+                            Bỏ qua
+                          </>
+                        )}
+                      </button>
+
+                      {/* Save Action - CÓ DYNAMIC TOGGLE COLOR (MỤC 6) */}
+                      <button
+                        onClick={() => handleAction(candidate.userId, "SAVE")}
+                        disabled={!!actionLoading}
+                        className={`flex-1 py-2 rounded-xl flex items-center justify-center gap-1 transition-all font-semibold text-xs border ${
+                          isSaved 
+                            ? "bg-rose-50 hover:bg-rose-100 text-rose-600 border-rose-200 shadow-sm" 
+                            : "bg-amber-50 hover:bg-amber-100/80 text-amber-700 border-amber-100"
+                        } disabled:opacity-50`}
+                      >
+                        {actionLoading === `${candidate.userId}-SAVE` ? (
+                          <Loader size={14} className="animate-spin" />
+                        ) : (
+                          <>
+                            <Heart size={14} className={isSaved ? "fill-rose-500 text-rose-500" : ""} />
+                            {isSaved ? "Đã lưu" : "Lưu"}
+                          </>
+                        )}
+                      </button>
+
+                      {/* Like/Connect Action */}
+                      <button
+                        onClick={() => handleAction(candidate.userId, "LIKE", candidate.fullName, candidate.avatarUrl)}
+                        disabled={!!actionLoading}
+                        className="flex-1 bg-[var(--brand-600)] hover:bg-[var(--brand-700)] disabled:opacity-50 text-white py-2 rounded-xl flex items-center justify-center gap-1 transition-colors font-semibold text-xs shadow-sm shadow-blue-100"
+                      >
+                        {actionLoading === `${candidate.userId}-LIKE` ? (
+                          <Loader size={14} className="animate-spin" />
+                        ) : (
+                          <>
+                            <ThumbsUp size={14} />
+                            Kết nối
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
-        {/* 🔥 Modal Pop-up hiện ra ăn mừng khi 2 bên tương thích và quẹt trúng nhau (Match 2 chiều) */}
+        {/* Modal Pop-up hiện ra khi Match 2 chiều */}
         {matchNotification && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
-            <div className="bg-white rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl border border-emerald-100 relative overflow-hidden transform transition-all scale-100">
-              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-500 via-teal-500 to-green-400" />
-              <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4 mt-2 text-emerald-600">
+            <div className="bg-white rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl border border-blue-100 relative overflow-hidden transform transition-all scale-100">
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[var(--brand-800)] via-[var(--brand-600)] to-[#7c3aed]" />
+              <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 mt-2 text-[var(--brand-600)]">
                 <Sparkles size={32} className="animate-pulse" />
               </div>
               <h3 className="text-xl font-black text-gray-900">Kết nối thành công!</h3>
@@ -302,7 +323,7 @@ export default function RoommateMatching() {
                     setMatchNotification(null);
                     navigate("/chat");
                   }}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl shadow-md text-sm transition-colors"
+                  className="w-full bg-[var(--brand-600)] hover:bg-[var(--brand-700)] text-white font-bold py-2.5 rounded-xl shadow-md text-sm transition-colors"
                 >
                   Nhắn tin trao đổi ngay
                 </button>

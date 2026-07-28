@@ -6,6 +6,7 @@ import {
   User, Calendar, MapPin, Briefcase, DollarSign, 
   Moon, Cigarette, Beer, Sparkles, Sliders, Loader 
 } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function RoommateOnboarding() {
   const { user } = useAuth();
@@ -35,17 +36,18 @@ export default function RoommateOnboarding() {
     
     // HTML Validation bổ sung kiểm tra logic số liệu tài chính
     if (Number(form.budgetMin) > Number(form.budgetMax)) {
-      alert("Ngân sách tối thiểu không được lớn hơn ngân sách tối đa!");
+      toast.error("Ngân sách tối thiểu không được lớn hơn ngân sách tối đa!");
       return;
     }
 
     setLoading(true);
     try {
       await roommateService.createOrUpdateProfile(form);
+      toast.success("Cập nhật hồ sơ thành công!");
       navigate("/roommate-matching");
     } catch (error) {
       console.error("Error:", error);
-      alert("Lỗi khi lưu hồ sơ lối sống");
+      toast.error("Lỗi khi lưu hồ sơ lối sống");
     } finally {
       setLoading(false);
     }
@@ -82,7 +84,7 @@ export default function RoommateOnboarding() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">Giới tính</label>
+                <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">Giới tính *</label>
                 <select
                   required
                   value={form.gender}
@@ -97,7 +99,7 @@ export default function RoommateOnboarding() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">Tuổi của bạn</label>
+                <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">Tuổi của bạn *</label>
                 <div className="relative">
                   <input
                     type="number"
@@ -115,12 +117,14 @@ export default function RoommateOnboarding() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Mục Quê quán: Bỏ required */}
               <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">Quê quán / Vùng miền</label>
+                <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">
+                  Quê quán / Vùng miền <span className="text-gray-400 font-normal lowercase"></span>
+                </label>
                 <div className="relative">
                   <input
                     type="text"
-                    required
                     value={form.hometown}
                     onChange={(e) => handleChange("hometown", e.target.value)}
                     className="w-full border border-gray-200 bg-white rounded-xl p-3 pl-9 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-none transition-all"
@@ -130,12 +134,14 @@ export default function RoommateOnboarding() {
                 </div>
               </div>
 
+              {/* Mục Trường học/Nghề nghiệp: Bỏ required */}
               <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">Trường học / Nghề nghiệp</label>
+                <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">
+                  Trường học / Nghề nghiệp <span className="text-gray-400 font-normal lowercase"></span>
+                </label>
                 <div className="relative">
                   <input
                     type="text"
-                    required
                     value={form.schoolOrJob}
                     onChange={(e) => handleChange("schoolOrJob", e.target.value)}
                     className="w-full border border-gray-200 bg-white rounded-xl p-3 pl-9 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-none transition-all"
@@ -155,7 +161,7 @@ export default function RoommateOnboarding() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">Tối thiểu (VNĐ / Tháng)</label>
+                <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">Tối thiểu (VNĐ / Tháng) *</label>
                 <div className="relative">
                   <input
                     type="number"
@@ -171,7 +177,7 @@ export default function RoommateOnboarding() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">Tối đa gánh được (VNĐ / Tháng)</label>
+                <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">Tối đa chi trả được (VNĐ / Tháng) *</label>
                 <div className="relative">
                   <input
                     type="number"
@@ -305,7 +311,7 @@ export default function RoommateOnboarding() {
               </div>
             </div>
 
-            {/* Các tùy chọn Boolean nhanh dạng dải hàng ngang */}
+            {/* Các tùy chọn Boolean nhanh */}
             <div className="space-y-3 pt-2">
               {[
                 { field: "hasPet", label: "🐾 Tôi định nuôi hoặc mang theo thú cưng vào phòng" },
