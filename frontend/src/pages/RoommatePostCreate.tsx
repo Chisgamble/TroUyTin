@@ -48,15 +48,44 @@ export default function RoommatePostCreate() {
     toast.success("Đã xóa ảnh");
   };
 
+  // 🔥 ĐIỀU HƯỚNG BƯỚC BẰNG TYPE="BUTTON" + VALIDATION TỪNG BƯỚC
+  const nextStep = (e: React.MouseEvent) => {
+    e.preventDefault(); // Chặn mọi trigger submit form
+
+    if (currentStep === 1) {
+      if (!form.title.trim()) {
+        toast.error("Vui lòng nhập tiêu đề bài đăng!");
+        return;
+      }
+      if (!form.pricePerMonth) {
+        toast.error("Vui lòng nhập giá thuê mỗi tháng!");
+        return;
+      }
+    }
+
+    if (currentStep === 2) {
+      if (!form.wardId) {
+        toast.error("Vui lòng nhập Mã phường / Xã (Ward ID)!");
+        return;
+      }
+    }
+
+    setCurrentStep((prev) => Math.min(prev + 1, 4));
+  };
+
+  const prevStep = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // BẢO VỆ 1: Tuyệt đối không cho submit nếu chưa ở bước cuối cùng (Bước 4)
-    if (currentStep < 4) {
+    // 🔥 BẢO VỆ TẦNG DUYỆT: Tuyệt đối không submit nếu chưa tới bước 4
+    if (currentStep !== 4) {
       return;
     }
 
-    // HTML Validation bổ sung cho bước cuối cùng
     if (!form.title || !form.pricePerMonth) {
       toast.error("Vui lòng điền đầy đủ các thông tin bắt buộc!");
       return;
@@ -73,7 +102,7 @@ export default function RoommatePostCreate() {
 
       const postId = postRes.data.id;
 
-      // Chạy vòng lặp upload ảnh tuần tự lên Backend
+      // Upload chuỗi danh sách ảnh lên backend (roommate_post_images)
       for (let i = 0; i < images.length; i++) {
         await roommatePostService.uploadImage(postId, images[i], i);
       }
@@ -90,10 +119,6 @@ export default function RoommatePostCreate() {
 
   const amenityOptions = ["Wifi", "Điều hòa", "Bếp", "Phòng tắm riêng", "Chỗ để xe", "Máy giặt", "Nóng lạnh", "TV"];
 
-  const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, 4));
-  const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
-
-  // Định nghĩa các bước Wizard
   const stepsMeta = [
     { step: 1, label: "Thông tin", icon: <ListPlus size={16} /> },
     { step: 2, label: "Vị trí", icon: <MapPin size={16} /> },
@@ -143,7 +168,15 @@ export default function RoommatePostCreate() {
         </div>
 
         {/* Content Wizard Forms */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form 
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (currentStep === 4) {
+              handleSubmit(e);
+            }
+          }} 
+          className="space-y-6"
+        >
           
           {/* BƯỚC 1: THÔNG TIN CƠ BẢN */}
           {currentStep === 1 && (
@@ -153,7 +186,6 @@ export default function RoommatePostCreate() {
                 <label className="block text-xs font-bold text-gray-600 uppercase mb-2">Tiêu đề bài viết bài đăng *</label>
                 <input
                   type="text"
-                  required
                   value={form.title}
                   onChange={(e) => handleChange("title", e.target.value)}
                   className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-none transition-all"
@@ -203,7 +235,6 @@ export default function RoommatePostCreate() {
                   <label className="block text-xs font-bold text-gray-600 uppercase mb-2">Giá thuê / Tháng (VNĐ) *</label>
                   <input
                     type="number"
-                    required
                     min="0"
                     value={form.pricePerMonth}
                     onChange={(e) => handleChange("pricePerMonth", e.target.value)}
@@ -233,11 +264,10 @@ export default function RoommatePostCreate() {
                 <label className="block text-xs font-bold text-gray-600 uppercase mb-2">Mã phường / Xã (Ward ID) *</label>
                 <input
                   type="number"
-                  required
                   value={form.wardId}
                   onChange={(e) => handleChange("wardId", e.target.value)}
                   className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-none transition-all"
-                  placeholder="Nhập mã ID hành chính của Phường"
+                  placeholder="Nhập mã ID hành chính của Phường (VD: 1)"
                 />
               </div>
 
@@ -318,7 +348,7 @@ export default function RoommatePostCreate() {
                     onChange={(e) => setImageInput(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        e.preventDefault(); // Ngăn submit form khi nhấn Enter ở đây
+                        e.preventDefault();
                         handleAddImage();
                       }
                     }}
