@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { roommateService } from "../services/roommates";
-import { Heart, X, ThumbsUp, Loader, MessageSquare, Sparkles, Bookmark } from "lucide-react";
+import { chatService } from "../services/chatService";
+import { Heart, X, ThumbsUp, Loader, MessageSquare, Bookmark } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface RoommateCandidate {
@@ -23,12 +24,9 @@ export default function RoommateMatching() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [candidates, setCandidates] = useState<RoommateCandidate[]>([]);
-  const [savedUserIds, setSavedUserIds] = useState<string[]>([]); // Quản lý danh sách ID đã lưu local
+  const [savedUserIds, setSavedUserIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  
-  // Trạng thái hiển thị modal chúc mừng khi match thành công 2 chiều
-  const [matchNotification, setMatchNotification] = useState<{ userName: string; avatarUrl?: string } | null>(null);
 
   useEffect(() => {
     loadCandidates();
@@ -59,47 +57,70 @@ export default function RoommateMatching() {
     candidateName?: string,
     candidateAvatar?: string
   ) => {
+    // 1. Kiểm tra đăng nhập
+    if (!user) {
+      toast.error("Vui lòng đăng nhập để thực hiện chức năng này!");
+      navigate("/login");
+      return;
+    }
+
+    // 2. Chặn tự kết nối với chính mình
+    if (String(user.id) === String(targetUserId)) {
+      toast.error("Bạn không thể tự kết nối với chính mình!");
+      return;
+    }
+
     try {
       setActionLoading(`${targetUserId}-${action}`);
 
+      // XỬ LÝ LƯU HỒ SƠ
       if (action === "SAVE") {
         const isAlreadySaved = savedUserIds.includes(targetUserId);
 
         if (isAlreadySaved) {
-          // Trạng thái toggle: Bỏ lưu
           setSavedUserIds((prev) => prev.filter((id) => id !== targetUserId));
           toast.success("Đã bỏ lưu hồ sơ!");
         } else {
-          // Trạng thái toggle: Lưu mới
           await roommateService.saveRoommate(targetUserId);
           setSavedUserIds((prev) => [...prev, targetUserId]);
           toast.success("Đã lưu hồ sơ ứng viên!");
         }
-      } else {
-        const matchAction = action === "LIKE" ? "LIKE" : "PASS";
-        const res = await roommateService.createMatch(targetUserId, matchAction);
-        
-        if (action === "LIKE" && res.data?.status === "MATCHED") {
-          setMatchNotification({
-            userName: candidateName || "Bạn cùng phòng",
-            avatarUrl: candidateAvatar
-          });
-        } else if (action === "LIKE") {
-          toast.success("Đã gửi yêu cầu kết nối!");
-        } else {
-          toast("Đã bỏ qua ứng viên", { icon: "👋" });
-        }
+        return; 
+      }
 
-        // Với PASS hoặc LIKE thì ẩn thẻ khỏi màn hình tìm kiếm
-        setCandidates(candidates.filter((c) => c.userId !== targetUserId));
+      // XỬ LÝ KẾT NỐI (MỞ CHAT TRỰC TIẾP NHƯ LISTING DETAIL)
+      if (action === "LIKE") {
+        const conversationId = await chatService.getOrCreateConversation(
+          String(user.id),
+          String(targetUserId)
+        );
+
+        toast.success("Đang chuyển đến phòng trò chuyện...");
+
+        navigate("/chat", {
+          state: { 
+            conversationId, 
+            participantId: targetUserId 
+          },
+        });
+        return; 
+      }
+
+      // XỬ LÝ BỎ QUA
+      if (action === "PASS") {
+        await roommateService.createMatch(targetUserId, "PASS");
+        toast("Đã bỏ qua ứng viên", { icon: "👋" });
+        setCandidates((prev) => prev.filter((c) => c.userId !== targetUserId));
       }
 
     } catch (error: any) {
+      console.error("Lỗi khi xử lý thao tác:", error);
       if (error.response?.status === 409) {
         toast.error("Đã tương tác với người này rồi!");
-        setCandidates(candidates.filter((c) => c.userId !== targetUserId));
+        setCandidates((prev) => prev.filter((c) => c.userId !== targetUserId));
       } else {
-        toast.error("Lỗi hệ thống, vui lòng thử lại sau");
+        const message = error instanceof Error ? error.message : "Lỗi hệ thống, vui lòng thử lại sau";
+        toast.error(message);
       }
     } finally {
       setActionLoading(null);
@@ -201,12 +222,18 @@ export default function RoommateMatching() {
                           {candidate.fullName || "Sinh viên ẩn danh"}
                         </h3>
                         
+                        {/* Cập nhật nút nhắn tin nhỏ ở góc thành gọi API mở chat */}
                         <button
-                          onClick={() => navigate("/chat")}
-                          className="text-gray-400 hover:text-blue-600 p-1.5 hover:bg-blue-50 rounded-lg transition-colors"
+                          onClick={() => handleAction(candidate.userId, "LIKE", candidate.fullName, candidate.avatarUrl)}
+                          disabled={!!actionLoading}
+                          className="text-gray-400 hover:text-blue-600 p-1.5 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
                           title={`Nhắn tin ngay với ${candidate.fullName || 'ứng viên'}`}
                         >
-                          <MessageSquare size={18} />
+                          {actionLoading === `${candidate.userId}-LIKE` ? (
+                             <Loader size={18} className="animate-spin text-blue-600" />
+                          ) : (
+                             <MessageSquare size={18} />
+                          )}
                         </button>
                       </div>
 
@@ -262,7 +289,7 @@ export default function RoommateMatching() {
                         )}
                       </button>
 
-                      {/* Save Action - CÓ DYNAMIC TOGGLE COLOR (MỤC 6) */}
+                      {/* Save Action */}
                       <button
                         onClick={() => handleAction(candidate.userId, "SAVE")}
                         disabled={!!actionLoading}
@@ -293,7 +320,7 @@ export default function RoommateMatching() {
                         ) : (
                           <>
                             <ThumbsUp size={14} />
-                            Kết nối
+                            Chat ngay
                           </>
                         )}
                       </button>
@@ -304,40 +331,6 @@ export default function RoommateMatching() {
             })}
           </div>
         )}
-
-        {/* Modal Pop-up hiện ra khi Match 2 chiều */}
-        {matchNotification && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
-            <div className="bg-white rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl border border-blue-100 relative overflow-hidden transform transition-all scale-100">
-              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[var(--brand-800)] via-[var(--brand-600)] to-[#7c3aed]" />
-              <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 mt-2 text-[var(--brand-600)]">
-                <Sparkles size={32} className="animate-pulse" />
-              </div>
-              <h3 className="text-xl font-black text-gray-900">Kết nối thành công!</h3>
-              <p className="text-sm text-gray-500 mt-2 px-2">
-                Bạn và <span className="font-bold text-gray-800">{matchNotification.userName}</span> đều có mong muốn ở ghép cùng nhau.
-              </p>
-              <div className="mt-5 flex flex-col gap-2">
-                <button
-                  onClick={() => {
-                    setMatchNotification(null);
-                    navigate("/chat");
-                  }}
-                  className="w-full bg-[var(--brand-600)] hover:bg-[var(--brand-700)] text-white font-bold py-2.5 rounded-xl shadow-md text-sm transition-colors"
-                >
-                  Nhắn tin trao đổi ngay
-                </button>
-                <button
-                  onClick={() => setMatchNotification(null)}
-                  className="w-full bg-gray-50 hover:bg-gray-100 text-gray-500 font-semibold py-2 rounded-xl text-sm transition-colors"
-                >
-                  Để sau
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
       </div>
     </div>
   );
