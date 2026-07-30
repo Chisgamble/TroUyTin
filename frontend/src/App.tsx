@@ -23,6 +23,7 @@ import SearchResultsPage from './pages/SearchResultsPage'
 import RoomSearchLLM from './pages/RoomSearchLLM'
 import ResetPassword from './pages/ResetPassword'
 import MyListingsPage from './pages/MyListingsPage'
+import RoommatePostDetailPage from './pages/RoommatePostDetailPage'
 
 function AppRoutes() {
   const { user, loading } = useAuth()
@@ -76,6 +77,7 @@ function AppRoutes() {
           <Route path="/roommate-posts" element={user ? <RoommatePostList /> : <Navigate to="/login" />} />
           <Route path="/roommate-posts/create" element={user ? <RoommatePostCreate /> : <Navigate to="/login" />} />
           <Route path="/roommate-posts/:postId/edit" element={user ? <RoommatePostCreate /> : <Navigate to="/login" />} />
+          <Route path="/roommate-posts/:id" element={user ? <RoommatePostDetailPage /> : <Navigate to="/login" />} />
 
           {/* 🔥 CỤM TRANG HỒ SƠ (ĐƯỢC BỌC TRONG PROFILE LAYOUT ĐỂ HẾT LỖI) */}
           <Route path="/profile" element={user ? <ProfileLayout /> : <Navigate to="/login" />}>

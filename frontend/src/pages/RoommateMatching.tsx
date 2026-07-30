@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { roommateService } from "../services/roommates";
 import { chatService } from "../services/chatService";
-import { Heart, X, ThumbsUp, Loader, MessageSquare, Bookmark } from "lucide-react";
+import { Heart, X, ThumbsUp, Loader, MessageSquare, Bookmark, Home } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface RoommateCandidate {
@@ -18,6 +18,9 @@ interface RoommateCandidate {
   compatibilityPct: number;
   hasPet: boolean;
   sleepSchedule: string;
+  // Bổ sung 2 trường để kiểm tra xem người này có bài đăng phòng không
+  hasRoom?: boolean;
+  roomId?: number | string;
 }
 
 export default function RoommateMatching() {
@@ -57,14 +60,12 @@ export default function RoommateMatching() {
     candidateName?: string,
     candidateAvatar?: string
   ) => {
-    // 1. Kiểm tra đăng nhập
     if (!user) {
       toast.error("Vui lòng đăng nhập để thực hiện chức năng này!");
       navigate("/login");
       return;
     }
 
-    // 2. Chặn tự kết nối với chính mình
     if (String(user.id) === String(targetUserId)) {
       toast.error("Bạn không thể tự kết nối với chính mình!");
       return;
@@ -73,10 +74,8 @@ export default function RoommateMatching() {
     try {
       setActionLoading(`${targetUserId}-${action}`);
 
-      // XỬ LÝ LƯU HỒ SƠ
       if (action === "SAVE") {
         const isAlreadySaved = savedUserIds.includes(targetUserId);
-
         if (isAlreadySaved) {
           setSavedUserIds((prev) => prev.filter((id) => id !== targetUserId));
           toast.success("Đã bỏ lưu hồ sơ!");
@@ -88,7 +87,6 @@ export default function RoommateMatching() {
         return; 
       }
 
-      // XỬ LÝ KẾT NỐI (MỞ CHAT TRỰC TIẾP NHƯ LISTING DETAIL)
       if (action === "LIKE") {
         const conversationId = await chatService.getOrCreateConversation(
           String(user.id),
@@ -106,7 +104,6 @@ export default function RoommateMatching() {
         return; 
       }
 
-      // XỬ LÝ BỎ QUA
       if (action === "PASS") {
         await roommateService.createMatch(targetUserId, "PASS");
         toast("Đã bỏ qua ứng viên", { icon: "👋" });
@@ -181,7 +178,6 @@ export default function RoommateMatching() {
             </button>
           </div>
         ) : (
-          /* Candidates Grid */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {candidates.map((candidate) => {
               const isSaved = savedUserIds.includes(candidate.userId);
@@ -193,6 +189,14 @@ export default function RoommateMatching() {
                 >
                   {/* Visual Header Section */}
                   <div className="h-44 bg-gradient-to-br from-[var(--brand-800)] via-[var(--brand-600)] to-[#7c3aed] flex items-center justify-center relative shrink-0">
+                    
+                    {/* BỔ SUNG: Tag Đã có phòng */}
+                    {candidate.hasRoom && (
+                      <div className="absolute top-4 left-4 bg-emerald-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm z-10 flex items-center gap-1 border border-emerald-400">
+                        <Home size={12} /> Đã có phòng
+                      </div>
+                    )}
+
                     {candidate.avatarUrl ? (
                       <img 
                         src={candidate.avatarUrl} 
@@ -222,7 +226,6 @@ export default function RoommateMatching() {
                           {candidate.fullName || "Sinh viên ẩn danh"}
                         </h3>
                         
-                        {/* Cập nhật nút nhắn tin nhỏ ở góc thành gọi API mở chat */}
                         <button
                           onClick={() => handleAction(candidate.userId, "LIKE", candidate.fullName, candidate.avatarUrl)}
                           disabled={!!actionLoading}
@@ -270,6 +273,18 @@ export default function RoommateMatching() {
                         </div>
                       )}
                     </div>
+
+                    {/* BỔ SUNG: Nút Xem Phòng (Nằm trên Footer Actions) */}
+                    {candidate.hasRoom && candidate.roomId && (
+                      <button
+                        onClick={() => navigate(`/roommate-posts/${candidate.roomId}`, { 
+                          state: { compatibilityPct: candidate.compatibilityPct } // Truyền độ tương thích qua state
+                        })}
+                        className="w-full mt-3 mb-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-2 rounded-xl text-xs transition-colors border border-emerald-200 flex items-center justify-center gap-1.5"
+                      >
+                        <Home size={14} /> Xem phòng của họ
+                      </button>
+                    )}
 
                     {/* Core Action Footer Buttons */}
                     <div className="flex gap-2 pt-4 border-t border-gray-100 mt-4">

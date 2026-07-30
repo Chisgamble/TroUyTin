@@ -1,8 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { roommatePostService } from "../services/roommates";
-import { Loader, ChevronRight, ChevronLeft, Check, Plus, Trash2, MapPin, ListPlus, ShieldAlert, Image } from "lucide-react";
+import { getAmenities, type Amenity } from "../services/roomListing";
+import { getIcon } from "../utils/iconMap";
+import { 
+  Loader, ChevronRight, ChevronLeft, Check, Plus, Trash2, 
+  MapPin, ListPlus, ShieldAlert, Image, Search, X 
+} from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function RoommatePostCreate() {
@@ -12,6 +17,10 @@ export default function RoommatePostCreate() {
   const [currentStep, setCurrentStep] = useState(1);
   const [images, setImages] = useState<string[]>([]);
   const [imageInput, setImageInput] = useState("");
+  
+  // State quản lý tiện ích từ DB
+  const [amenitiesList, setAmenitiesList] = useState<Amenity[]>([]);
+  const [searchAmenity, setSearchAmenity] = useState("");
 
   const [form, setForm] = useState({
     title: "",
@@ -22,9 +31,16 @@ export default function RoommatePostCreate() {
     wardId: "",
     addressDetail: "",
     availableFrom: "",
-    amenities: [] as string[],
+    amenityIds: [] as number[], // Đổi thành mảng ID số
     rules: "",
   });
+
+  // Fetch danh sách tiện ích khi load form
+  useEffect(() => {
+    getAmenities()
+      .then(setAmenitiesList)
+      .catch((err) => console.error("Lỗi lấy amenities:", err));
+  }, []);
 
   const handleChange = (field: string, value: any) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -97,7 +113,7 @@ export default function RoommatePostCreate() {
         ...form,
         area: form.area ? parseFloat(form.area) : null,
         wardId: form.wardId ? parseInt(form.wardId) : null,
-        amenities: form.amenities,
+        amenityIds: form.amenityIds, // Gửi mảng ID
       });
 
       const postId = postRes.data.id;
@@ -116,8 +132,6 @@ export default function RoommatePostCreate() {
       setLoading(false);
     }
   };
-
-  const amenityOptions = ["Wifi", "Điều hòa", "Bếp", "Phòng tắm riêng", "Chỗ để xe", "Máy giặt", "Nóng lạnh", "TV"];
 
   const stepsMeta = [
     { step: 1, label: "Thông tin", icon: <ListPlus size={16} /> },
@@ -289,40 +303,80 @@ export default function RoommatePostCreate() {
             <div className="space-y-5 animate-fadeIn">
               <h3 className="text-lg font-bold text-gray-800 border-b pb-2 mb-4">Bước 3: Tiện ích cơ sở vật chất & Quy định</h3>
               
-              <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase mb-3">Tích chọn các tiện ích phòng đang sở hữu</label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {amenityOptions.map((amenity) => {
-                    const isChecked = form.amenities.includes(amenity);
-                    return (
-                      <label 
-                        key={amenity} 
-                        className={`flex items-center gap-3 p-3 border rounded-xl cursor-pointer select-none transition-all text-xs font-medium ${
-                          isChecked 
-                            ? "bg-emerald-50 border-emerald-400 text-emerald-900" 
-                            : "bg-white border-gray-100 text-gray-600 hover:border-gray-200"
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              handleChange("amenities", [...form.amenities, amenity]);
-                            } else {
-                              handleChange("amenities", form.amenities.filter((a) => a !== amenity));
-                            }
-                          }}
-                          className="w-3.5 h-3.5 accent-emerald-600 rounded"
-                        />
-                        {amenity}
-                      </label>
-                    );
-                  })}
+              <div className="space-y-4">
+                <label className="block text-xs font-bold text-gray-600 uppercase mb-2">Tiện ích phòng đang sở hữu</label>
+                
+                {/* Ô tìm kiếm */}
+                <div className="relative mb-3">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    value={searchAmenity}
+                    onChange={e => setSearchAmenity(e.target.value)}
+                    placeholder="Tìm tiện ích..."
+                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                  />
+                </div>
+
+                {/* Chips tiện ích đã chọn */}
+                {form.amenityIds.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    {form.amenityIds.map((id) => {
+                      const a = amenitiesList.find(x => x.id === id);
+                      if (!a) return null;
+                      return (
+                        <span key={id} className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full text-xs font-semibold">
+                          {a.name}
+                          <button 
+                            type="button" 
+                            onClick={() => handleChange("amenityIds", form.amenityIds.filter(x => x !== id))} 
+                            className="hover:text-emerald-900"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Grid danh sách tiện ích */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 max-h-72 overflow-y-auto pr-1">
+                  {amenitiesList.filter(a => a.name.toLowerCase().includes(searchAmenity.toLowerCase())).length === 0 ? (
+                    <p className="col-span-full text-sm text-gray-400 py-4 text-center">Không tìm thấy tiện ích phù hợp.</p>
+                  ) : (
+                    amenitiesList
+                      .filter(a => a.name.toLowerCase().includes(searchAmenity.toLowerCase()))
+                      .map(a => {
+                        const Icon = getIcon(a.icon);
+                        const isSelected = form.amenityIds.includes(a.id);
+                        return (
+                          <button
+                            key={a.id}
+                            type="button" // Ngăn chặn trigger submit
+                            onClick={() => {
+                              handleChange("amenityIds", isSelected 
+                                ? form.amenityIds.filter(id => id !== a.id) 
+                                : [...form.amenityIds, a.id]
+                              );
+                            }}
+                            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all text-left ${
+                              isSelected
+                                ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm'
+                                : 'bg-white border-gray-200 text-gray-600 hover:border-emerald-400 hover:bg-emerald-50'
+                            }`}
+                          >
+                            <Icon className="w-4 h-4 flex-shrink-0" />
+                            <span className="truncate">{a.name}</span>
+                            {isSelected && <Check className="w-3.5 h-3.5 ml-auto flex-shrink-0" />}
+                          </button>
+                        );
+                      })
+                  )}
                 </div>
               </div>
 
-              <div className="pt-2">
+              <div className="pt-4 border-t border-gray-100 mt-4">
                 <label className="block text-xs font-bold text-gray-600 uppercase mb-2">Quy định chung của phòng nội bộ</label>
                 <textarea
                   value={form.rules}
