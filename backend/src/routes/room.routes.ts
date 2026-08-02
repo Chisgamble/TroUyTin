@@ -7,6 +7,7 @@ import {
   profiles,
   wards,
   districts,
+  provinces,
   amenities,
   reviews,
 } from "../db/schema";
@@ -24,10 +25,14 @@ router.get("/", async (req, res) => {
         room: roomListings,
         wardName: wards.name,
         districtName: districts.name,
+        districtId: districts.id,
+        provinceId: districts.provinceId,
+        provinceName: provinces.name,
       })
       .from(roomListings)
       .leftJoin(wards, eq(roomListings.wardId, wards.id))
       .leftJoin(districts, eq(wards.districtId, districts.id))
+      .leftJoin(provinces, eq(districts.provinceId, provinces.id))
       .orderBy(desc(roomListings.createdAt));
 
     if (roomsQuery.length === 0) {
@@ -84,6 +89,9 @@ router.get("/", async (req, res) => {
             ? roomImages
             : ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267"], // fallback image
         amenity_ids: roomAmenityIds,
+        district_id: row.districtId,
+        province_id: row.provinceId,
+        province_name: row.provinceName || "",
         district_name: row.districtName || "",
         ward_name: row.wardName || "",
       };
