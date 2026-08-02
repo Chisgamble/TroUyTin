@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import type { Profile } from '../../services/profiles'
 import {
-  User, Heart, Building2, MessageCircle, User2, BadgeCheck
+  User, Heart, Building2, MessageCircle, User2, BadgeCheck, Home, UserCheck
 } from 'lucide-react'
 
 type SidebarItem = {
@@ -17,7 +17,9 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
   { key: 'listings', label: 'Phòng cho thuê', icon: Building2, landlordOnly: true, path: '/profile/listings' },
   { key: 'saved-rooms', label: 'Phòng đã lưu', icon: Heart, path: '/profile/saved-rooms' },
   { key: 'messages', label: 'Tin nhắn', icon: MessageCircle, path: '/chat' },
+  { key: 'roommate-profile', label: 'Hồ sơ ở ghép', icon: UserCheck, path: '/roommate-onboarding' },
   { key: 'saved-roommates', label: 'Người ở ghép đã lưu', icon: User2, path: '/saved-roommates' },
+  { key: 'Phòng ở ghép đã đăng', label: 'Phòng ở ghép đã đăng', icon: Home, path: '/roommate-posts' },
 ]
 
 function DefaultAvatar({ name }: { name: string }) {

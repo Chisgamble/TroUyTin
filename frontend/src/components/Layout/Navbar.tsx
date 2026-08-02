@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { NavLink, Link, useNavigate } from "react-router-dom";
+import { NavLink, Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../../services/supabase";
 import type { Notification } from "../../types";
 import { useAuth } from "../../contexts/AuthContext";
@@ -8,6 +8,7 @@ import { Heart } from "lucide-react";
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -33,7 +34,7 @@ export default function Navbar() {
       }
 
       const { data, error } = await supabase
-        .from<Notification>("notifications")
+        .from("notifications")
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
@@ -50,6 +51,9 @@ export default function Navbar() {
   }, [user?.id]);
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
+  const isRoommateArea =
+    location.pathname === "/roommate-matching" ||
+    location.pathname.startsWith("/roommate-posts");
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -142,7 +146,22 @@ export default function Navbar() {
           </div>
 
           <div className="navbar-actions">
-            {profile?.role === "LANDLORD" && (
+            {isRoommateArea ? (
+              <Link to="/roommate-posts/create" className="navbar-post-btn">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 8v8M8 12h8" />
+                </svg>
+                <span>Đăng tin ở ghép</span>
+              </Link>
+            ) : profile?.role === "LANDLORD" && (
               <Link to="/dang-tin" className="navbar-post-btn">
                 <svg
                   width="18"

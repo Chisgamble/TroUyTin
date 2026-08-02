@@ -172,7 +172,6 @@ export const roommateProfiles = pgTable(
     allowOvernightGuest: boolean("allow_overnight_guest").default(false).notNull(),
     cookingFreq: cookingFreqEnum("cooking_freq"),
     hasRoom: boolean("has_room").default(false).notNull(),
-    vectorEmbedding: text("vector_embedding"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },

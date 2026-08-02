@@ -1,17 +1,32 @@
-// Vectorization scales (1-5)
-const SLEEP_SCHEDULE_MAP: Record<string, number> = {
-  "12AM-8AM": 1,  // Muộn
-  "10PM-6AM": 3,  // Bình thường
-  "8PM-5AM": 5,   // Sớm
+type SleepScheduleValue = "EARLY" | "FLEXIBLE" | "LATE";
+type TidinessValue = "MESSY" | "MODERATE" | "VERY_TIDY";
+type FrequencyValue = "DAILY" | "WEEKLY" | "BIWEEKLY" | "NEVER" | "RARELY" | "SOMETIMES" | "OFTEN" | "ALWAYS";
+type HabitValue = "NO" | "SOMETIMES" | "YES";
+
+type LegacySleepScheduleValue = "12AM-8AM" | "10PM-6AM" | "8PM-5AM";
+type LegacyTidinessValue = "LOW" | "MEDIUM" | "HIGH";
+
+type SleepScheduleInput = SleepScheduleValue | LegacySleepScheduleValue | string | null | undefined;
+type TidinessInput = TidinessValue | LegacyTidinessValue | string | null | undefined;
+type FrequencyInput = FrequencyValue | string | null | undefined;
+type HabitInput = HabitValue | string | null | undefined;
+
+const SLEEP_SCHEDULE_SCORE: Record<SleepScheduleValue, number> = {
+  EARLY: 5,     // Sớm
+  FLEXIBLE: 3,  // Linh hoạt
+  LATE: 1,      // Cú đêm
 };
 
-const TIDINESS_MAP: Record<string, number> = {
-  LOW: 1,     // Bừa bộn
-  MEDIUM: 3,  // Bình thường
-  HIGH: 5,    // Rất sạch sẽ
+const TIDINESS_SCORE: Record<TidinessValue, number> = {
+  MESSY: 1,      // Bừa bộn
+  MODERATE: 3,   // Bình thường
+  VERY_TIDY: 5,  // Rất sạch sẽ
 };
 
-const FREQUENCY_MAP: Record<string, number> = {
+const FREQUENCY_SCORE: Record<FrequencyValue, number> = {
+  DAILY: 5,
+  WEEKLY: 3,
+  BIWEEKLY: 1,
   NEVER: 1,
   RARELY: 2,
   SOMETIMES: 3,
@@ -19,11 +34,40 @@ const FREQUENCY_MAP: Record<string, number> = {
   ALWAYS: 5,
 };
 
-const HABIT_MAP: Record<string, number> = {
-  NO: 5,         // Tốt (không hút thuốc, không uống rượu)
-  SOMETIMES: 3,  // Trung bình
-  YES: 1,        // Không tốt (hút thuốc, uống rượu)
+const HABIT_SCORE: Record<HabitValue, number> = {
+  NO: 5,        // Tốt (không hút thuốc, không uống rượu)
+  SOMETIMES: 3, // Trung bình
+  YES: 1,       // Không tốt (hút thuốc, uống rượu)
 };
+
+const SLEEP_SCHEDULE_ALIASES: Record<LegacySleepScheduleValue, SleepScheduleValue> = {
+  "12AM-8AM": "LATE",
+  "10PM-6AM": "FLEXIBLE",
+  "8PM-5AM": "EARLY",
+};
+
+const TIDINESS_ALIASES: Record<LegacyTidinessValue, TidinessValue> = {
+  LOW: "MESSY",
+  MEDIUM: "MODERATE",
+  HIGH: "VERY_TIDY",
+};
+
+function normalizeEnumValue<TValue extends string>(
+  rawValue: string | null | undefined,
+  allowedValues: readonly TValue[],
+  aliasMap?: Record<string, TValue>
+): TValue | undefined {
+  if (!rawValue) {
+    return undefined;
+  }
+
+  const normalizedValue = rawValue.toUpperCase();
+  if (allowedValues.includes(normalizedValue as TValue)) {
+    return normalizedValue as TValue;
+  }
+
+  return aliasMap?.[normalizedValue];
+}
 
 export interface RoommateVector {
   sleepScore: number;
@@ -39,13 +83,34 @@ export interface RoommateVector {
  * Convert roommate profile to vector (1-5 scale)
  */
 export function profileToVector(profile: any): RoommateVector {
+  const sleepSchedule = normalizeEnumValue(
+    profile.sleepSchedule,
+    ["EARLY", "FLEXIBLE", "LATE"] as const,
+    SLEEP_SCHEDULE_ALIASES
+  );
+  const tidiness = normalizeEnumValue(
+    profile.tidiness,
+    ["MESSY", "MODERATE", "VERY_TIDY"] as const,
+    TIDINESS_ALIASES
+  );
+  const cleaningFreq = normalizeEnumValue(
+    profile.cleaningFreq,
+    ["DAILY", "WEEKLY", "BIWEEKLY", "NEVER", "RARELY", "SOMETIMES", "OFTEN", "ALWAYS"] as const
+  );
+  const smoking = normalizeEnumValue(profile.smoking, ["NO", "SOMETIMES", "YES"] as const);
+  const drinking = normalizeEnumValue(profile.drinking, ["NO", "SOMETIMES", "YES"] as const);
+  const cookingFreq = normalizeEnumValue(
+    profile.cookingFreq,
+    ["DAILY", "WEEKLY", "BIWEEKLY", "NEVER", "RARELY", "SOMETIMES", "OFTEN", "ALWAYS"] as const
+  );
+
   return {
-    sleepScore: SLEEP_SCHEDULE_MAP[profile.sleepSchedule] || 3,
-    tidyScore: TIDINESS_MAP[profile.tidiness] || 3,
-    cleaningScore: FREQUENCY_MAP[profile.cleaningFreq] || 3,
-    smokingScore: HABIT_MAP[profile.smoking] || 3,
-    drinkingScore: HABIT_MAP[profile.drinking] || 3,
-    cookingScore: FREQUENCY_MAP[profile.cookingFreq] || 3,
+    sleepScore: sleepSchedule ? SLEEP_SCHEDULE_SCORE[sleepSchedule] : 3,
+    tidyScore: tidiness ? TIDINESS_SCORE[tidiness] : 3,
+    cleaningScore: cleaningFreq ? FREQUENCY_SCORE[cleaningFreq] : 3,
+    smokingScore: smoking ? HABIT_SCORE[smoking] : 3,
+    drinkingScore: drinking ? HABIT_SCORE[drinking] : 3,
+    cookingScore: cookingFreq ? FREQUENCY_SCORE[cookingFreq] : 3,
     petScore: profile.hasPet ? 1 : 5, // Prefer no pets (5 = no pet)
   };
 }

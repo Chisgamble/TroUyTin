@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { roommateService } from "../services/roommates";
 import { chatService } from "../services/chatService";
-import { Heart, X, ThumbsUp, Loader, MessageSquare, Bookmark, Home } from "lucide-react";
+import { Heart, X, ThumbsUp, Loader, MessageSquare, Bookmark, Home, RefreshCcw } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface RoommateCandidate {
@@ -21,6 +21,7 @@ interface RoommateCandidate {
   // Bổ sung 2 trường để kiểm tra xem người này có bài đăng phòng không
   hasRoom?: boolean;
   roomId?: number | string;
+  roomAddress?: string;
 }
 
 export default function RoommateMatching() {
@@ -28,12 +29,29 @@ export default function RoommateMatching() {
   const navigate = useNavigate();
   const [candidates, setCandidates] = useState<RoommateCandidate[]>([]);
   const [savedUserIds, setSavedUserIds] = useState<string[]>([]);
+  const [savedCount, setSavedCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [reloading, setReloading] = useState(false);
 
   useEffect(() => {
-    loadCandidates();
+    void Promise.all([loadCandidates(), loadSavedState()]);
   }, []);
+
+  const loadSavedState = async () => {
+    try {
+      const [savedRes, savedCountRes] = await Promise.all([
+        roommateService.getSavedRoommates(),
+        roommateService.getSavedRoommatesCount(),
+      ]);
+
+      const savedIds = savedRes.data.map((item: any) => item.userId).filter(Boolean);
+      setSavedUserIds(savedIds);
+      setSavedCount(savedCountRes.data?.count ?? savedIds.length);
+    } catch (error) {
+      console.error("Error loading saved roommate state:", error);
+    }
+  };
 
   const loadCandidates = async () => {
     try {
@@ -54,11 +72,24 @@ export default function RoommateMatching() {
     }
   };
 
+  const handleReloadCandidates = async () => {
+    try {
+      setReloading(true);
+      await roommateService.resetDiscover();
+      await loadCandidates();
+      toast.success("Đã tải lại toàn bộ danh sách ứng viên");
+    } catch (error) {
+      console.error("Error reloading candidates:", error);
+      toast.error("Không thể tải lại danh sách ứng viên");
+    } finally {
+      setReloading(false);
+      void loadSavedState();
+    }
+  };
+
   const handleAction = async (
     targetUserId: string,
-    action: "PASS" | "SAVE" | "LIKE",
-    candidateName?: string,
-    candidateAvatar?: string
+    action: "PASS" | "SAVE" | "LIKE"
   ) => {
     if (!user) {
       toast.error("Vui lòng đăng nhập để thực hiện chức năng này!");
@@ -77,13 +108,13 @@ export default function RoommateMatching() {
       if (action === "SAVE") {
         const isAlreadySaved = savedUserIds.includes(targetUserId);
         if (isAlreadySaved) {
-          setSavedUserIds((prev) => prev.filter((id) => id !== targetUserId));
+          await roommateService.removeSavedRoommate(targetUserId);
           toast.success("Đã bỏ lưu hồ sơ!");
         } else {
           await roommateService.saveRoommate(targetUserId);
-          setSavedUserIds((prev) => [...prev, targetUserId]);
           toast.success("Đã lưu hồ sơ ứng viên!");
         }
+        void loadSavedState();
         return; 
       }
 
@@ -158,7 +189,15 @@ export default function RoommateMatching() {
             className="flex items-center gap-2 px-5 py-2.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl hover:bg-amber-100 transition-all font-semibold shadow-sm shrink-0 text-sm"
           >
             <Bookmark className="w-4 h-4 fill-amber-700" />
-            Hồ sơ đã lưu ({savedUserIds.length})
+            Hồ sơ đã lưu ({savedCount})
+          </button>
+          <button
+            onClick={handleReloadCandidates}
+            disabled={loading || reloading}
+            className="flex items-center gap-2 px-5 py-2.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-xl hover:bg-blue-100 transition-all font-semibold shadow-sm shrink-0 text-sm disabled:opacity-60"
+          >
+            <RefreshCcw className={reloading ? "w-4 h-4 animate-spin" : "w-4 h-4"} />
+            Tải lại
           </button>
         </div>
 
@@ -171,7 +210,7 @@ export default function RoommateMatching() {
               Bạn đã lướt hết các gợi ý hiện tại. Hãy quay lại sau hoặc cập nhật thêm thói quen tại hồ sơ cá nhân để mở rộng tệp tìm kiếm.
             </p>
             <button
-              onClick={loadCandidates}
+              onClick={handleReloadCandidates}
               className="bg-[var(--brand-600)] hover:bg-[var(--brand-700)] text-white font-semibold py-2.5 px-6 rounded-xl shadow-sm transition-colors text-sm"
             >
               Cập nhật lại danh sách
@@ -192,7 +231,7 @@ export default function RoommateMatching() {
                     
                     {/* BỔ SUNG: Tag Đã có phòng */}
                     {candidate.hasRoom && (
-                      <div className="absolute top-4 left-4 bg-emerald-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm z-10 flex items-center gap-1 border border-emerald-400">
+                      <div className="absolute top-4 left-4 bg-blue-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm z-10 flex items-center gap-1 border border-blue-400">
                         <Home size={12} /> Đã có phòng
                       </div>
                     )}
@@ -227,7 +266,7 @@ export default function RoommateMatching() {
                         </h3>
                         
                         <button
-                          onClick={() => handleAction(candidate.userId, "LIKE", candidate.fullName, candidate.avatarUrl)}
+                          onClick={() => handleAction(candidate.userId, "LIKE")}
                           disabled={!!actionLoading}
                           className="text-gray-400 hover:text-blue-600 p-1.5 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
                           title={`Nhắn tin ngay với ${candidate.fullName || 'ứng viên'}`}
@@ -255,6 +294,13 @@ export default function RoommateMatching() {
                         </div>
                       </div>
 
+                      {candidate.hasRoom && candidate.roomAddress && (
+                        <div className="flex items-start gap-2 text-sm text-blue-700 mb-4 bg-blue-50/80 border border-blue-100 rounded-xl p-2.5">
+                          <span className="shrink-0">🏠</span>
+                          <span className="line-clamp-2">Địa chỉ phòng: {candidate.roomAddress}</span>
+                        </div>
+                      )}
+
                       {/* Behavior Tags */}
                       {getTags(candidate).length > 0 && (
                         <div className="flex flex-wrap gap-1.5 mb-2">
@@ -280,7 +326,7 @@ export default function RoommateMatching() {
                         onClick={() => navigate(`/roommate-posts/${candidate.roomId}`, { 
                           state: { compatibilityPct: candidate.compatibilityPct } // Truyền độ tương thích qua state
                         })}
-                        className="w-full mt-3 mb-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-2 rounded-xl text-xs transition-colors border border-emerald-200 flex items-center justify-center gap-1.5"
+                        className="w-full mt-3 mb-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold py-2 rounded-xl text-xs transition-colors border border-blue-200 flex items-center justify-center gap-1.5"
                       >
                         <Home size={14} /> Xem phòng của họ
                       </button>
@@ -326,7 +372,7 @@ export default function RoommateMatching() {
 
                       {/* Like/Connect Action */}
                       <button
-                        onClick={() => handleAction(candidate.userId, "LIKE", candidate.fullName, candidate.avatarUrl)}
+                        onClick={() => handleAction(candidate.userId, "LIKE")}
                         disabled={!!actionLoading}
                         className="flex-1 bg-[var(--brand-600)] hover:bg-[var(--brand-700)] disabled:opacity-50 text-white py-2 rounded-xl flex items-center justify-center gap-1 transition-colors font-semibold text-xs shadow-sm shadow-blue-100"
                       >

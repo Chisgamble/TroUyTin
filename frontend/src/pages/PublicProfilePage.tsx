@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../services/supabase'
 import { chatService } from '../services/chatService'
 import { getListingsByLandlord, type RoomListing } from '../services/roomListing'
+import { roommatePostService, roommateService } from '../services/roommates'
 import { formatPriceVND } from '../utils/formatters'
 import {
   BadgeCheck, Calendar, MapPin, MessageSquare,
@@ -22,8 +23,37 @@ const ROOM_TYPE_LABELS: Record<string, string> = {
   KTX: 'Ký túc xá',
 }
 
+const ROOMMATE_ROOM_TYPE_LABELS: Record<string, string> = {
+  PHONG_TRO: 'Phòng trọ',
+  CAN_HO_MINI: 'Căn hộ mini',
+  KTX: 'Ký túc xá',
+  NGUYEN_CAN: 'Nhà nguyên căn',
+}
+
 const LISTINGS_PER_PAGE = 4
 const REVIEWS_PER_PAGE = 5
+const ROOMMATE_POSTS_PER_PAGE = 4
+
+type RoommatePostSummary = {
+  id: number
+  userId: string
+  title: string
+  description?: string | null
+  area?: number | null
+  pricePerMonth: number | string
+  roomType: string
+  wardName?: string | null
+  districtName?: string | null
+  addressDetail?: string | null
+  status: string
+  viewCount?: number | null
+  createdAt?: string
+}
+
+type RoommateCandidate = {
+  userId: string
+  compatibilityPct: number
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -69,13 +99,15 @@ export default function PublicProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [listings, setListings] = useState<RoomListing[]>([])
   const [reviews, setReviews] = useState<Review[]>([])
+  const [roommatePosts, setRoommatePosts] = useState<RoommatePostSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [chatLoading, setChatLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<'listings' | 'reviews'>('listings')
+  const [activeTab, setActiveTab] = useState<'listings' | 'roommatePosts' | 'reviews'>('listings')
   const [listingPage, setListingPage] = useState(1)
+  const [roommatePostPage, setRoommatePostPage] = useState(1)
   const [reviewPage, setReviewPage] = useState(1)
   const [roommateProfile, setRoommateProfile] = useState<any | null>(null)
-  const [myRoommateProfile, setMyRoommateProfile] = useState<any | null>(null)
+  const [compatibilityPct, setCompatibilityPct] = useState<number | null>(null)
 
   // ── Fetch profile + listings + reviews ──
   useEffect(() => {
@@ -91,8 +123,9 @@ export default function PublicProfilePage() {
         .select('*')
         .eq('user_id', userId)
         .maybeSingle(),
+      roommatePostService.getPosts(),
     ])
-      .then(([profileRes, listingsData, reviewsData, roommateRes]) => {
+      .then(([profileRes, listingsData, reviewsData, roommateRes, roommatePostsRes]) => {
         if (profileRes.data) {
           const d = profileRes.data
           setProfile({
@@ -110,38 +143,38 @@ export default function PublicProfilePage() {
         setListings(listingsData.filter(l => l.status === 'AVAILABLE'))
         setReviews(reviewsData);
         if (roommateRes.data) setRoommateProfile(roommateRes.data)
+        const posts = (roommatePostsRes.data ?? []).filter((post: RoommatePostSummary) => String(post.userId) === String(userId))
+        setRoommatePosts(posts)
       })
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [userId])
 
+  // Keep this value in sync with RoommateMatching and RoommatePostDetailPage.
   useEffect(() => {
-    console.log("Effect 1");
+    if (!user?.id || !userId || user.id === userId) {
+      setCompatibilityPct(null)
+      return
+    }
 
-    if (!user?.id) return;
+    let isCurrent = true
 
-    const fetchProfile = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('roommate_profiles')
-          .select('*')
-          .eq('user_id', user.id)
-          .maybeSingle();
+    roommateService.getDiscover()
+      .then(response => {
+        const candidate = (response.data as RoommateCandidate[]).find(
+          item => String(item.userId) === String(userId)
+        )
+        if (isCurrent) setCompatibilityPct(candidate?.compatibilityPct ?? null)
+      })
+      .catch(error => {
+        console.error('Unable to load compatibility score:', error)
+        if (isCurrent) setCompatibilityPct(null)
+      })
 
-        if (error) throw error;
-
-        if (data) {
-          setMyRoommateProfile(data);
-        }
-
-        console.log(data);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    fetchProfile();
-  }, [user]);
+    return () => {
+      isCurrent = false
+    }
+  }, [user?.id, userId])
 
   const getLifestyleTags = (rp: any) => {
     if (!rp) return []
@@ -280,22 +313,6 @@ export default function PublicProfilePage() {
     return tags
   }
 
-  const calculateCompatibility = (p1: any, p2: any) => {
-    if (!p1 || !p2) return 85; // Mặc định 85%
-    let score = 0;
-    let total = 0;
-    if (p1.gender && p2.gender) { total++; if (p1.gender === p2.gender) score++; }
-    if (p1.smoking && p2.smoking) { total++; if (p1.smoking === p2.smoking) score++; }
-    if (p1.drinking && p2.drinking) { total++; if (p1.drinking === p2.drinking) score++; }
-    if (p1.sleep_schedule && p2.sleep_schedule) { total++; if (p1.sleep_schedule === p2.sleep_schedule) score++; }
-    if (p1.tidiness && p2.tidiness) { total++; if (p1.tidiness === p2.tidiness) score++; }
-    if (p1.has_pet !== undefined && p2.has_pet !== undefined) { total++; if (p1.has_pet === p2.has_pet) score++; }
-    if (p1.allow_overnight_guest !== undefined && p2.allow_overnight_guest !== undefined) { total++; if (p1.allow_overnight_guest === p2.allow_overnight_guest) score++; }
-    return total > 0 ? Math.round((score / total) * 100) : 85;
-  }
-
-  const compatibilityPct = calculateCompatibility(myRoommateProfile, roommateProfile)
-
   const handleChat = async () => {
     if (!user) { navigate('/login'); return }
     if (!userId) return
@@ -325,6 +342,12 @@ export default function PublicProfilePage() {
   const paginatedReviews = reviews.slice(
     (reviewPage - 1) * REVIEWS_PER_PAGE,
     reviewPage * REVIEWS_PER_PAGE
+  )
+
+  const totalRoommatePostPages = Math.max(1, Math.ceil(roommatePosts.length / ROOMMATE_POSTS_PER_PAGE))
+  const paginatedRoommatePosts = roommatePosts.slice(
+    (roommatePostPage - 1) * ROOMMATE_POSTS_PER_PAGE,
+    roommatePostPage * ROOMMATE_POSTS_PER_PAGE
   )
 
   const displayName = profile?.full_name || 'Người dùng'
@@ -449,7 +472,7 @@ export default function PublicProfilePage() {
             )}
 
             {/* Compatibility score circle */}
-            {user && roommateProfile && (
+            {compatibilityPct !== null && (
               <div className="flex items-center gap-4 pt-3 border-t border-slate-100">
                 <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
                   <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
@@ -473,8 +496,8 @@ export default function PublicProfilePage() {
                   <span className="absolute text-[10px] font-bold text-slate-700">{compatibilityPct}%</span>
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-slate-800">Độ phù hợp lối sống</p>
-                  <p className="text-xs text-slate-400">Dựa trên thói quen sinh hoạt</p>
+                  <p className="text-sm font-bold text-slate-800">Độ phù hợp</p>
+                  {/* <p className="text-xs text-slate-400">Dựa trên thói quen sinh hoạt</p> */}
                 </div>
               </div>
             )}
@@ -531,11 +554,12 @@ export default function PublicProfilePage() {
             <div className="flex border-b border-slate-100 px-4">
               {[
                 { key: 'listings', label: `Tin đang đăng (${listings.length})` },
+                { key: 'roommatePosts', label: `Phòng ở ghép (${roommatePosts.length})` },
                 { key: 'reviews', label: `Đánh giá (${reviews.length})` },
               ].map(tab => (
                 <button
                   key={tab.key}
-                  onClick={() => setActiveTab(tab.key as 'listings' | 'reviews')}
+                  onClick={() => setActiveTab(tab.key as 'listings' | 'roommatePosts' | 'reviews')}
                   className={`px-4 py-4 text-sm font-semibold border-b-2 transition -mb-px ${activeTab === tab.key
                       ? 'border-blue-600 text-blue-600'
                       : 'border-transparent text-slate-500 hover:text-slate-700'
@@ -545,7 +569,6 @@ export default function PublicProfilePage() {
                 </button>
               ))}
             </div>
-
             <div className="p-5">
 
               {/* ── Tab: Listings ── */}
@@ -657,6 +680,91 @@ export default function PublicProfilePage() {
                         <p className="text-center text-xs text-slate-400 mt-2">
                           Hiển thị {Math.min((listingPage - 1) * LISTINGS_PER_PAGE + 1, listings.length)}–{Math.min(listingPage * LISTINGS_PER_PAGE, listings.length)} / {listings.length} tin
                         </p>
+                      )}
+                    </>
+                  )}
+                </>
+              )}
+
+              {/* ── Tab: Roommate posts ── */}
+              {activeTab === 'roommatePosts' && (
+                <>
+                  {roommatePosts.length === 0 ? (
+                    <div className="flex flex-col items-center py-12 gap-3 text-slate-400">
+                      <Building2 size={40} className="text-slate-200" />
+                      <p className="text-sm">Chưa có phòng ở ghép nào đang đăng.</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {paginatedRoommatePosts.map(post => (
+                              <div
+                                key={post.id}
+                                className="rounded-xl border border-slate-100 overflow-hidden hover:shadow-md transition group cursor-pointer"
+                                onClick={() => navigate(`/roommate-posts/${post.id}`)}
+                              >
+                                <div className="h-40 bg-slate-100 relative overflow-hidden">
+                                  <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                    <Building2 size={32} />
+                                  </div>
+                                  <span className="absolute top-2 left-2 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                    {post.status === 'APPROVED' ? 'Tin sạch' : post.status}
+                                  </span>
+                                </div>
+
+                                <div className="p-3 space-y-1.5">
+                                  <p className="text-blue-600 font-bold text-sm">
+                                    {formatPriceVND(Number(post.pricePerMonth))}/tháng
+                                  </p>
+                                  <h3 className="text-sm font-semibold text-slate-800 line-clamp-1">
+                                    {post.title}
+                                  </h3>
+                                  <div className="flex items-center gap-1 text-xs text-slate-500">
+                                    <MapPin size={11} />
+                                    <span className="line-clamp-1">
+                                      {[post.addressDetail, post.wardName, post.districtName].filter(Boolean).join(', ') || 'Không rõ địa chỉ'}
+                                    </span>
+                                  </div>
+                                  <div className="flex gap-2 text-xs text-slate-400 pt-0.5">
+                                    <span className="px-2 py-0.5 bg-slate-100 rounded-md">{post.area ?? '—'} m²</span>
+                                    <span className="px-2 py-0.5 bg-slate-100 rounded-md">
+                                      {ROOMMATE_ROOM_TYPE_LABELS[post.roomType] ?? post.roomType}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                      </div>
+
+                      {totalRoommatePostPages > 1 && (
+                        <div className="flex items-center justify-center gap-2 pt-5">
+                          <button
+                            onClick={() => setRoommatePostPage(p => Math.max(1, p - 1))}
+                            disabled={roommatePostPage === 1}
+                            className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 disabled:opacity-40 transition"
+                          >
+                            <ChevronLeft size={15} />
+                          </button>
+                          {Array.from({ length: totalRoommatePostPages }, (_, i) => i + 1).map(p => (
+                            <button
+                              key={p}
+                              onClick={() => setRoommatePostPage(p)}
+                              className={`w-8 h-8 rounded-lg text-sm font-semibold transition ${p === roommatePostPage
+                                ? 'bg-blue-600 text-white'
+                                : 'border border-slate-200 text-slate-600 hover:bg-slate-100'
+                              }`}
+                            >
+                              {p}
+                            </button>
+                          ))}
+                          <button
+                            onClick={() => setRoommatePostPage(p => Math.min(totalRoommatePostPages, p + 1))}
+                            disabled={roommatePostPage === totalRoommatePostPages}
+                            className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 disabled:opacity-40 transition"
+                          >
+                            <ChevronRight size={15} />
+                          </button>
+                        </div>
                       )}
                     </>
                   )}

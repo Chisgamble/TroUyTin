@@ -28,17 +28,20 @@ export default function RoommatePostList() {
   const navigate = useNavigate();
   const [posts, setPosts] = useState<RoommatePost[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterStatus, setFilterStatus] = useState<string>("");
 
   useEffect(() => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
     loadPosts();
-  }, [filterStatus]);
+  }, [user, navigate]);
 
   const loadPosts = async () => {
     try {
       setLoading(true);
-      const params = filterStatus ? { status: filterStatus } : {};
-      const res = await roommatePostService.getPosts(params);
+      const res = await roommatePostService.getMyPosts();
       setPosts(res.data);
     } catch (error) {
       console.error("Error:", error);
@@ -75,7 +78,7 @@ export default function RoommatePostList() {
   const getStatusBadge = (status: string) => {
     const badges: Record<string, { bg: string; label: string }> = {
       PENDING: { bg: "bg-amber-50 text-amber-700 border-amber-100", label: "Chờ duyệt" },
-      APPROVED: { bg: "bg-emerald-50 text-emerald-700 border-emerald-100", label: "Tin sạch" },
+      APPROVED: { bg: "bg-blue-50 text-blue-700 border-blue-100", label: "Tin sạch" },
       REJECTED: { bg: "bg-rose-50 text-rose-700 border-rose-100", label: "Từ chối" },
       RENTED: { bg: "bg-gray-100 text-gray-700 border-gray-200", label: "Đã ghép xong" },
     };
@@ -103,7 +106,7 @@ export default function RoommatePostList() {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
-          <Loader className="animate-spin mx-auto mb-3 text-emerald-600" size={36} />
+          <Loader className="animate-spin mx-auto mb-3 text-blue-600" size={36} />
           <div className="text-sm font-semibold text-gray-500">Đang truy vấn danh sách phòng trọ...</div>
         </div>
       </div>
@@ -119,12 +122,6 @@ export default function RoommatePostList() {
             <h1 className="text-2xl font-black text-gray-900 tracking-tight">📋 Khám Phá Phòng Ở Ghép</h1>
             <p className="text-xs text-gray-400 mt-0.5">Tìm kiếm không gian sống chung minh bạch và an toàn</p>
           </div>
-          <button
-            onClick={() => navigate("/roommate-posts/create")}
-            className="self-start sm:self-center bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-2.5 px-5 rounded-xl shadow-md shadow-emerald-100 transition-all"
-          >
-            + Đăng tin tìm bạn
-          </button>
         </div>
       </div>
 
@@ -134,43 +131,14 @@ export default function RoommatePostList() {
         {/* LEFT COLUMN: FILTER + POSTS LIST (Scrollable) */}
         <div className="w-full md:w-[55%] lg:w-[60%] p-4 sm:p-6 overflow-y-auto space-y-4">
           
-          {/* Filter Pills Box */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-3 shadow-sm flex items-center gap-1.5 overflow-x-auto whitespace-nowrap scrollbar-none">
-            {[
-              { id: "", label: "Tất cả" },
-              { id: "PENDING", label: "Chờ duyệt" },
-              { id: "APPROVED", label: "Đã duyệt" },
-              { id: "RENTED", label: "Đã có phòng" }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setFilterStatus(tab.id)}
-                className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  filterStatus === tab.id
-                    ? "bg-emerald-600 text-white shadow-sm shadow-emerald-50"
-                    : "bg-gray-50 text-gray-500 hover:bg-gray-100"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-            <span className="text-xs text-gray-400 ml-auto pr-2 font-medium">{posts.length} kết quả</span>
-          </div>
-
           {/* Empty State */}
           {posts.length === 0 ? (
             <div className="text-center py-16 bg-white rounded-2xl border border-gray-100 shadow-sm max-w-md mx-auto">
               <div className="text-5xl mb-3">📋</div>
               <h3 className="text-lg font-bold text-gray-800">Kho dữ liệu trống</h3>
               <p className="text-xs text-gray-400 max-w-xs mx-auto mt-1 mb-6">
-                Chưa có tin bài đăng nào ở bộ lọc này. Hãy là người đầu tiên chia sẻ phòng trọ của bạn!
+                Chưa có tin bài đăng nào. Hãy là người đầu tiên chia sẻ phòng trọ của bạn!
               </p>
-              <button
-                onClick={() => navigate("/roommate-posts/create")}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 px-5 rounded-xl shadow-sm transition"
-              >
-                Đăng tin ngay
-              </button>
             </div>
           ) : (
             /* Posts Vertical List */
@@ -179,23 +147,23 @@ export default function RoommatePostList() {
                 <div
                   key={post.id}
                   onClick={() => navigate(`/roommate-posts/${post.id}`)}
-                  className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all p-5 cursor-pointer relative group flex flex-col sm:flex-row gap-4"
+                  className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-200 transition-all p-5 cursor-pointer relative group flex flex-col sm:flex-row gap-4"
                 >
                   {/* Pseudo Image Placeholder for Card */}
-                  <div className="w-full sm:w-32 h-28 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-xl flex items-center justify-center text-emerald-600 shrink-0 font-bold text-xs">
+                  <div className="w-full sm:w-32 h-28 bg-gradient-to-br from-blue-500/20 to-sky-500/20 rounded-xl flex items-center justify-center text-blue-600 shrink-0 font-bold text-xs">
                     TroUyTin Pic
                   </div>
 
                   {/* Main Content Area */}
                   <div className="flex-1 min-w-0 flex flex-col justify-between">
                     <div>
-                      <h3 className="text-base font-bold text-gray-900 group-hover:text-emerald-700 transition-colors truncate pr-14 mb-1.5">
+                      <h3 className="text-base font-bold text-gray-900 group-hover:text-blue-700 transition-colors truncate pr-14 mb-1.5">
                         {post.title}
                       </h3>
 
                       {/* Detail Metrics Grid Line */}
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-gray-500 font-medium mb-2">
-                        <span className="flex items-center gap-1 text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded">
+                        <span className="flex items-center gap-1 text-blue-700 font-bold bg-blue-50 px-1.5 py-0.5 rounded">
                           <DollarSign size={13} /> {parseFloat(post.pricePerMonth).toLocaleString("vi-VN")} ₫/tháng
                         </span>
                         {post.area && (
@@ -206,7 +174,7 @@ export default function RoommatePostList() {
 
                       {/* 📍 ĐỊA CHỈ CHI TIẾT (MỤC 3) */}
                       <div className="flex items-start gap-1 text-xs text-gray-600 font-medium mb-2.5">
-                        <MapPin size={14} className="text-emerald-600 shrink-0 mt-0.5" />
+                        <MapPin size={14} className="text-blue-600 shrink-0 mt-0.5" />
                         <span className="line-clamp-1">{getFullAddress(post)}</span>
                       </div>
 
@@ -226,7 +194,7 @@ export default function RoommatePostList() {
                       </div>
 
                       {/* Nút Xem Chi Tiết Phòng */}
-                      <span className="flex items-center gap-1 text-emerald-600 group-hover:translate-x-1 transition-transform font-bold">
+                      <span className="flex items-center gap-1 text-blue-600 group-hover:translate-x-1 transition-transform font-bold">
                         Xem chi tiết <ArrowRight size={12} />
                       </span>
                     </div>
@@ -263,8 +231,8 @@ export default function RoommatePostList() {
 
         {/* RIGHT COLUMN: MAP PLATFORM MOCKUP INTERACTIVE VIEW */}
         <div className="hidden md:block md:w-[45%] lg:w-[40%] border-l border-gray-100 bg-gray-100 relative overflow-hidden">
-          <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-gray-400 bg-emerald-50/30">
-            <div className="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center mb-3 shadow-md animate-bounce">
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-gray-400 bg-blue-50/30">
+            <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center mb-3 shadow-md animate-bounce">
               <MapPin size={24} />
             </div>
             <h4 className="text-sm font-bold text-gray-800">Bản đồ tương tác TroUyTin</h4>
@@ -272,7 +240,7 @@ export default function RoommatePostList() {
               Đang đồng bộ hóa tọa độ vệ tinh các tin trọ quanh khu vực ĐH KHTN và nội thành TP. Hồ Chí Minh
             </p>
             {posts.length > 0 && (
-              <div className="mt-4 bg-white/90 backdrop-blur-sm border border-emerald-100 px-3 py-1.5 rounded-xl text-[11px] font-bold text-emerald-700 shadow-sm">
+              <div className="mt-4 bg-white/90 backdrop-blur-sm border border-blue-100 px-3 py-1.5 rounded-xl text-[11px] font-bold text-blue-700 shadow-sm">
                 📍 Đã ghim {posts.filter(p => p.latitude && p.longitude).length} vị trí phòng lên Maps
               </div>
             )}

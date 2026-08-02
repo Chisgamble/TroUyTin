@@ -6,6 +6,10 @@ import { chatService } from "../services/chatService";
 import { roommatePostService } from "../services/roommates";
 import { formatPriceVND } from "../utils/formatters";
 import { getIcon } from "../utils/iconMap";
+import { api } from "../lib/axios";
+import StarRating from "../components/StarRating";
+import ReviewCard from "../components/ReviewCard";
+import type { Review } from "../types";
 import "./ListingDetailPage.css"; 
 import "../components/ui/Button.css";
 import toast from "react-hot-toast";
@@ -26,6 +30,9 @@ interface RoommatePostDetail {
   images: string[];
   wardName: string;
   districtName: string;
+  status: string;
+  viewCount: number;
+  createdAt: string;
   amenities: { id: number; name: string; icon: string }[];
   author: {
     id: string;
@@ -34,7 +41,64 @@ interface RoommatePostDetail {
     phone?: string;
     gender?: string;
     age?: number;
+    isVerified?: boolean;
+    createdAt?: string;
   };
+}
+
+function normalizeReview(review: Review): Review {
+  return {
+    ...review,
+    comment: review.comment ?? "",
+    reviewer: review.reviewer ?? undefined,
+  };
+}
+
+async function fetchAuthorReviews(authorId: string) {
+  const { data } = await api.get<Review[]>(`/api/reviews/reviewee/${authorId}`);
+  return data.map(normalizeReview);
+}
+
+function getFullYearsSince(dateValue?: string | null) {
+  if (!dateValue) return null;
+
+  const timestamp = new Date(dateValue).getTime();
+  if (Number.isNaN(timestamp) || timestamp > Date.now()) return null;
+
+  const MS_PER_YEAR = 365.25 * 24 * 60 * 60 * 1000;
+  return Math.floor((Date.now() - timestamp) / MS_PER_YEAR);
+}
+
+function formatYearsActive(years: number | null) {
+  if (years === null) return "—";
+  if (years === 0) return "Dưới 1 năm";
+  return `${years} năm`;
+}
+
+function formatAverageRating(rating: number | null) {
+  return rating === null ? "—" : rating.toFixed(1);
+}
+
+function getStatusLabel(status: string) {
+  const labels: Record<string, string> = {
+    PENDING: "Chờ duyệt",
+    APPROVED: "Tin sạch",
+    REJECTED: "Từ chối",
+    RENTED: "Đã ghép xong",
+  };
+
+  return labels[status] || status;
+}
+
+function getStatusBadgeClass(status: string) {
+  const badges: Record<string, string> = {
+    PENDING: "bg-amber-50 text-amber-700 border-amber-100",
+    APPROVED: "bg-blue-50 text-blue-700 border-blue-100",
+    REJECTED: "bg-rose-50 text-rose-700 border-rose-100",
+    RENTED: "bg-gray-100 text-gray-700 border-gray-200",
+  };
+
+  return badges[status] || "bg-gray-100 text-gray-700 border-gray-200";
 }
 
 export default function RoommatePostDetailPage() {
@@ -49,10 +113,13 @@ export default function RoommatePostDetailPage() {
   const [post, setPost] = useState<RoommatePostDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [chatLoading, setChatLoading] = useState(false);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState(0);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [reviews, setReviews] = useState<Review[]>([]);
 
   useEffect(() => {
     async function loadPost() {
@@ -79,6 +146,9 @@ export default function RoommatePostDetailPage() {
           addressDetail: rawData.address_detail || rawData.addressDetail || "",
           availableFrom: rawData.available_from || rawData.availableFrom || "",
           rules: rawData.rules || "",
+          status: rawData.status || "APPROVED",
+          viewCount: Number(rawData.viewCount || rawData.view_count || 0),
+          createdAt: rawData.createdAt || rawData.created_at || "",
           
           images: Array.isArray(rawData.images) 
             ? rawData.images
@@ -92,18 +162,35 @@ export default function RoommatePostDetailPage() {
           amenities: rawData.amenities || [], 
           
           author: {
-            id: rawData.author?.id || rawData.user_id,
-            fullName: rawData.author?.full_name || rawData.author?.fullName || "Chủ phòng ẩn danh",
-            avatarUrl: rawData.author?.avatar_url || rawData.author?.avatarUrl || "",
-            phone: rawData.author?.phone,
+            id: String(rawData.userId || rawData.user_id || rawData.author?.id || ""),
+            fullName:
+              rawData.userName ||
+              rawData.author?.full_name ||
+              rawData.author?.fullName ||
+              "Chủ phòng ẩn danh",
+            avatarUrl:
+              rawData.userAvatar ||
+              rawData.author?.avatar_url ||
+              rawData.author?.avatarUrl ||
+              "",
+            phone: rawData.userPhone || rawData.author?.phone,
             gender: rawData.author?.gender,
             age: rawData.author?.age,
+            isVerified: rawData.author?.is_verified ?? rawData.author?.isVerified,
+            createdAt: rawData.author?.created_at || rawData.author?.createdAt,
           }
         };
 
+        if (mappedPost.images.length === 0) {
+          mappedPost.images = ["https://images.unsplash.com/photo-1486304873000-235643847519?q=80&w=3132&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"];
+        }
+
         setPost(mappedPost);
-        // Nếu backend có trả về trường isSaved, bạn set ở đây
-        // setIsSaved(rawData.isSaved);
+        if (user) {
+          const savedRoommatePostsKey = `tro-uy-tin:saved-roommate-posts:${user.id}`;
+          const savedPosts = JSON.parse(localStorage.getItem(savedRoommatePostsKey) || "[]") as number[];
+          setIsSaved(savedPosts.includes(mappedPost.id));
+        }
         
       } catch (err: any) {
         console.error("Lỗi lấy chi tiết bài đăng:", err);
@@ -115,6 +202,35 @@ export default function RoommatePostDetailPage() {
 
     loadPost();
   }, [id]);
+
+  useEffect(() => {
+    const authorId = post?.author.id;
+    if (typeof authorId !== "string" || !authorId.trim()) return;
+
+    let ignore = false;
+
+    async function loadReviews(currentAuthorId: string) {
+      try {
+        setReviewsLoading(true);
+        const authorReviews = await fetchAuthorReviews(currentAuthorId);
+        if (!ignore) {
+          setReviews(authorReviews);
+        }
+      } catch (error) {
+        console.error("Lỗi lấy đánh giá người đăng:", error);
+      } finally {
+        if (!ignore) {
+          setReviewsLoading(false);
+        }
+      }
+    }
+
+    loadReviews(authorId);
+
+    return () => {
+      ignore = true;
+    };
+  }, [post?.author.id]);
 
   const handleChatClick = async () => {
     if (!user) {
@@ -153,9 +269,28 @@ export default function RoommatePostDetailPage() {
       navigate("/login");
       return;
     }
-    // TODO: Gắn API lưu bài đăng ở đây nếu có (ví dụ roommatePostService.savePost)
-    setIsSaved(!isSaved);
-    toast.success(isSaved ? "Đã bỏ lưu bài đăng" : "Đã lưu bài đăng");
+
+    if (!post) return;
+
+    try {
+      setSaving(true);
+      const savedRoommatePostsKey = `tro-uy-tin:saved-roommate-posts:${user.id}`;
+      const currentSavedPosts = JSON.parse(localStorage.getItem(savedRoommatePostsKey) || "[]") as number[];
+
+      if (isSaved) {
+        const nextSavedPosts = currentSavedPosts.filter((savedPostId) => savedPostId !== post.id);
+        localStorage.setItem(savedRoommatePostsKey, JSON.stringify(nextSavedPosts));
+        setIsSaved(false);
+        toast.success("Đã bỏ lưu bài đăng");
+      } else {
+        const nextSavedPosts = Array.from(new Set([...currentSavedPosts, post.id]));
+        localStorage.setItem(savedRoommatePostsKey, JSON.stringify(nextSavedPosts));
+        setIsSaved(true);
+        toast.success("Đã lưu bài đăng");
+      }
+    } finally {
+      setSaving(false);
+    }
   };
 
   const getRoomTypeLabel = (type: string): string => {
@@ -171,8 +306,8 @@ export default function RoommatePostDetailPage() {
   if (loading) {
     return (
       <div className="legacy-page-wrapper flex items-center justify-center min-h-screen bg-gray-50">
-         <div className="text-emerald-600 font-bold flex flex-col items-center">
-            <Loader className="animate-spin mb-3 text-emerald-600" size={40} />
+        <div className="text-blue-600 font-bold flex flex-col items-center">
+          <Loader className="animate-spin mb-3 text-blue-600" size={40} />
             Đang tải dữ liệu phòng...
          </div>
       </div>
@@ -185,13 +320,19 @@ export default function RoommatePostDetailPage() {
         <div className="not-found-page text-center bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
           <div className="text-6xl mb-4">🏠</div>
           <h2 className="text-2xl font-bold mb-6 text-gray-800">{error || "Không tìm thấy phòng"}</h2>
-          <button onClick={() => navigate(-1)} className="btn-primary bg-emerald-600 hover:bg-emerald-700 border-none px-8 py-3 rounded-xl font-bold">Quay lại</button>
+          <button onClick={() => navigate(-1)} className="btn-primary bg-blue-600 hover:bg-blue-700 border-none px-8 py-3 rounded-xl font-bold">Quay lại</button>
         </div>
       </div>
     );
   }
 
   const displayedActiveImage = Math.min(activeImage, Math.max(post.images.length - 1, 0));
+  const authorReviewsCount = reviews.length;
+  const authorAvgRating = authorReviewsCount
+    ? reviews.reduce((sum, review) => sum + review.rating, 0) / authorReviewsCount
+    : null;
+  const authorYearsActive = getFullYearsSince(post.author.createdAt);
+  const responseRate = 98;
 
   return (
     <>
@@ -199,32 +340,39 @@ export default function RoommatePostDetailPage() {
         <div className="detail-page">
           <div className="detail-layout">
             <div className="detail-main">
-              
-              {/* VÙNG ẢNH GALLERY */}
-              <div className="detail-gallery rounded-2xl overflow-hidden shadow-sm border border-gray-100">
-                <div className="detail-gallery-main h-[400px] md:h-[500px] bg-black">
-                  {post.images.length > 0 ? (
-                    <img 
-                      src={post.images[displayedActiveImage]} 
-                      alt={post.title} 
-                      className="w-full h-full object-contain bg-black" 
+              <div className="detail-gallery rounded-3xl overflow-hidden shadow-lg border border-slate-100 bg-white">
+                <div className="detail-gallery-main h-[380px] md:h-[540px] bg-gradient-to-br from-slate-50 via-white to-slate-100 p-4 sm:p-5 relative">
+                  <div className="w-full h-full rounded-[24px] overflow-hidden bg-white shadow-inner">
+                    <img
+                      src={post.images[displayedActiveImage]}
+                      alt={post.title}
+                      className="w-full h-full object-cover"
                     />
-                  ) : (
-                    <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 font-bold text-lg">
-                      Phòng này chưa cập nhật hình ảnh
-                    </div>
+                  </div>
+
+                  {post.author.isVerified && (
+                    <span className="absolute top-5 left-5 inline-flex items-center gap-1.5 rounded-full bg-blue-600 text-white text-xs font-black px-3 py-1.5 shadow-sm">
+                      <CheckCircle size={14} />
+                      Đã xác minh
+                    </span>
                   )}
+
+                  <span className={`absolute top-5 right-5 inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-bold ${getStatusBadgeClass(post.status)}`}>
+                    {getStatusLabel(post.status)}
+                  </span>
                 </div>
 
-                {post.images.length > 0 && (
-                  <div className="detail-thumbs-overlay bg-black/60 backdrop-blur-sm p-4">
-                    <div className="detail-gallery-thumbs flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+                <div className="bg-white px-5 sm:px-6 py-4 sm:py-5 border-t border-slate-100">
+                  <div className="flex flex-col gap-4">
+                    <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-none">
                       {post.images.map((img, i) => (
                         <button
                           key={i}
                           type="button"
-                          className={`w-20 h-20 rounded-xl overflow-hidden shrink-0 border-2 transition-all ${
-                            displayedActiveImage === i ? "border-emerald-500 opacity-100" : "border-transparent opacity-50 hover:opacity-100"
+                          className={`w-20 h-20 rounded-2xl overflow-hidden shrink-0 border-2 transition-all ${
+                            displayedActiveImage === i
+                              ? "border-blue-500 shadow-md opacity-100"
+                              : "border-slate-200 opacity-70 hover:opacity-100"
                           }`}
                           onClick={() => setActiveImage(i)}
                         >
@@ -232,47 +380,76 @@ export default function RoommatePostDetailPage() {
                         </button>
                       ))}
                     </div>
-                  </div>
-                )}
-              </div>
 
-              {/* THÔNG TIN HEADER */}
-              <div className="mt-8 mb-8">
-                <h1 className="text-2xl sm:text-3xl font-black text-gray-900 mb-3 leading-tight">{post.title}</h1>
-                <div className="flex items-start gap-2 text-gray-600 font-medium">
-                  <MapPin size={20} className="text-emerald-500 shrink-0 mt-0.5" />
-                  <span>
-                    {[post.addressDetail, post.wardName, post.districtName, "TP.HCM"].filter(Boolean).join(", ")}
-                  </span>
+                    <div>
+                      <h1 className="text-2xl sm:text-3xl font-black text-gray-900 leading-tight mb-2">
+                        {post.title}
+                      </h1>
+                      <div className="flex items-start gap-2 text-gray-600 font-medium text-sm">
+                        <MapPin size={18} className="text-blue-500 shrink-0 mt-0.5" />
+                        <span>
+                          {[post.addressDetail, post.wardName, post.districtName, "TP.HCM"].filter(Boolean).join(", ")}
+                        </span>
+                        <a href="#detail-sidebar" className="detail-map-link shrink-0">Xem liên hệ</a>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* MÔ TẢ CHI TIẾT */}
-              <div className="detail-description bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 mb-6">
-                <h3 className="text-xl font-bold mb-4 text-gray-900 border-b border-gray-100 pb-3">Mô tả chi tiết phòng</h3>
-                <p className="whitespace-pre-line text-gray-700 leading-relaxed">{post.description || "Chưa có mô tả chi tiết."}</p>
+              <div className="detail-description bg-white rounded-2xl shadow-sm border border-gray-100">
+                <p className="whitespace-pre-line">{post.description || "Chưa có mô tả chi tiết."}</p>
               </div>
 
-              {/* NỘI QUY (Lấy từ bảng roommate_posts) */}
+              <div className="detail-reviews">
+                <div className="detail-reviews-header">
+                  <h2>Đánh giá từ người dùng trước</h2>
+                  <div className="detail-reviews-summary">
+                    {reviewsLoading ? (
+                      <span className="detail-reviews-count">Đang tải đánh giá...</span>
+                    ) : reviews.length > 0 ? (
+                      <StarRating
+                        rating={authorAvgRating ?? 0}
+                        size="md"
+                        showValue
+                        count={authorReviewsCount}
+                      />
+                    ) : (
+                      <span className="detail-reviews-count">Chưa có đánh giá</span>
+                    )}
+                  </div>
+                </div>
+
+                {reviews.length > 0 ? (
+                  <div className="detail-reviews-grid">
+                    {reviews.map((review) => (
+                      <ReviewCard key={review.id} review={review} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="detail-reviews-empty">Người đăng này chưa có đánh giá từ cộng đồng.</div>
+                )}
+              </div>
+
               {post.rules && (
                 <div className="bg-amber-50 p-6 sm:p-8 rounded-2xl shadow-sm border border-amber-100 mb-6">
                   <h3 className="text-lg font-bold mb-3 text-amber-900 flex items-center gap-2 border-b border-amber-200/50 pb-3">
-                    <ShieldAlert size={22} className="text-amber-500"/> Nội quy phòng ở ghép
+                    <ShieldAlert size={22} className="text-amber-500" /> Nội quy phòng ở ghép
                   </h3>
                   <p className="whitespace-pre-line text-amber-800 leading-relaxed text-sm">{post.rules}</p>
                 </div>
               )}
 
-              {/* TIỆN ÍCH */}
               {post.amenities && post.amenities.length > 0 && (
                 <div className="detail-amenities-card bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100">
-                  <h3 className="text-xl font-bold mb-6 text-gray-900 border-b border-gray-100 pb-3">Tiện ích phòng</h3>
+                  <h3 className="text-xl font-bold mb-6 text-gray-900 border-b border-gray-100 pb-3">Tiện ích</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     {post.amenities.map((amenity) => {
                       const Icon = getIcon(amenity.icon);
+
                       return (
                         <div key={amenity.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                          <span className="text-emerald-600 bg-emerald-100 p-2 rounded-lg">
+                          <span className="text-blue-600 bg-blue-100 p-2 rounded-lg">
                             <Icon size={18} />
                           </span>
                           <span className="text-sm font-semibold text-gray-700">{amenity.name}</span>
@@ -284,37 +461,58 @@ export default function RoommatePostDetailPage() {
               )}
             </div>
 
-            {/* SIDEBAR BÊN PHẢI (STICKY) */}
-            <div className="detail-sidebar sticky top-24">
-              
-              {/* CARD GIÁ VÀ LIÊN HỆ */}
+            <div className="detail-sidebar sticky top-24" id="detail-sidebar">
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                <div className="text-emerald-600 font-black text-3xl mb-1">
+                <div className="text-blue-600 font-black text-3xl mb-1">
                   {formatPriceVND(post.pricePerMonth)}
                 </div>
-                <div className="text-gray-500 text-sm font-medium mb-6">/tháng/người</div>
+                <div className="text-gray-500 text-sm font-medium mb-6">/tháng</div>
 
                 <div className="flex flex-col gap-4 mb-8 bg-gray-50 p-4 rounded-xl border border-gray-100">
                   <div className="flex items-center gap-3">
-                    <CheckCircle size={20} className="text-emerald-500 shrink-0" />
+                    <CheckCircle size={20} className="text-blue-500 shrink-0" />
                     <div>
-                      <div className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-0.5">Diện tích phòng</div>
+                      <div className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-0.5">Diện tích</div>
                       <div className="text-sm font-bold text-gray-900">{post.area ? `${post.area} m²` : "Chưa cập nhật"}</div>
                     </div>
                   </div>
                   <div className="h-px bg-gray-200 w-full"></div>
                   <div className="flex items-center gap-3">
-                    <CheckCircle size={20} className="text-emerald-500 shrink-0" />
+                    <CheckCircle size={20} className="text-blue-500 shrink-0" />
                     <div>
                       <div className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-0.5">Loại phòng</div>
                       <div className="text-sm font-bold text-gray-900">{getRoomTypeLabel(post.roomType)}</div>
+                    </div>
+                  </div>
+                  <div className="h-px bg-gray-200 w-full"></div>
+                  <div className="flex items-center gap-3">
+                    <CheckCircle size={20} className="text-blue-500 shrink-0" />
+                    <div>
+                      <div className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-0.5">Có thể vào ở</div>
+                      <div className="text-sm font-bold text-gray-900">{post.availableFrom ? new Date(post.availableFrom).toLocaleDateString("vi-VN") : "Chưa cập nhật"}</div>
+                    </div>
+                  </div>
+                  <div className="h-px bg-gray-200 w-full"></div>
+                  <div className="flex items-center gap-3">
+                    <CheckCircle size={20} className="text-blue-500 shrink-0" />
+                    <div>
+                      <div className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-0.5">Ngày đăng</div>
+                      <div className="text-sm font-bold text-gray-900">{post.createdAt ? new Date(post.createdAt).toLocaleDateString("vi-VN") : "Chưa cập nhật"}</div>
+                    </div>
+                  </div>
+                  <div className="h-px bg-gray-200 w-full"></div>
+                  <div className="flex items-center gap-3">
+                    <CheckCircle size={20} className="text-blue-500 shrink-0" />
+                    <div>
+                      <div className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-0.5">Lượt xem</div>
+                      <div className="text-sm font-bold text-gray-900">{post.viewCount} lượt</div>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-3">
                   <button
-                    className="w-full flex items-center justify-center gap-2 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-sm shadow-emerald-100 transition-all"
+                    className="w-full flex items-center justify-center gap-2 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-sm shadow-blue-100 transition-all"
                     onClick={(e) => {
                       e.preventDefault();
                       if (post.author?.phone) setShowPhoneModal(true);
@@ -326,7 +524,7 @@ export default function RoommatePostDetailPage() {
                   </button>
                   <div className="flex gap-2">
                     <button
-                      className="flex-1 flex items-center justify-center gap-2 border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 py-3 rounded-xl font-bold transition-all disabled:opacity-50"
+                      className="flex-1 flex items-center justify-center gap-2 border-2 border-blue-500 text-blue-600 hover:bg-blue-50 py-3 rounded-xl font-bold transition-all disabled:opacity-50"
                       onClick={handleChatClick}
                       disabled={chatLoading}
                     >
@@ -338,6 +536,7 @@ export default function RoommatePostDetailPage() {
                     <button
                       className="w-14 flex items-center justify-center border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-colors bg-white"
                       onClick={handleToggleSave}
+                      disabled={saving}
                       title={isSaved ? "Bỏ lưu bài đăng" : "Lưu bài đăng"}
                     >
                       <Heart className={isSaved ? "text-rose-500 fill-rose-500" : "text-gray-400"} size={22} />
@@ -346,38 +545,144 @@ export default function RoommatePostDetailPage() {
                 </div>
               </div>
 
-              {/* CARD THÔNG TIN NGƯỜI ĐĂNG + ĐỘ TƯƠNG THÍCH */}
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mt-6 relative overflow-hidden">
                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-5">THÔNG TIN NGƯỜI ĐĂNG</h3>
-                
+
                 <Link to={`/user/${post.author.id}`} className="flex items-center gap-4 hover:bg-gray-50 p-2 -m-2 rounded-xl transition-colors">
                   <img
                     src={post.author.avatarUrl || DEFAULT_AVATAR}
                     alt={post.author.fullName}
-                    className="w-16 h-16 rounded-full object-cover border-2 border-emerald-100 shadow-sm"
+                    className="w-16 h-16 rounded-full object-cover border-2 border-blue-100 shadow-sm"
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-col items-start gap-1.5 mb-1.5">
                       <span className="font-bold text-gray-900 text-lg truncate w-full">{post.author.fullName}</span>
-                      
-                      {/* BỔ SUNG: TAG ĐỘ TƯƠNG THÍCH (Bắt từ state của route) */}
                       {compatibilityPct && (
-                        <span className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-black px-2.5 py-1 rounded-md shadow-sm flex items-center gap-1 shrink-0">
+                        <span className="bg-gradient-to-r from-blue-500 to-sky-500 text-white text-xs font-black px-2.5 py-1 rounded-md shadow-sm flex items-center gap-1 shrink-0">
                           🔥 Hợp gu {compatibilityPct}%
                         </span>
                       )}
                     </div>
-                    
+
                     <div className="text-sm font-medium text-gray-500">
-                      {post.author.gender === 'MALE' ? 'Nam' : post.author.gender === 'FEMALE' ? 'Nữ' : 'Chưa cập nhật giới tính'} 
+                      {post.author.gender === 'MALE' ? 'Nam' : post.author.gender === 'FEMALE' ? 'Nữ' : 'Chưa cập nhật giới tính'}
                       {post.author.age ? ` • ${post.author.age} tuổi` : ''}
                     </div>
                   </div>
                 </Link>
-                
-                <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-full blur-3xl -z-10 -translate-y-1/2 translate-x-1/2"></div>
+
+                <div className="mt-5 grid grid-cols-3 gap-3 text-center">
+                  <div className="rounded-xl bg-blue-50 px-3 py-3">
+                    <div className="text-blue-600 font-black text-lg">{responseRate}%</div>
+                    <div className="text-[11px] text-blue-700 font-semibold">Phản hồi</div>
+                  </div>
+                  <div className="rounded-xl bg-slate-50 px-3 py-3">
+                    <div className="text-slate-900 font-black text-lg">{authorReviewsCount}</div>
+                    <div className="text-[11px] text-slate-600 font-semibold">Đánh giá</div>
+                  </div>
+                  <div className="rounded-xl bg-emerald-50 px-3 py-3">
+                    <div className="text-emerald-700 font-black text-lg">{formatYearsActive(authorYearsActive)}</div>
+                    <div className="text-[11px] text-emerald-700 font-semibold">Hoạt động</div>
+                  </div>
+                </div>
+
+                <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-full blur-3xl -z-10 -translate-y-1/2 translate-x-1/2"></div>
               </div>
 
+              <div className="detail-landlord-reviews-card">
+                <h3 className="detail-amenities-title">Đánh giá người đăng</h3>
+                <div className="detail-landlord-reviews-content">
+                  <div className="detail-landlord-avg-box">
+                    <div className="detail-landlord-avg-score">
+                      {formatAverageRating(authorAvgRating)}
+                    </div>
+                    <StarRating rating={authorAvgRating ?? 0} size="sm" showValue={false} />
+                    <div className="detail-landlord-avg-count">{authorReviewsCount} đánh giá</div>
+                  </div>
+
+                  <div className="detail-landlord-star-bars" style={{ marginTop: "8px", width: "100%" }}>
+                    {[5, 4, 3, 2, 1].map((star) => {
+                      const count = reviews.filter((review) => review.rating === star).length;
+                      const pct = authorReviewsCount ? (count / authorReviewsCount) * 100 : 0;
+
+                      return (
+                        <div
+                          key={star}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            fontSize: "12px",
+                            color: "var(--gray-600)",
+                            marginBottom: "4px",
+                          }}
+                        >
+                          <span style={{ width: "36px" }}>{star} sao</span>
+                          <div
+                            style={{
+                              flex: 1,
+                              height: "8px",
+                              borderRadius: "4px",
+                              overflow: "hidden",
+                              background: "#e2e8f0",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: `${pct}%`,
+                                height: "100%",
+                                background: "#fbbf24",
+                                borderRadius: "4px",
+                              }}
+                            />
+                          </div>
+                          <span style={{ width: "20px", textAlign: "right" }}>{count}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {reviews.filter((review) => review.rating >= 4 && review.comment).length > 0 && (
+                    <div
+                      className="detail-landlord-featured-comments"
+                      style={{
+                        marginTop: "12px",
+                        borderTop: "1px solid var(--gray-100)",
+                        paddingTop: "12px",
+                      }}
+                    >
+                      <div style={{ fontSize: "13px", fontWeight: "600", color: "var(--gray-800)", marginBottom: "8px" }}>
+                        Nhận xét tiêu biểu:
+                      </div>
+                      {reviews
+                        .filter((review) => review.rating >= 4 && review.comment)
+                        .slice(0, 2)
+                        .map((review) => (
+                          <div
+                            key={review.id}
+                            style={{
+                              fontSize: "12px",
+                              color: "var(--gray-600)",
+                              marginBottom: "8px",
+                              background: "#f8fafc",
+                              padding: "8px 12px",
+                              borderRadius: "8px",
+                              border: "1px solid var(--gray-100)",
+                            }}
+                          >
+                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                              <span style={{ fontWeight: "600", color: "var(--gray-700)" }}>
+                                {review.reviewer?.full_name || "Người dùng ẩn danh"}
+                              </span>
+                              <span style={{ color: "#fbbf24" }}>{"★".repeat(review.rating)}</span>
+                            </div>
+                            <p style={{ fontStyle: "italic", margin: 0 }}>"{review.comment}"</p>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -396,8 +701,8 @@ export default function RoommatePostDetailPage() {
                 <img src={post.author.avatarUrl || DEFAULT_AVATAR} alt={post.author.fullName} className="w-full h-full object-cover" />
               </div>
               <div className="text-lg font-bold text-gray-900 mb-1">{post.author.fullName}</div>
-              <div className="text-3xl font-black text-emerald-600 mb-6 tracking-wide">{post.author.phone}</div>
-              <a href={`tel:${post.author.phone}`} className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-center transition-colors shadow-sm">
+              <div className="text-3xl font-black text-blue-600 mb-6 tracking-wide">{post.author.phone}</div>
+              <a href={`tel:${post.author.phone}`} className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-center transition-colors shadow-sm">
                 Gọi ngay
               </a>
             </div>
