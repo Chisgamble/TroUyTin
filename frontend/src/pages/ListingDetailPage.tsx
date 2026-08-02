@@ -14,6 +14,7 @@ import {
   unsaveListing,
 } from "../services/roomListing";
 import type { Amenity, Profile, Review, RoomListing } from "../types";
+import { formatListingUpdatedAt } from "../utils/dateTime";
 import { formatPriceVND } from "../utils/formatters";
 import "./ListingDetailPage.css";
 import "../components/ui/Button.css";
@@ -415,6 +416,9 @@ export default function ListingDetailPage() {
               </div>
 
               <div className="detail-description">
+                <p className="detail-updated-at">
+                  Cập nhật lần cuối: {formatListingUpdatedAt(listing.updated_at)}
+                </p>
                 <p>{listing.description}</p>
               </div>
 
