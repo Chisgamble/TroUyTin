@@ -1,3 +1,7 @@
+.listing-card-wrapper {
+  position: relative;
+}
+
 .listing-card {
   display: block;
   background: white;
@@ -69,6 +73,7 @@
   color: var(--gray-500);
   transition: all 0.2s;
   backdrop-filter: blur(4px);
+  z-index: 1;
 }
 
 .listing-card-save:hover {
@@ -78,6 +83,11 @@
 
 .listing-card-save.saved {
   color: var(--danger);
+}
+
+.listing-card-save:focus-visible {
+  outline: 2px solid var(--brand-600);
+  outline-offset: 2px;
 }
 
 .listing-card-content {
