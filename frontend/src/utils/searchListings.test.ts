@@ -5,6 +5,7 @@ import {
   deriveProvinceOptions,
   filterListings,
   paginateListings,
+  selectLocationOptions,
 } from "./searchListings.ts";
 
 const listings = [
@@ -58,4 +59,12 @@ test("derives only the selected province's unique districts in Vietnamese name o
     { id: 11, provinceId: 1, name: "Bình Thạnh" },
     { id: 12, provinceId: 1, name: "Quận 7" },
   ]);
+});
+
+test("uses room-derived location options only when the fulfilled catalog is empty", () => {
+  const catalog = [{ id: 1, name: "Hồ Chí Minh" }];
+  const roomDerived = [{ id: 2, name: "Cần Thơ" }];
+
+  assert.deepEqual(selectLocationOptions(catalog, roomDerived), catalog);
+  assert.deepEqual(selectLocationOptions([], roomDerived), roomDerived);
 });

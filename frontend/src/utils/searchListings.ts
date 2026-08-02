@@ -36,6 +36,13 @@ export type Pagination<T> = {
   totalItems: number;
 };
 
+export function selectLocationOptions<T>(
+  catalogOptions: readonly T[],
+  roomDerivedOptions: readonly T[],
+): readonly T[] {
+  return catalogOptions.length > 0 ? catalogOptions : roomDerivedOptions;
+}
+
 export function deriveProvinceOptions(
   listings: readonly LocationListingCandidate[],
 ): ProvinceOption[] {

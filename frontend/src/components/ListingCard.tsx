@@ -66,9 +66,10 @@ export default function ListingCard({
             <span>/tháng</span>
           </div>
           {showDetailsAction && (
-            <span className="listing-card-details-action" aria-hidden="true">
+            <span className="listing-card-details-action">
               Xem chi tiết
               <svg
+                aria-hidden="true"
                 width="16"
                 height="16"
                 viewBox="0 0 24 24"

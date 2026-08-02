@@ -122,7 +122,7 @@ export interface RoomListingDbRow {
   created_at: string;
   updated_at: string;
   listing_images: ListingImage[] | null;
-  landlord_info?: Pick<Profile, "is_verified"> | null;
+  landlord_info?: Profile | null;
   wards: {
     name: string;
     districts: {

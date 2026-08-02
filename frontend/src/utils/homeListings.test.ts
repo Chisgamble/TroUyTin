@@ -40,3 +40,14 @@ test("selects verified-landlord listings independently", () => {
   assert.deepEqual(result.featured.map(({ id }) => id), [3, 1]);
   assert.deepEqual(result.verifiedLandlords.map(({ id }) => id), [3, 2]);
 });
+
+test("caps verified-landlord listings at the five newest", () => {
+  const listings = Array.from({ length: 7 }, (_, index) =>
+    candidate(index + 1, false, true),
+  );
+
+  assert.deepEqual(
+    selectHomeListings(listings).verifiedLandlords.map(({ id }) => id),
+    [7, 6, 5, 4, 3],
+  );
+});

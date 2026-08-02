@@ -59,9 +59,12 @@ export default function HomePage() {
           ? images
           : ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267"],
       amenity_ids: [],
+      district_id: row.wards?.districts?.id ?? null,
+      province_id: row.wards?.districts?.province_id ?? null,
+      province_name: row.wards?.districts?.provinces?.name ?? "",
       district_name: row.wards?.districts?.name ?? "",
       ward_name: row.wards?.name ?? "",
-      landlord: row.landlord_info as RoomListing["landlord"],
+      landlord: row.landlord_info ?? undefined,
     };
   }
 
@@ -93,7 +96,7 @@ export default function HomePage() {
       const { data, error: fetchError } = await supabase
         .from("room_listings")
         .select(
-          "*, listing_images(image_url, display_order), wards(name, districts(name)), landlord_info:profiles(is_verified)",
+          "*, listing_images(image_url, display_order), wards(name, districts(id, name, province_id, provinces(name))), landlord_info:profiles(id, email, full_name, avatar_url, role, is_verified, is_active, bio, created_at, updated_at)",
         )
         .eq("status", "AVAILABLE")
         .order("created_at", { ascending: false });
@@ -120,10 +123,6 @@ export default function HomePage() {
   ) => {
     if (loading) {
       return <p>Đang tải phòng trọ...</p>;
-    }
-
-    if (error) {
-      return <p>{error}</p>;
     }
 
     if (listings.length === 0) {
@@ -219,57 +218,65 @@ export default function HomePage() {
             </div>
           </section>
 
-          <section className="home-listing-section">
-            <div className="home-listing-section-header">
-              <h2>Phòng trọ nổi bật</h2>
-              <button
-                className="home-see-all"
-                onClick={() => navigate("/tim-kiem")}
-              >
-                Xem tất cả
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <polyline points="9,18 15,12 9,6" />
-                </svg>
-              </button>
-            </div>
-            {renderListingGrid(
-              featuredListings,
-              "Chưa có phòng trọ nổi bật.",
-            )}
-          </section>
+          {error ? (
+            <section className="home-listing-section home-listing-section--last">
+              <p>{error}</p>
+            </section>
+          ) : (
+            <>
+              <section className="home-listing-section">
+                <div className="home-listing-section-header">
+                  <h2>Phòng trọ nổi bật</h2>
+                  <button
+                    className="home-see-all"
+                    onClick={() => navigate("/tim-kiem")}
+                  >
+                    Xem tất cả
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <polyline points="9,18 15,12 9,6" />
+                    </svg>
+                  </button>
+                </div>
+                {renderListingGrid(
+                  featuredListings,
+                  "Chưa có phòng trọ nổi bật.",
+                )}
+              </section>
 
-          <section className="home-listing-section home-listing-section--last">
-            <div className="home-listing-section-header">
-              <h2>Phòng trọ từ chủ nhà xác thực</h2>
-              <button
-                className="home-see-all"
-                onClick={() => navigate("/tim-kiem")}
-              >
-                Xem tất cả
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <polyline points="9,18 15,12 9,6" />
-                </svg>
-              </button>
-            </div>
-            {renderListingGrid(
-              verifiedLandlords,
-              "Chưa có phòng trọ từ chủ nhà xác thực.",
-            )}
-          </section>
+              <section className="home-listing-section home-listing-section--last">
+                <div className="home-listing-section-header">
+                  <h2>Phòng trọ từ chủ nhà xác thực</h2>
+                  <button
+                    className="home-see-all"
+                    onClick={() => navigate("/tim-kiem")}
+                  >
+                    Xem tất cả
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <polyline points="9,18 15,12 9,6" />
+                    </svg>
+                  </button>
+                </div>
+                {renderListingGrid(
+                  verifiedLandlords,
+                  "Chưa có phòng trọ từ chủ nhà xác thực.",
+                )}
+              </section>
+            </>
+          )}
         </div>
       </div>
     </>

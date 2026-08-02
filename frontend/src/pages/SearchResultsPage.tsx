@@ -15,6 +15,7 @@ import {
   deriveProvinceOptions,
   filterListings,
   paginateListings,
+  selectLocationOptions,
 } from "../utils/searchListings";
 import "./SearchResultsPage.css";
 
@@ -92,8 +93,8 @@ export default function SearchResultsPage() {
 
   const fallbackProvinces = deriveProvinceOptions(rooms);
   const fallbackDistricts = deriveDistrictOptions(rooms, provinceId);
-  const provinceOptions = provinceCatalogFailed ? fallbackProvinces : provinces;
-  const districtOptions = districtCatalogFailed ? fallbackDistricts : districts;
+  const provinceOptions = selectLocationOptions(provinces, fallbackProvinces);
+  const districtOptions = selectLocationOptions(districts, fallbackDistricts);
   const locationError =
     provinceCatalogFailed && !isLoading && fallbackProvinces.length === 0
       ? "Không thể tải danh sách tỉnh/thành phố."
