@@ -59,9 +59,6 @@ export default function HomePage() {
           ? images
           : ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267"],
       amenity_ids: [],
-      district_id: row.wards?.districts?.id ?? null,
-      province_id: row.wards?.districts?.province_id ?? null,
-      province_name: row.wards?.districts?.provinces?.name ?? "",
       district_name: row.wards?.districts?.name ?? "",
       ward_name: row.wards?.name ?? "",
       landlord: row.landlord_info ?? undefined,
@@ -96,7 +93,7 @@ export default function HomePage() {
       const { data, error: fetchError } = await supabase
         .from("room_listings")
         .select(
-          "*, listing_images(image_url, display_order), wards(name, districts(id, name, province_id, provinces(name))), landlord_info:profiles(id, email, full_name, avatar_url, role, is_verified, is_active, bio, created_at, updated_at)",
+          "*, listing_images(image_url, display_order), wards(name, districts(name)), landlord_info:profiles(id, email, full_name, avatar_url, role, is_verified, is_active, bio, created_at, updated_at)",
         )
         .eq("status", "AVAILABLE")
         .order("created_at", { ascending: false });
@@ -116,33 +113,6 @@ export default function HomePage() {
 
   const { featured: featuredListings, verifiedLandlords } =
     selectHomeListings(rooms);
-
-  const renderListingGrid = (
-    listings: RoomListing[],
-    emptyMessage: string,
-  ) => {
-    if (loading) {
-      return <p>Đang tải phòng trọ...</p>;
-    }
-
-    if (listings.length === 0) {
-      return <p>{emptyMessage}</p>;
-    }
-
-    return (
-      <div className="home-grid">
-        {listings.map((listing) => (
-          <ListingCard
-            key={listing.id}
-            listing={listing}
-            saved={savedIds.includes(listing.id)}
-            onToggleSave={toggleSave}
-            showDetailsAction
-          />
-        ))}
-      </div>
-    );
-  };
 
   const toggleSave = async (id: number) => {
     if (!user) {
@@ -218,64 +188,84 @@ export default function HomePage() {
             </div>
           </section>
 
-          {error ? (
-            <section className="home-listing-section home-listing-section--last">
+          <section className="home-featured">
+            <div className="home-featured-header">
+              <h2>Phòng trọ nổi bật</h2>
+              <button
+                className="home-see-all"
+                onClick={() => navigate("/tim-kiem")}
+              >
+                Xem tất cả
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <polyline points="9,18 15,12 9,6" />
+                </svg>
+              </button>
+            </div>
+            {loading ? (
+              <p>Đang tải phòng trọ...</p>
+            ) : error ? (
               <p>{error}</p>
-            </section>
-          ) : (
-            <>
-              <section className="home-listing-section">
-                <div className="home-listing-section-header">
-                  <h2>Phòng trọ nổi bật</h2>
-                  <button
-                    className="home-see-all"
-                    onClick={() => navigate("/tim-kiem")}
-                  >
-                    Xem tất cả
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <polyline points="9,18 15,12 9,6" />
-                    </svg>
-                  </button>
-                </div>
-                {renderListingGrid(
-                  featuredListings,
-                  "Chưa có phòng trọ nổi bật.",
-                )}
-              </section>
+            ) : featuredListings.length === 0 ? (
+              <p>Chưa có phòng trọ nổi bật.</p>
+            ) : (
+              <div className="home-grid">
+                {featuredListings.map((listing) => (
+                  <ListingCard
+                    key={listing.id}
+                    listing={listing}
+                    saved={savedIds.includes(listing.id)}
+                    onToggleSave={toggleSave}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
 
-              <section className="home-listing-section home-listing-section--last">
-                <div className="home-listing-section-header">
-                  <h2>Phòng trọ từ chủ nhà xác thực</h2>
-                  <button
-                    className="home-see-all"
-                    onClick={() => navigate("/tim-kiem")}
+          {!error && (
+            <section className="home-featured home-featured--last">
+              <div className="home-featured-header">
+                <h2>Phòng trọ từ chủ nhà xác thực</h2>
+                <button
+                  className="home-see-all"
+                  onClick={() => navigate("/tim-kiem")}
+                >
+                  Xem tất cả
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
                   >
-                    Xem tất cả
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <polyline points="9,18 15,12 9,6" />
-                    </svg>
-                  </button>
+                    <polyline points="9,18 15,12 9,6" />
+                  </svg>
+                </button>
+              </div>
+              {loading ? (
+                <p>Đang tải phòng trọ...</p>
+              ) : verifiedLandlords.length === 0 ? (
+                <p>Chưa có phòng trọ từ chủ nhà xác thực.</p>
+              ) : (
+                <div className="home-grid">
+                  {verifiedLandlords.map((listing) => (
+                    <ListingCard
+                      key={listing.id}
+                      listing={listing}
+                      saved={savedIds.includes(listing.id)}
+                      onToggleSave={toggleSave}
+                    />
+                  ))}
                 </div>
-                {renderListingGrid(
-                  verifiedLandlords,
-                  "Chưa có phòng trọ từ chủ nhà xác thực.",
-                )}
-              </section>
-            </>
+              )}
+            </section>
           )}
         </div>
       </div>

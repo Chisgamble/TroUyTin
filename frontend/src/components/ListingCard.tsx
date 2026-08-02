@@ -7,7 +7,6 @@ type ListingCardProps = {
   saved?: boolean;
   onToggleSave?: (id: number) => void;
   showVerifiedBadge?: boolean;
-  showDetailsAction?: boolean;
 };
 
 export default function ListingCard({
@@ -15,7 +14,6 @@ export default function ListingCard({
   saved = false,
   onToggleSave,
   showVerifiedBadge = true,
-  showDetailsAction = false,
 }: ListingCardProps) {
   return (
     <div className="legacy-page-wrapper listing-card-wrapper">
@@ -65,22 +63,6 @@ export default function ListingCard({
             {formatPriceVND(listing.price)}
             <span>/tháng</span>
           </div>
-          {showDetailsAction && (
-            <span className="listing-card-details-action">
-              Xem chi tiết
-              <svg
-                aria-hidden="true"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="m9 18 6-6-6-6" />
-              </svg>
-            </span>
-          )}
         </div>
       </Link>
       {onToggleSave && (

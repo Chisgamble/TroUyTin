@@ -114,25 +114,25 @@
   color: rgba(255, 255, 255, 0.7);
 }
 
-/* Listing sections */
-.home-listing-section {
+/* Featured Section */
+.home-featured {
   max-width: 1200px;
   margin: 0 auto;
   padding: 36px 24px 0;
 }
 
-.home-listing-section--last {
+.home-featured--last {
   padding-bottom: 36px;
 }
 
-.home-listing-section-header {
+.home-featured-header {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   margin-bottom: 20px;
 }
 
-.home-listing-section-header h2 {
+.home-featured-header h2 {
   font-size: 22px;
   font-weight: 700;
   color: var(--gray-800);
@@ -154,7 +154,7 @@
 
 .home-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
 }
 

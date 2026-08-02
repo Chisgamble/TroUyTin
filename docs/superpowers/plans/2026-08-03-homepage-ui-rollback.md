@@ -4,7 +4,7 @@
 
 **Goal:** Restore the original homepage listing presentation and add only one visually identical verified-landlord section below it.
 
-**Architecture:** Keep the current single Supabase room query because the new section needs the joined landlord verification flag. Make the selection helper preserve the query's newest-first order while applying the legacy four-item featured rule and the new five-item verified-landlord rule independently. Restore the original homepage selectors and card typography, with one small modifier that adds bottom spacing to the second section.
+**Architecture:** Keep the current single Supabase room query because the new section needs the joined landlord verification flag. Make the selection helper preserve the query's newest-first order while applying four-item limits to both sections independently. Restore the original homepage selectors and card typography, with one small modifier that adds bottom spacing to the second section.
 
 **Tech Stack:** React 19, TypeScript, React Router, Supabase, CSS, Node test runner
 
@@ -12,7 +12,7 @@
 
 - The original `Phòng trọ nổi bật` typography, spacing, four-column grid, and card presentation must match `main`.
 - The existing featured section shows four available verified listings in API order.
-- The new verified-landlord section shows five available listings in API order and may wrap its fifth card under the original four-column grid.
+- The new verified-landlord section shows four available listings in API order, matching the original four-column grid.
 - Homepage cards remain fully clickable links and do not show a separate `Xem chi tiết` text row.
 - Search-results and listing-detail behavior must remain unchanged.
 
@@ -83,7 +83,7 @@ export function selectHomeListings<T extends HomeListingCandidate>(
         (listing) =>
           listing.status === "AVAILABLE" && listing.landlord?.is_verified,
       )
-      .slice(0, 5),
+      .slice(0, 4),
   };
 }
 ```
@@ -97,7 +97,7 @@ Set-Location frontend
 node --test src/utils/homeListings.test.ts
 ```
 
-Expected: all homepage selection tests pass, including independent overlap and the five-item verified-landlord cap.
+Expected: all homepage selection tests pass, including independent overlap and the four-item verified-landlord cap.
 
 ---
 
@@ -282,7 +282,7 @@ Open the homepage at desktop width and confirm:
 - `Phòng trọ nổi bật` uses the original 22px heading and four-column grid.
 - Cards contain no visible `Xem chi tiết` row.
 - `Phòng trọ từ chủ nhà xác thực` appears immediately below with identical typography and card styling.
-- The fifth verified-landlord card wraps naturally.
+- The verified-landlord section contains at most four cards in the desktop row.
 - At widths below 1024px the grid uses two columns, and below 768px it uses one column.
 
 - [ ] **Step 3: Run final verification**
