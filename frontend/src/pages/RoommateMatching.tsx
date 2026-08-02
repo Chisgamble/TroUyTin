@@ -265,7 +265,7 @@ export default function RoommateMatching() {
                           {candidate.fullName || "Sinh viên ẩn danh"}
                         </h3>
                         
-                        <button
+                        {/* <button
                           onClick={() => handleAction(candidate.userId, "LIKE")}
                           disabled={!!actionLoading}
                           className="text-gray-400 hover:text-blue-600 p-1.5 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
@@ -276,7 +276,7 @@ export default function RoommateMatching() {
                           ) : (
                              <MessageSquare size={18} />
                           )}
-                        </button>
+                        </button> */}
                       </div>
 
                       <p className="text-xs font-semibold text-[var(--brand-600)] bg-blue-50 inline-block px-2 py-0.5 rounded-md mb-4">
