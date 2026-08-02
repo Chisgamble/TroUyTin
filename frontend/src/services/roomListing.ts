@@ -56,6 +56,7 @@ export type RoomListing = {
   wardName?: string;
   districtId?: number;
   districtName?: string;
+  provinceId?: number;
   amenities?: Amenity[];
   imageUrls?: string[];
   imagePath?: string[];
@@ -166,7 +167,8 @@ export async function searchListings(
         district_id,
         districts (
           id,
-          name
+          name,
+          province_id
         )
       ),
       listing_amenities (
@@ -276,11 +278,97 @@ export async function createListing(payload: CreateListingPayload): Promise<Room
   return mapListing(listing);
 }
 
+export async function updateListing(
+  listingId: number,
+  payload: Partial<CreateListingPayload>
+): Promise<RoomListing> {
+  const updateData: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (payload.title !== undefined) updateData.title = payload.title;
+  if (payload.description !== undefined) updateData.description = payload.description ?? null;
+  if (payload.price !== undefined) updateData.price = payload.price;
+  if (payload.deposit !== undefined) updateData.deposit = payload.deposit ?? null;
+  if (payload.area !== undefined) updateData.area = payload.area;
+  if (payload.roomType !== undefined) updateData.room_type = payload.roomType;
+  if (payload.wardId !== undefined) updateData.ward_id = payload.wardId ?? null;
+  if (payload.addressDetail !== undefined) updateData.address_detail = payload.addressDetail ?? null;
+
+  const { data: listing, error: listingError } = await supabase
+    .from('room_listings')
+    .update(updateData)
+    .eq('id', listingId)
+    .select()
+    .single();
+
+  if (listingError) throw listingError;
+
+  if (payload.amenityIds !== undefined) {
+    await supabase.from('listing_amenities').delete().eq('listing_id', listingId);
+    if (payload.amenityIds.length > 0) {
+      const { error: amenityError } = await supabase
+        .from('listing_amenities')
+        .insert(
+          payload.amenityIds.map(amenityId => ({
+            listing_id: listingId,
+            amenity_id: amenityId,
+          }))
+        );
+      if (amenityError) throw amenityError;
+    }
+  }
+
+  if (payload.imageUrls !== undefined) {
+    await supabase.from('listing_images').delete().eq('listing_id', listingId);
+    if (payload.imageUrls.length > 0) {
+      const { error: imageError } = await supabase
+        .from('listing_images')
+        .insert(
+          payload.imageUrls.map((url, index) => ({
+            listing_id: listingId,
+            image_url: url,
+            image_path: payload.imagePaths?.[index] ?? null,
+            display_order: index,
+          }))
+        );
+      if (imageError) throw imageError;
+    }
+  }
+
+  return mapListing(listing);
+}
+
+export async function updateListingStatus(
+  listingId: number,
+  status: ListingStatus
+): Promise<void> {
+  const { error } = await supabase
+    .from('room_listings')
+    .update({
+      status,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', listingId);
+
+  if (error) throw error;
+}
+
 export async function getListing(listingId: number): Promise<RoomListing | null> {
   const { data, error } = await supabase
     .from('room_listings')
     .select(`
       *,
+      wards (
+        id,
+        name,
+        district_id,
+        districts (
+          id,
+          name,
+          province_id
+        )
+      ),
       listing_amenities ( amenity_id, amenities ( id, name, icon ) ),
       listing_images ( image_url, display_order )
     `)
@@ -298,6 +386,16 @@ export async function getListingsByLandlord(landlordId: string): Promise<RoomLis
     .from('room_listings')
     .select(`
       *,
+      wards (
+        id,
+        name,
+        district_id,
+        districts (
+          id,
+          name,
+          province_id
+        )
+      ),
       listing_amenities ( amenity_id, amenities ( id, name, icon ) ),
       listing_images ( image_url, display_order )
     `)
@@ -369,9 +467,10 @@ function mapListingWithRelations(row: Record<string, unknown>): RoomListing {
 
   return {
     ...base,
-    wardName: row.wards?.name,
-    districtId: row.wards?.district_id,
-    districtName: row.wards?.districts?.name,
+    wardName: (row.wards as any)?.name,
+    districtId: (row.wards as any)?.district_id,
+    districtName: (row.wards as any)?.districts?.name,
+    provinceId: (row.wards as any)?.districts?.province_id,
     amenities: amenityRows
       .filter(r => r.amenities)
       .map(r => ({
