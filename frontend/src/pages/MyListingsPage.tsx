@@ -1,12 +1,12 @@
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { useNavigate, useOutletContext } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useNavigate, useOutletContext, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { getListingsByLandlord, type RoomListing } from '../services/roomListing'
+import { getListingsByLandlord, updateListingStatus, type RoomListing, type ListingStatus } from '../services/roomListing'
 import { type Profile } from '../services/profiles'
 import {
   Building2, MapPin, ChevronLeft, ChevronRight,
-  Eye, Clock, BadgeCheck, PlusCircle, Pencil
+  Eye, Clock, BadgeCheck, PlusCircle, Pencil, CheckCircle2, Loader2, AlertCircle
 } from 'lucide-react'
 
 const PAGE_SIZE = 6
@@ -39,7 +39,20 @@ function formatDate(dateStr: string) {
 export default function MyListingsPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const queryClient = useQueryClient()
   const [page, setPage] = useState(1)
+
+  const [toastMessage, setToastMessage] = useState<string | null>(location.state?.successToast || null)
+  const [updatingId, setUpdatingId] = useState<number | null>(null)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+
+  // Clear location state after toast shown
+  useEffect(() => {
+    if (location.state?.successToast) {
+      window.history.replaceState({}, document.title)
+    }
+  }, [location.state])
 
   // Accept outlet context same way as other profile pages
   useOutletContext<{ profile: Profile; setProfile: unknown }>()
@@ -53,6 +66,23 @@ export default function MyListingsPage() {
     queryFn: () => getListingsByLandlord(user!.id),
     enabled: !!user?.id,
   })
+
+  const handleStatusChange = async (listingId: number, newStatus: ListingStatus) => {
+    setUpdatingId(listingId)
+    setErrorMsg(null)
+    try {
+      await updateListingStatus(listingId, newStatus)
+      await queryClient.invalidateQueries({ queryKey: ['my-listings', user?.id] })
+      setToastMessage(`Đã cập nhật trạng thái phòng thành "${STATUS_LABELS[newStatus]?.label || newStatus}"`)
+      setTimeout(() => setToastMessage(null), 3000)
+    } catch (err) {
+      console.error(err)
+      setErrorMsg('Không thể cập nhật trạng thái phòng. Vui lòng thử lại.')
+      setTimeout(() => setErrorMsg(null), 3000)
+    } finally {
+      setUpdatingId(null)
+    }
+  }
 
   const totalPages = Math.max(1, Math.ceil(listings.length / PAGE_SIZE))
   const paginated = listings.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
@@ -78,6 +108,21 @@ export default function MyListingsPage() {
 
   return (
     <div className="space-y-5">
+
+      {/* ── Toast notifications ── */}
+      {toastMessage && (
+        <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-medium px-4 py-3 rounded-xl shadow-sm transition">
+          <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {errorMsg && (
+        <div className="flex items-center gap-2 bg-rose-50 border border-rose-200 text-rose-800 text-sm font-medium px-4 py-3 rounded-xl shadow-sm transition">
+          <AlertCircle size={18} className="text-rose-600 shrink-0" />
+          <span>{errorMsg}</span>
+        </div>
+      )}
 
       {/* ── Header ── */}
       <div className="flex items-center justify-between">
@@ -119,83 +164,113 @@ export default function MyListingsPage() {
               return (
                 <div
                   key={item.id}
-                  className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition group"
+                  className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition group flex flex-col justify-between"
                 >
-                  {/* Image */}
-                  <div className="h-40 bg-gray-100 relative">
-                    {item.imageUrls?.[0] ? (
-                      <img
-                        src={item.imageUrls[0]}
-                        alt={item.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 gap-2">
-                        <Building2 size={32} className="text-slate-200" />
-                        <span className="text-xs">Không có ảnh</span>
-                      </div>
-                    )}
+                  <div>
+                    {/* Image */}
+                    <div className="h-40 bg-gray-100 relative">
+                      {item.imageUrls?.[0] ? (
+                        <img
+                          src={item.imageUrls[0]}
+                          alt={item.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 gap-2">
+                          <Building2 size={32} className="text-slate-200" />
+                          <span className="text-xs">Không có ảnh</span>
+                        </div>
+                      )}
 
-                    {/* Status badge */}
-                    <span className={`absolute top-2 left-2 text-xs font-semibold px-2 py-1 rounded-full ${statusInfo.color}`}>
-                      {statusInfo.label}
-                    </span>
-
-                    {/* Verified badge */}
-                    {item.isVerified && (
-                      <span className="absolute top-2 right-2 bg-emerald-500 text-white p-1 rounded-full" title="Đã xác minh">
-                        <BadgeCheck size={14} />
+                      {/* Status badge */}
+                      <span className={`absolute top-2 left-2 text-xs font-semibold px-2.5 py-1 rounded-full shadow-sm ${statusInfo.color}`}>
+                        {statusInfo.label}
                       </span>
-                    )}
+
+                      {/* Verified badge */}
+                      {item.isVerified && (
+                        <span className="absolute top-2 right-2 bg-emerald-500 text-white p-1 rounded-full shadow-sm" title="Đã xác minh">
+                          <BadgeCheck size={14} />
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-4 space-y-2">
+                      <h2
+                        className="font-semibold text-gray-800 line-clamp-1 cursor-pointer hover:text-blue-600 transition"
+                        onClick={() => navigate(`/phong/${item.id}`)}
+                      >
+                        {item.title}
+                      </h2>
+
+                      <p className="text-blue-600 font-bold text-sm">
+                        {formatPrice(item.price)} / tháng
+                      </p>
+
+                      <div className="flex items-center gap-1 text-sm text-gray-500">
+                        <MapPin size={13} />
+                        <span className="line-clamp-1">
+                          {item.addressDetail || item.districtName || 'Không rõ địa chỉ'}
+                        </span>
+                      </div>
+
+                      <div className="flex gap-2 text-xs text-gray-500 flex-wrap">
+                        <span className="px-2 py-1 bg-gray-100 rounded-md">{item.area} m²</span>
+                        <span className="px-2 py-1 bg-gray-100 rounded-md">
+                          {ROOM_TYPE_LABELS[item.roomType] ?? item.roomType}
+                        </span>
+                      </div>
+
+                      {/* Meta row */}
+                      <div className="flex items-center justify-between text-xs text-slate-400 pt-1 border-t border-slate-100">
+                        <span className="flex items-center gap-1">
+                          <Eye size={11} />
+                          {item.viewCount ?? 0} lượt xem
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock size={11} />
+                          {formatDate(item.createdAt)}
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Content */}
-                  <div className="p-4 space-y-2">
-                    <h2
-                      className="font-semibold text-gray-800 line-clamp-1 cursor-pointer hover:text-blue-600 transition"
-                      onClick={() => navigate(`/phong/${item.id}`)}
-                    >
-                      {item.title}
-                    </h2>
+                  {/* Actions Bar */}
+                  <div className="p-4 pt-0 space-y-2">
+                    <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
+                      <button
+                        onClick={() => navigate(`/dang-tin?edit=${item.id}`)}
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 transition"
+                      >
+                        <Pencil size={13} />
+                        Chỉnh sửa tin
+                      </button>
 
-                    <p className="text-blue-600 font-bold text-sm">
-                      {formatPrice(item.price)} / tháng
-                    </p>
-
-                    <div className="flex items-center gap-1 text-sm text-gray-500">
-                      <MapPin size={13} />
-                      <span className="line-clamp-1">
-                        {item.addressDetail || item.districtName || 'Không rõ địa chỉ'}
-                      </span>
+                      {/* Status Dropdown */}
+                      <div className="relative">
+                        <select
+                          value={item.status}
+                          disabled={updatingId === item.id}
+                          onChange={(e) => handleStatusChange(item.id, e.target.value as ListingStatus)}
+                          className={`text-xs font-semibold px-2.5 py-2 rounded-lg border outline-none cursor-pointer transition ${
+                            item.status === 'AVAILABLE'
+                              ? 'bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100'
+                              : item.status === 'RENTED'
+                              ? 'bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100'
+                              : 'bg-slate-50 border-slate-300 text-slate-700'
+                          } disabled:opacity-50`}
+                        >
+                          <option value="AVAILABLE">Đang hiển thị</option>
+                          <option value="RENTED">Đã cho thuê</option>
+                        </select>
+                        {updatingId === item.id && (
+                          <div className="absolute inset-0 bg-white/70 flex items-center justify-center rounded-lg">
+                            <Loader2 size={14} className="animate-spin text-blue-600" />
+                          </div>
+                        )}
+                      </div>
                     </div>
-
-                    <div className="flex gap-2 text-xs text-gray-500 flex-wrap">
-                      <span className="px-2 py-1 bg-gray-100 rounded-md">{item.area} m²</span>
-                      <span className="px-2 py-1 bg-gray-100 rounded-md">
-                        {ROOM_TYPE_LABELS[item.roomType] ?? item.roomType}
-                      </span>
-                    </div>
-
-                    {/* Meta row */}
-                    <div className="flex items-center justify-between text-xs text-slate-400 pt-1 border-t border-slate-100">
-                      <span className="flex items-center gap-1">
-                        <Eye size={11} />
-                        {item.viewCount ?? 0} lượt xem
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock size={11} />
-                        {formatDate(item.createdAt)}
-                      </span>
-                    </div>
-
-                    {/* Action */}
-                    <button
-                      onClick={() => navigate(`/dang-tin?edit=${item.id}`)}
-                      className="w-full mt-1 inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-600 border border-slate-200 rounded-lg px-3 py-1.5 hover:bg-slate-50 transition"
-                    >
-                      <Pencil size={13} />
-                      Chỉnh sửa tin
-                    </button>
                   </div>
                 </div>
               )
@@ -246,3 +321,4 @@ export default function MyListingsPage() {
     </div>
   )
 }
+

@@ -1,11 +1,11 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getIcon } from '../utils/iconMap';
-import { getProfile, type Profile } from '../services/profiles';
+import { getProfile } from '../services/profiles';
 import {
   getAmenities, getProvinces, getDistricts, getWards,
-  createListing, uploadListingImage,
+  createListing, updateListing, getListing, uploadListingImage,
   type Amenity, type Province, type District, type Ward, type RoomType,
 } from '../services/roomListing';
 import {
@@ -619,11 +619,16 @@ const inputCls =
 export default function PostListingPage() {
   const [form, setForm] = useState<FormData>(DEFAULT_FORM);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get('edit');
+  const isEditing = Boolean(editId);
+
   const { user } = useAuth();
 
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [loadingEditData, setLoadingEditData] = useState(isEditing);
 
   // Geo data
   const [provinces, setProvinces] = useState<Province[]>([]);
@@ -632,7 +637,6 @@ export default function PostListingPage() {
   const [loadingGeo, setLoadingGeo] = useState(false);
   const [amenities, setAmenities] = useState<Amenity[]>([]);
 
-  const [profileRole, setProfileRole] = useState<string | null>(null);
   const [checkingRole, setCheckingRole] = useState(true);
 
   useEffect(() => {
@@ -644,8 +648,6 @@ export default function PostListingPage() {
         .then(p => {
         if (p?.role !== 'LANDLORD') {
             navigate('/', { replace: true, state: { errorToast: 'Chỉ chủ nhà mới có thể đăng tin.' } });
-        } else {
-            setProfileRole(p.role);
         }
         })
         .catch(() => navigate('/', { replace: true }))
@@ -662,10 +664,75 @@ export default function PostListingPage() {
     getProvinces().then(setProvinces).catch(() => {});
   }, []);
 
-  if (checkingRole) {
+  // Fetch listing data if editing
+  useEffect(() => {
+    if (!editId) return;
+    setLoadingEditData(true);
+    getListing(Number(editId))
+      .then(async (listing) => {
+        if (!listing) {
+          setError('Không tìm thấy thông tin phòng.');
+          return;
+        }
+
+        const provinceIdStr = listing.provinceId ? String(listing.provinceId) : '';
+        const districtIdStr = listing.districtId ? String(listing.districtId) : '';
+        const wardIdStr = listing.wardId ? String(listing.wardId) : '';
+
+        // Load district and ward dropdown options if ids present
+        if (listing.provinceId) {
+          try {
+            const dList = await getDistricts(Number(listing.provinceId));
+            setDistricts(dList);
+          } catch (e) {
+            console.error('Error fetching districts:', e);
+          }
+        }
+        if (listing.districtId) {
+          try {
+            const wList = await getWards(Number(listing.districtId));
+            setWards(wList);
+          } catch (e) {
+            console.error('Error fetching wards:', e);
+          }
+        }
+
+        setForm({
+          title: listing.title || '',
+          description: listing.description || '',
+          room_type: listing.roomType || 'PHONG_TRO',
+          price: listing.price ? String(listing.price) : '',
+          deposit: listing.deposit ? String(listing.deposit) : '',
+          area: listing.area ? String(listing.area) : '',
+          amenity_ids: listing.amenities?.map(a => a.id) || [],
+          images: (listing.imageUrls || []).map(url => ({
+            file: new File([], ''),
+            preview: url,
+            uploading: false,
+            url,
+            error: null,
+          })),
+          province_id: provinceIdStr,
+          district_id: districtIdStr,
+          ward_id: wardIdStr,
+          address_detail: listing.addressDetail || '',
+        });
+      })
+      .catch(() => {
+        setError('Không thể tải thông tin phòng.');
+      })
+      .finally(() => {
+        setLoadingEditData(false);
+      });
+  }, [editId]);
+
+  if (checkingRole || loadingEditData) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-3">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          <p className="text-sm text-slate-500">
+            {loadingEditData ? 'Đang tải dữ liệu phòng...' : 'Đang kiểm tra quyền...'}
+          </p>
       </div>
     );
   }
@@ -730,7 +797,7 @@ export default function PostListingPage() {
     setSubmitting(true);
     setError('');
     try {
-      await createListing({
+      const payload = {
         landlordId: user.id,
         title: form.title,
         description: form.description || undefined,
@@ -742,15 +809,20 @@ export default function PostListingPage() {
         addressDetail: form.address_detail || undefined,
         amenityIds: form.amenity_ids,
         imageUrls: form.images
-        .filter(i => i.url)
-        .map(i => i.url as string),
-
+          .filter(i => i.url)
+          .map(i => i.url as string),
         imagePaths: form.images
-        .filter(i => i.url)
-        .map(i => (i as any).path), 
-      });
+          .filter(i => i.url)
+          .map(i => (i as any).path), 
+      };
 
-      navigate('/', { state: { successToast: 'Tin đăng đã được gửi và đang chờ duyệt!' } });
+      if (isEditing && editId) {
+        await updateListing(Number(editId), payload);
+        navigate('/profile/listings', { state: { successToast: 'Cập nhật tin đăng thành công!' } });
+      } else {
+        await createListing(payload);
+        navigate('/', { state: { successToast: 'Tin đăng đã được gửi và đang chờ duyệt!' } });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra. Vui lòng thử lại.');
     } finally {
@@ -764,6 +836,11 @@ export default function PostListingPage() {
       {/* Progress bar header */}
       <div className="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-3xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-lg font-bold text-slate-800">
+              {isEditing ? 'Chỉnh sửa tin đăng phòng' : 'Đăng tin phòng trọ mới'}
+            </h1>
+          </div>
           <div className="flex items-center justify-between relative">
             {/* Connector line */}
             <div className="absolute left-0 right-0 top-5 h-0.5 bg-slate-200 z-0 mx-10" />
@@ -859,9 +936,9 @@ export default function PostListingPage() {
                 className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl text-sm font-bold shadow-sm shadow-blue-200 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {submitting ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" />Đang đăng...</>
+                  <><Loader2 className="w-4 h-4 animate-spin" />{isEditing ? 'Đang lưu...' : 'Đang đăng...'}</>
                 ) : (
-                  <><Check className="w-4 h-4" />Xác nhận đăng tin</>
+                  <><Check className="w-4 h-4" />{isEditing ? 'Lưu thay đổi' : 'Xác nhận đăng tin'}</>
                 )}
               </button>
             )}
