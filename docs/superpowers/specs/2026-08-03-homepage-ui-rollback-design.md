@@ -9,6 +9,7 @@ Restore the original homepage presentation from `main` and add only one new list
 - Restore the original typography, spacing, header, four-column grid, and card presentation for `Phòng trọ nổi bật`.
 - Restore the original featured-listing behavior: preserve the API's newest-first order, select available verified listings, and show the first four.
 - Remove the visible `Xem chi tiết` row from homepage cards; the full card remains a link to `/phong/:id` as before.
+- Hide the `Đã xác minh` badge on homepage cards in both sections while keeping each card and its verification data unchanged.
 - Add `Phòng trọ từ chủ nhà xác thực` immediately below the original featured section.
 - Reuse the original section header, `Xem tất cả` control, grid, card typography, and responsive behavior without introducing a second visual language.
 - The new section shows the four newest available listings whose landlord profile is verified, matching the original four-column grid exactly.

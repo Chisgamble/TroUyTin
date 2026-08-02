@@ -222,6 +222,7 @@ export default function HomePage() {
                     listing={listing}
                     saved={savedIds.includes(listing.id)}
                     onToggleSave={toggleSave}
+                    showVerifiedBadge={false}
                   />
                 ))}
               </div>
@@ -261,6 +262,7 @@ export default function HomePage() {
                       listing={listing}
                       saved={savedIds.includes(listing.id)}
                       onToggleSave={toggleSave}
+                      showVerifiedBadge={false}
                     />
                   ))}
                 </div>

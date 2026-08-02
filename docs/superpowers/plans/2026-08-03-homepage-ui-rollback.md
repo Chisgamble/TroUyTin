@@ -14,6 +14,7 @@
 - The existing featured section shows four available verified listings in API order.
 - The new verified-landlord section shows four available listings in API order, matching the original four-column grid.
 - Homepage cards remain fully clickable links and do not show a separate `Xem chi tiết` text row.
+- Homepage cards in both sections pass `showVerifiedBadge={false}` so the `Đã xác minh` badge is not rendered.
 - Search-results and listing-detail behavior must remain unchanged.
 
 ---
@@ -149,6 +150,7 @@ Use the original selector names for both sections and render cards without a det
           listing={listing}
           saved={savedIds.includes(listing.id)}
           onToggleSave={toggleSave}
+          showVerifiedBadge={false}
         />
       ))}
     </div>
@@ -185,6 +187,7 @@ Use the original selector names for both sections and render cards without a det
             listing={listing}
             saved={savedIds.includes(listing.id)}
             onToggleSave={toggleSave}
+            showVerifiedBadge={false}
           />
         ))}
       </div>
