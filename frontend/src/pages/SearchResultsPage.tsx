@@ -1,9 +1,16 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import ListingCard from "../components/ListingCard";
 import type { RoomListing } from "../types";
+import {
+  getDistricts,
+  getProvinces,
+  type District,
+  type Province,
+} from "../services/roomListing";
 import { getRoomTypeLabel } from "../utils/formatters";
+import { filterListings, paginateListings } from "../utils/searchListings";
 import "./SearchResultsPage.css";
 
 const ROOM_TYPES = ["PHONG_TRO", "CAN_HO_MINI", "KTX", "NGUYEN_CAN"] as const;
@@ -20,17 +27,6 @@ const AREA_RANGES = [
   { label: "20 – 30 m²", min: 20, max: 30 },
   { label: "30 – 50 m²", min: 30, max: 50 },
   { label: "Trên 50 m²", min: 50, max: Infinity },
-];
-
-const DISTRICTS = [
-  { id: 1, province_id: 1, name: "Quận 1" },
-  { id: 2, province_id: 1, name: "Quận 3" },
-  { id: 3, province_id: 1, name: "Quận 7" },
-  { id: 4, province_id: 1, name: "Quận Bình Thạnh" },
-  { id: 5, province_id: 1, name: "Quận Phú Nhuận" },
-  { id: 6, province_id: 1, name: "Quận Tân Bình" },
-  { id: 7, province_id: 1, name: "Quận Gò Vấp" },
-  { id: 8, province_id: 1, name: "TP. Thủ Đức" },
 ];
 
 async function fetchRooms(): Promise<RoomListing[]> {
@@ -50,11 +46,18 @@ export default function SearchResultsPage() {
   const initialQuery = searchParams.get("q") || "";
 
   const [query, setQuery] = useState(initialQuery);
+  const [provinceId, setProvinceId] = useState(0);
   const [districtId, setDistrictId] = useState(0);
+  const [provinces, setProvinces] = useState<Province[]>([]);
+  const [districts, setDistricts] = useState<District[]>([]);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [loadingDistricts, setLoadingDistricts] = useState(false);
   const [roomType, setRoomType] = useState("");
   const [priceIdx, setPriceIdx] = useState(0);
   const [areaIdx, setAreaIdx] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [savedIds, setSavedIds] = useState<number[]>([]);
+  const districtRequestId = useRef(0);
   const {
     data: rooms = [],
     isLoading,
@@ -65,35 +68,33 @@ export default function SearchResultsPage() {
     staleTime: 60_000,
   });
 
-  const results = rooms.filter((l) => {
-    if (l.status !== "AVAILABLE") return false;
-    // Text search
-    const q = query.toLowerCase();
-    if (
-      q &&
-      !(
-        (l.title || "").toLowerCase().includes(q) ||
-        (l.description || "").toLowerCase().includes(q) ||
-        (l.address_detail || "").toLowerCase().includes(q) ||
-        (l.district_name || "").toLowerCase().includes(q)
-      )
-    )
-      return false;
-    // District
-    if (districtId > 0) {
-      const d = DISTRICTS.find((d) => d.id === districtId);
-      if (d && l.district_name !== d.name) return false;
-    }
-    // Room type
-    if (roomType && l.room_type !== roomType) return false;
-    // Price
-    const pr = PRICE_RANGES[priceIdx];
-    if (l.price < pr.min || l.price >= pr.max) return false;
-    // Area
-    const ar = AREA_RANGES[areaIdx];
-    if (l.area < ar.min || l.area >= ar.max) return false;
-    return true;
+  useEffect(() => {
+    let cancelled = false;
+
+    getProvinces()
+      .then((loadedProvinces) => {
+        if (!cancelled) setProvinces(loadedProvinces);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setLocationError("Không thể tải danh sách tỉnh/thành phố.");
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const results = filterListings(rooms, {
+    query,
+    provinceId,
+    districtId,
+    roomType,
+    price: PRICE_RANGES[priceIdx],
+    area: AREA_RANGES[areaIdx],
   });
+  const pagination = paginateListings(results, currentPage, 9);
 
   const toggleSave = (id: number) => {
     setSavedIds((prev) =>
@@ -104,17 +105,80 @@ export default function SearchResultsPage() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setSearchParams(query ? { q: query } : {});
+    setCurrentPage(1);
+  };
+
+  const handleQueryChange = (nextQuery: string) => {
+    setQuery(nextQuery);
+    setCurrentPage(1);
+  };
+
+  const handleProvinceChange = async (nextProvinceId: number) => {
+    const requestId = districtRequestId.current + 1;
+    districtRequestId.current = requestId;
+    setProvinceId(nextProvinceId);
+    setDistrictId(0);
+    setDistricts([]);
+    setLocationError(null);
+    setCurrentPage(1);
+
+    if (nextProvinceId === 0) {
+      setLoadingDistricts(false);
+      return;
+    }
+
+    setLoadingDistricts(true);
+    try {
+      const loadedDistricts = await getDistricts(nextProvinceId);
+      if (districtRequestId.current === requestId) {
+        setDistricts(loadedDistricts);
+      }
+    } catch {
+      if (districtRequestId.current === requestId) {
+        setLocationError("Không thể tải danh sách quận/huyện.");
+      }
+    } finally {
+      if (districtRequestId.current === requestId) {
+        setLoadingDistricts(false);
+      }
+    }
+  };
+
+  const handleDistrictChange = (nextDistrictId: number) => {
+    setDistrictId(nextDistrictId);
+    setCurrentPage(1);
+  };
+
+  const handleRoomTypeChange = (nextRoomType: string) => {
+    setRoomType(nextRoomType);
+    setCurrentPage(1);
+  };
+
+  const handlePriceChange = (nextPriceIdx: number) => {
+    setPriceIdx(nextPriceIdx);
+    setCurrentPage(1);
+  };
+
+  const handleAreaChange = (nextAreaIdx: number) => {
+    setAreaIdx(nextAreaIdx);
+    setCurrentPage(1);
   };
 
   const clearFilters = () => {
+    districtRequestId.current += 1;
+    setProvinceId(0);
     setDistrictId(0);
+    setDistricts([]);
+    setLoadingDistricts(false);
+    setLocationError(null);
     setRoomType("");
     setPriceIdx(0);
     setAreaIdx(0);
+    setCurrentPage(1);
   };
 
   const hasFilters =
-    districtId > 0 || roomType !== "" || priceIdx > 0 || areaIdx > 0;
+    provinceId > 0 || districtId > 0 || roomType !== "" || priceIdx > 0 || areaIdx > 0;
 
   return (
     <>
@@ -162,20 +226,45 @@ export default function SearchResultsPage() {
                 type="text"
                 placeholder="Tìm theo từ khóa..."
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => handleQueryChange(e.target.value)}
               />
             </form>
 
-            {/* District */}
+            {/* Location */}
             <div className="search-filter-group">
-              <label className="search-filter-label">Khu vực</label>
+              <label className="search-filter-label" htmlFor="province-filter">
+                Tỉnh/Thành phố
+              </label>
               <select
+                id="province-filter"
+                className="search-filter-select"
+                value={provinceId}
+                onChange={(e) => handleProvinceChange(Number(e.target.value))}
+              >
+                <option value={0}>Tất cả tỉnh/thành phố</option>
+                {provinces.map((province) => (
+                  <option key={province.id} value={province.id}>
+                    {province.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="search-filter-group">
+              <label className="search-filter-label" htmlFor="district-filter">
+                Quận/Huyện
+              </label>
+              <select
+                id="district-filter"
                 className="search-filter-select"
                 value={districtId}
-                onChange={(e) => setDistrictId(Number(e.target.value))}
+                disabled={provinceId === 0 || loadingDistricts}
+                onChange={(e) => handleDistrictChange(Number(e.target.value))}
               >
-                <option value={0}>Tất cả khu vực</option>
-                {DISTRICTS.map((d) => (
+                <option value={0}>
+                  {loadingDistricts ? "Đang tải quận/huyện..." : "Tất cả quận/huyện"}
+                </option>
+                {districts.map((d) => (
                   <option key={d.id} value={d.id}>
                     {d.name}
                   </option>
@@ -183,13 +272,19 @@ export default function SearchResultsPage() {
               </select>
             </div>
 
+            {locationError && (
+              <p className="search-location-error" role="alert">
+                {locationError}
+              </p>
+            )}
+
             {/* Room Type */}
             <div className="search-filter-group">
               <label className="search-filter-label">Loại phòng</label>
               <div className="search-filter-chips">
                 <button
                   className={`search-chip ${roomType === "" ? "active" : ""}`}
-                  onClick={() => setRoomType("")}
+                  onClick={() => handleRoomTypeChange("")}
                 >
                   Tất cả
                 </button>
@@ -197,7 +292,7 @@ export default function SearchResultsPage() {
                   <button
                     key={t}
                     className={`search-chip ${roomType === t ? "active" : ""}`}
-                    onClick={() => setRoomType(roomType === t ? "" : t)}
+                    onClick={() => handleRoomTypeChange(roomType === t ? "" : t)}
                   >
                     {getRoomTypeLabel(t)}
                   </button>
@@ -215,7 +310,7 @@ export default function SearchResultsPage() {
                       type="radio"
                       name="price"
                       checked={priceIdx === i}
-                      onChange={() => setPriceIdx(i)}
+                      onChange={() => handlePriceChange(i)}
                     />
                     <span>{r.label}</span>
                   </label>
@@ -233,7 +328,7 @@ export default function SearchResultsPage() {
                       type="radio"
                       name="area"
                       checked={areaIdx === i}
-                      onChange={() => setAreaIdx(i)}
+                      onChange={() => handleAreaChange(i)}
                     />
                     <span>{r.label}</span>
                   </label>
@@ -261,12 +356,13 @@ export default function SearchResultsPage() {
               </div>
             ) : results.length > 0 ? (
               <div className="search-grid">
-                {results.map((listing) => (
+                {pagination.items.map((listing) => (
                   <ListingCard
                     key={listing.id}
                     listing={listing}
                     saved={savedIds.includes(listing.id)}
                     onToggleSave={toggleSave}
+                    showVerifiedBadge={false}
                   />
                 ))}
               </div>
@@ -286,6 +382,43 @@ export default function SearchResultsPage() {
                 <h3>Không tìm thấy kết quả</h3>
                 <p>Thử thay đổi từ khóa hoặc bộ lọc</p>
               </div>
+            )}
+
+            {pagination.totalPages > 1 && (
+              <nav className="search-pagination" aria-label="Phân trang kết quả">
+                <button
+                  type="button"
+                  className="search-pagination-button"
+                  disabled={pagination.currentPage === 1}
+                  onClick={() => setCurrentPage(pagination.currentPage - 1)}
+                >
+                  Trước
+                </button>
+                {Array.from({ length: pagination.totalPages }, (_, index) => {
+                  const page = index + 1;
+                  return (
+                    <button
+                      key={page}
+                      type="button"
+                      className={`search-pagination-button ${
+                        page === pagination.currentPage ? "active" : ""
+                      }`}
+                      aria-current={page === pagination.currentPage ? "page" : undefined}
+                      onClick={() => setCurrentPage(page)}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  className="search-pagination-button"
+                  disabled={pagination.currentPage === pagination.totalPages}
+                  onClick={() => setCurrentPage(pagination.currentPage + 1)}
+                >
+                  Sau
+                </button>
+              </nav>
             )}
           </div>
         </div>
