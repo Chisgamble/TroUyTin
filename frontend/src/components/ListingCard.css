@@ -134,3 +134,32 @@
   color: var(--gray-500);
 }
 
+.listing-card-details-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 12px;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--brand-50);
+  color: var(--brand-700);
+  font-size: 12px;
+  font-weight: 600;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+
+.listing-card-details-action svg {
+  transition: transform 0.2s;
+}
+
+.listing-card:hover .listing-card-details-action,
+.listing-card:focus-visible .listing-card-details-action {
+  background: var(--brand-700);
+  color: white;
+}
+
+.listing-card:hover .listing-card-details-action svg,
+.listing-card:focus-visible .listing-card-details-action svg {
+  transform: translateX(2px);
+}
+
