@@ -10,7 +10,12 @@ import {
   type Province,
 } from "../services/roomListing";
 import { getRoomTypeLabel } from "../utils/formatters";
-import { filterListings, paginateListings } from "../utils/searchListings";
+import {
+  deriveDistrictOptions,
+  deriveProvinceOptions,
+  filterListings,
+  paginateListings,
+} from "../utils/searchListings";
 import "./SearchResultsPage.css";
 
 const ROOM_TYPES = ["PHONG_TRO", "CAN_HO_MINI", "KTX", "NGUYEN_CAN"] as const;
@@ -50,7 +55,8 @@ export default function SearchResultsPage() {
   const [districtId, setDistrictId] = useState(0);
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
-  const [locationError, setLocationError] = useState<string | null>(null);
+  const [provinceCatalogFailed, setProvinceCatalogFailed] = useState(false);
+  const [districtCatalogFailed, setDistrictCatalogFailed] = useState(false);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
   const [roomType, setRoomType] = useState("");
   const [priceIdx, setPriceIdx] = useState(0);
@@ -76,15 +82,24 @@ export default function SearchResultsPage() {
         if (!cancelled) setProvinces(loadedProvinces);
       })
       .catch(() => {
-        if (!cancelled) {
-          setLocationError("Không thể tải danh sách tỉnh/thành phố.");
-        }
+        if (!cancelled) setProvinceCatalogFailed(true);
       });
 
     return () => {
       cancelled = true;
     };
   }, []);
+
+  const fallbackProvinces = deriveProvinceOptions(rooms);
+  const fallbackDistricts = deriveDistrictOptions(rooms, provinceId);
+  const provinceOptions = provinceCatalogFailed ? fallbackProvinces : provinces;
+  const districtOptions = districtCatalogFailed ? fallbackDistricts : districts;
+  const locationError =
+    provinceCatalogFailed && !isLoading && fallbackProvinces.length === 0
+      ? "Không thể tải danh sách tỉnh/thành phố."
+      : districtCatalogFailed && !isLoading && fallbackDistricts.length === 0
+        ? "Không thể tải danh sách quận/huyện."
+        : null;
 
   const results = filterListings(rooms, {
     query,
@@ -119,7 +134,7 @@ export default function SearchResultsPage() {
     setProvinceId(nextProvinceId);
     setDistrictId(0);
     setDistricts([]);
-    setLocationError(null);
+    setDistrictCatalogFailed(false);
     setCurrentPage(1);
 
     if (nextProvinceId === 0) {
@@ -135,7 +150,7 @@ export default function SearchResultsPage() {
       }
     } catch {
       if (districtRequestId.current === requestId) {
-        setLocationError("Không thể tải danh sách quận/huyện.");
+        setDistrictCatalogFailed(true);
       }
     } finally {
       if (districtRequestId.current === requestId) {
@@ -170,7 +185,7 @@ export default function SearchResultsPage() {
     setDistrictId(0);
     setDistricts([]);
     setLoadingDistricts(false);
-    setLocationError(null);
+    setDistrictCatalogFailed(false);
     setRoomType("");
     setPriceIdx(0);
     setAreaIdx(0);
@@ -242,7 +257,7 @@ export default function SearchResultsPage() {
                 onChange={(e) => handleProvinceChange(Number(e.target.value))}
               >
                 <option value={0}>Tất cả tỉnh/thành phố</option>
-                {provinces.map((province) => (
+                {provinceOptions.map((province) => (
                   <option key={province.id} value={province.id}>
                     {province.name}
                   </option>
@@ -264,7 +279,7 @@ export default function SearchResultsPage() {
                 <option value={0}>
                   {loadingDistricts ? "Đang tải quận/huyện..." : "Tất cả quận/huyện"}
                 </option>
-                {districts.map((d) => (
+                {districtOptions.map((d) => (
                   <option key={d.id} value={d.id}>
                     {d.name}
                   </option>

@@ -9,18 +9,25 @@ export type SearchFilters = {
   area: NumericRange;
 };
 
-type SearchListingCandidate = {
+type LocationListingCandidate = {
+  province_id?: number | null;
+  province_name?: string;
+  district_id?: number | null;
+  district_name?: string;
+};
+
+type SearchListingCandidate = LocationListingCandidate & {
   status: string;
   title?: string;
   description?: string;
   address_detail?: string;
-  district_name?: string;
-  province_id?: number | null;
-  district_id?: number | null;
   room_type: string;
   price: number;
   area: number;
 };
+
+export type ProvinceOption = { id: number; name: string };
+export type DistrictOption = { id: number; provinceId: number; name: string };
 
 export type Pagination<T> = {
   items: T[];
@@ -28,6 +35,42 @@ export type Pagination<T> = {
   totalPages: number;
   totalItems: number;
 };
+
+export function deriveProvinceOptions(
+  listings: readonly LocationListingCandidate[],
+): ProvinceOption[] {
+  const provinces = new Map<number, ProvinceOption>();
+
+  for (const listing of listings) {
+    const id = listing.province_id;
+    const name = listing.province_name?.trim();
+    if (typeof id !== "number" || !Number.isInteger(id) || id <= 0 || !name) continue;
+    if (!provinces.has(id)) provinces.set(id, { id, name });
+  }
+
+  return [...provinces.values()].sort((a, b) =>
+    a.name.localeCompare(b.name, "vi-VN"),
+  );
+}
+
+export function deriveDistrictOptions(
+  listings: readonly LocationListingCandidate[],
+  provinceId: number,
+): DistrictOption[] {
+  const districts = new Map<number, DistrictOption>();
+
+  for (const listing of listings) {
+    if (listing.province_id !== provinceId) continue;
+    const id = listing.district_id;
+    const name = listing.district_name?.trim();
+    if (typeof id !== "number" || !Number.isInteger(id) || id <= 0 || !name) continue;
+    if (!districts.has(id)) districts.set(id, { id, provinceId, name });
+  }
+
+  return [...districts.values()].sort((a, b) =>
+    a.name.localeCompare(b.name, "vi-VN"),
+  );
+}
 
 export function filterListings<T extends SearchListingCandidate>(
   listings: readonly T[],
