@@ -10881,6 +10881,8 @@ DECLARE
   post_table_exists boolean := to_regclass('public.roommate_posts') IS NOT NULL;
   unexpected_foreign_key_count integer;
 BEGIN
+  GRANT SELECT ON TABLE provinces, districts, wards TO anon, authenticated;
+
   SELECT count(*) INTO source_province_count FROM _source_provinces;
   SELECT count(*) INTO source_district_count FROM _source_districts;
   SELECT count(*) INTO source_ward_count FROM _source_wards;

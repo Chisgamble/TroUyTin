@@ -15,6 +15,7 @@ Cơ sở dữ liệu hiện chỉ có 6 tỉnh/thành, 11 quận/huyện và 13 
 - bảo toàn lựa chọn quận của 27 hồ sơ ở ghép khi thay khóa danh mục;
 - xóa hoàn toàn `Quận Mẫu 1` và các phường giả trực thuộc;
 - giữ nguyên cấu trúc bảng, kiểu dữ liệu và API hiện có;
+- cấp quyền `SELECT` cho hai role ứng dụng `anon` và `authenticated` trên ba bảng danh mục, để frontend tải được toàn bộ bộ lọc;
 - không sửa source code backend hoặc frontend nếu kiểm thử không phát hiện lỗi tương thích.
 
 Tài liệu nguồn và giấy phép được lưu kèm migration, nhưng không tham gia vào runtime của ứng dụng.
@@ -95,6 +96,8 @@ Không có thay đổi source code dự kiến. Frontend hiện truy vấn tỉn
 - trang đăng tin nhận đủ danh mục 63 tỉnh/thành;
 - trang tìm kiếm nhận đủ các lựa chọn tỉnh và huyện;
 - homepage và kết quả tìm kiếm hiển thị địa chỉ thật qua join backend hiện có.
+
+Migration bảo đảm cả người dùng chưa đăng nhập (`anon`) lẫn đã đăng nhập (`authenticated`) có quyền đọc ba bảng danh mục. Không có quyền ghi nào được cấp thêm.
 
 Danh mục vẫn được tải theo từng cấp, nên giới hạn mặc định 1.000 dòng của Supabase không ảnh hưởng: ứng dụng không tải đồng thời cả 10.035 phường/xã.
 

@@ -18,6 +18,7 @@
 - Preserve the two `room_listings` rows whose `ward_id` is null.
 - Remap 215 room listings, one roommate post, and 27 roommate-profile district preferences currently referencing the old catalog.
 - Remove `Quận Mẫu 1` and every fake ward below it.
+- Grant read-only catalog access to the Supabase `anon` and `authenticated` application roles.
 - Run destructive replacement and all assertions in one transaction; take a recoverable JSON backup immediately before the live transaction.
 
 ---

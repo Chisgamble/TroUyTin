@@ -65,6 +65,15 @@ BEGIN
     RAISE EXCEPTION 'Quận Mẫu 1 still exists';
   END IF;
 
+  IF NOT has_table_privilege('anon', 'public.provinces', 'SELECT')
+     OR NOT has_table_privilege('anon', 'public.districts', 'SELECT')
+     OR NOT has_table_privilege('anon', 'public.wards', 'SELECT')
+     OR NOT has_table_privilege('authenticated', 'public.provinces', 'SELECT')
+     OR NOT has_table_privilege('authenticated', 'public.districts', 'SELECT')
+     OR NOT has_table_privilege('authenticated', 'public.wards', 'SELECT') THEN
+    RAISE EXCEPTION 'location catalog is not readable by application roles';
+  END IF;
+
   IF EXISTS (
     SELECT 1
     FROM room_listings
