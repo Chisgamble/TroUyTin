@@ -26,7 +26,8 @@
 
 - `backend/supabase/tests/verify_vietnam_legacy_locations.sql`: Reusable database contract for catalog counts, referential integrity, fake-data removal, and serial sequences.
 - `backend/supabase/migrations/0001_vietnam_legacy_locations.sql`: Complete custom migration, including staged snapshot rows, deterministic reference mapping, replacement, restoration, and inline safety assertions.
-- `backend/supabase/migrations/meta/_journal.json`: Registers the custom migration with Drizzle; no schema snapshot changes are needed because the schema is unchanged.
+- `backend/supabase/migrations/meta/_journal.json`: Registers the custom migration with Drizzle.
+- `backend/supabase/migrations/meta/0001_snapshot.json`: Drizzle-generated schema snapshot paired with the custom migration; its schema content remains unchanged.
 - `backend/supabase/data/vietnam-admin-v2.4.1-NOTICE.md`: Records source URL, tag, commit, input checksum, expected counts, and the upstream MIT notice.
 - `docs/superpowers/specs/2026-08-03-vietnam-legacy-administrative-data-design.md`: Adds the discovered roommate-post and roommate-profile foreign-key requirements.
 
@@ -147,6 +148,7 @@ git commit -m "test: define Vietnam location catalog contract"
 - Create: `backend/supabase/migrations/0001_vietnam_legacy_locations.sql`
 - Create: `backend/supabase/data/vietnam-admin-v2.4.1-NOTICE.md`
 - Modify: `backend/supabase/migrations/meta/_journal.json`
+- Create: `backend/supabase/migrations/meta/0001_snapshot.json`
 
 **Interfaces:**
 - Consumes: The pinned upstream JSON hierarchy and all current foreign keys into `districts` and `wards`.
@@ -160,7 +162,7 @@ Run from `backend`:
 npx drizzle-kit generate --custom --name vietnam_legacy_locations
 ```
 
-Expected: Drizzle creates the `0001_vietnam_legacy_locations.sql` custom migration and adds index 1 to `supabase/migrations/meta/_journal.json`. Do not generate or modify a schema snapshot.
+Expected: Drizzle creates `0001_vietnam_legacy_locations.sql`, adds index 1 to `supabase/migrations/meta/_journal.json`, and writes the paired `0001_snapshot.json` without changing the application schema.
 
 - [ ] **Step 2: Download and authenticate the exact upstream source**
 
@@ -455,7 +457,7 @@ Re-run the Task 3 Step 1 counts. Expected: exactly `6`, `11`, `13`, `215`, `1`, 
 - [ ] **Step 4: Commit the migration implementation**
 
 ```powershell
-git add backend/supabase/migrations/0001_vietnam_legacy_locations.sql backend/supabase/migrations/meta/_journal.json backend/supabase/data/vietnam-admin-v2.4.1-NOTICE.md
+git add backend/supabase/migrations/0001_vietnam_legacy_locations.sql backend/supabase/migrations/meta/_journal.json backend/supabase/migrations/meta/0001_snapshot.json backend/supabase/data/vietnam-admin-v2.4.1-NOTICE.md
 git commit -m "feat: replace mock Vietnam location catalog"
 ```
 
