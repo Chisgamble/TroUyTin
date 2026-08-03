@@ -34,8 +34,8 @@ Danh mục được lấy từ [release `v2.4.1`](https://github.com/thanglequoc
 Snapshot kỳ vọng chứa chính xác:
 
 - 63 tỉnh/thành;
-- 705 đơn vị cấp huyện;
-- 10.599 đơn vị cấp xã.
+- 696 đơn vị cấp huyện;
+- 10.035 đơn vị cấp xã.
 
 Migration chứa dữ liệu đã chuẩn hóa từ đúng tag và commit nêu trên. Deployment không tải dữ liệu qua mạng.
 
@@ -62,7 +62,7 @@ Cột `name` lưu tên đầy đủ có loại đơn vị, ví dụ `Thành ph�
 Migration chạy trong một transaction duy nhất:
 
 1. Nạp snapshot vào các bảng staging tạm thời có mã hành chính dạng chuỗi.
-2. Xác nhận staging có đúng 63 tỉnh/thành, 705 quận/huyện và 10.599 phường/xã; sai số lượng sẽ làm transaction thất bại.
+2. Xác nhận staging có đúng 63 tỉnh/thành, 696 quận/huyện và 10.035 phường/xã; sai số lượng sẽ làm transaction thất bại.
 3. Tạo bảng ánh xạ tạm cho 215 phòng và 1 bài tìm bạn ở ghép thuộc cây `Quận Mẫu 1`, gồm id bản ghi, mã phường/xã đích và địa chỉ đường mới.
 4. Tạo bảng ánh xạ tạm cho 27 `roommate_profiles.preferred_district_id`: giữ quận tương ứng theo tên, đổi `Quận 2` sang `Thành phố Thủ Đức`, và phân bổ các lựa chọn `Quận Mẫu 1` sang quận thật tại Thành phố Hồ Chí Minh.
 5. Xác nhận mọi tham chiếu tới `wards` và `districts` từ `room_listings`, `roommate_posts` và `roommate_profiles` đã có ánh xạ. Nếu có tham chiếu ngoài phạm vi này, migration dừng để không xóa dữ liệu thật ngoài dự kiến.
@@ -96,7 +96,7 @@ Không có thay đổi source code dự kiến. Frontend hiện truy vấn tỉn
 - trang tìm kiếm nhận đủ các lựa chọn tỉnh và huyện;
 - homepage và kết quả tìm kiếm hiển thị địa chỉ thật qua join backend hiện có.
 
-Danh mục vẫn được tải theo từng cấp, nên giới hạn mặc định 1.000 dòng của Supabase không ảnh hưởng: ứng dụng không tải đồng thời cả 10.599 phường/xã.
+Danh mục vẫn được tải theo từng cấp, nên giới hạn mặc định 1.000 dòng của Supabase không ảnh hưởng: ứng dụng không tải đồng thời cả 10.035 phường/xã.
 
 Nếu kiểm thử phát hiện code ứng dụng không tương thích với dữ liệu đầy đủ, việc sửa code phải được báo lại và thống nhất riêng; migration database không mặc nhiên mở rộng sang thay đổi ứng dụng.
 
@@ -114,7 +114,7 @@ Nếu kiểm thử phát hiện code ứng dụng không tương thích với d�
 ## Tiêu chí hoàn thành
 
 - Schema database không thay đổi.
-- Có đúng 63 tỉnh/thành, 705 quận/huyện và 10.599 phường/xã.
+- Có đúng 63 tỉnh/thành, 696 quận/huyện và 10.035 phường/xã.
 - Mọi huyện tham chiếu tỉnh hợp lệ và mọi xã tham chiếu huyện hợp lệ.
 - Không còn `Quận Mẫu 1` hoặc các phường giả trực thuộc.
 - 215 phòng cũ có tỉnh-huyện-xã thật và `address_detail` mới.

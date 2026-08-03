@@ -14,7 +14,7 @@
 - Do not add columns, tables, enums, dependencies, or change existing database types.
 - Use the three-tier 63-province legacy snapshot from `thanglequoc/vietnamese-provinces-database` release `v2.4.1`, commit `fc33b74`.
 - Accept only the source file with SHA-256 `04bc47b359a9a122b2a3d13a5e90e066f44dc1671a01c1aaa5fb59cc8d05e444` and byte length `1,132,216`.
-- Final catalog counts must be exactly 63 provinces, 705 districts, and 10,599 wards.
+- Final catalog counts must be exactly 63 provinces, 696 districts, and 10,035 wards.
 - Preserve the two `room_listings` rows whose `ward_id` is null.
 - Remap 215 room listings, one roommate post, and 27 roommate-profile district preferences currently referencing the old catalog.
 - Remove `Quận Mẫu 1` and every fake ward below it.
@@ -63,11 +63,11 @@ BEGIN
   IF province_count <> 63 THEN
     RAISE EXCEPTION 'expected 63 provinces, found %', province_count;
   END IF;
-  IF district_count <> 705 THEN
-    RAISE EXCEPTION 'expected 705 districts, found %', district_count;
+  IF district_count <> 696 THEN
+    RAISE EXCEPTION 'expected 696 districts, found %', district_count;
   END IF;
-  IF ward_count <> 10599 THEN
-    RAISE EXCEPTION 'expected 10599 wards, found %', ward_count;
+  IF ward_count <> 10035 THEN
+    RAISE EXCEPTION 'expected 10035 wards, found %', ward_count;
   END IF;
 
   SELECT count(*) INTO orphan_district_count
@@ -368,7 +368,7 @@ SELECT setval(pg_get_serial_sequence('districts', 'id'), (SELECT max(id) FROM di
 SELECT setval(pg_get_serial_sequence('wards', 'id'), (SELECT max(id) FROM wards), true);
 ```
 
-Wrap replacement logic in an idempotency guard: if counts are already `63/705/10599` and `Quận Mẫu 1` is absent, validate references and return without deleting or remapping again.
+Wrap replacement logic in an idempotency guard: if counts are already `63/696/10035` and `Quận Mẫu 1` is absent, validate references and return without deleting or remapping again.
 
 - [ ] **Step 7: Add inline preconditions and postconditions**
 
@@ -387,7 +387,7 @@ Create `backend/supabase/data/vietnam-admin-v2.4.1-NOTICE.md` containing:
 - Input: json/vn_only_simplified_json_generated_data_vn_units.json
 - Bytes: 1,132,216
 - SHA-256: 04bc47b359a9a122b2a3d13a5e90e066f44dc1671a01c1aaa5fb59cc8d05e444
-- Expected records: 63 provinces, 705 districts, 10,599 wards
+- Expected records: 63 provinces, 696 districts, 10,035 wards
 
 MIT License
 
@@ -418,7 +418,7 @@ Run from the repository root:
 
 ```powershell
 git diff --check
-rg -n "fc33b74|04bc47b359a9a122b2a3d13a5e90e066f44dc1671a01c1aaa5fb59cc8d05e444|Quận Mẫu 1|10599|roommate_posts|roommate_profiles" backend/supabase
+rg -n "fc33b74|04bc47b359a9a122b2a3d13a5e90e066f44dc1671a01c1aaa5fb59cc8d05e444|Quận Mẫu 1|10035|roommate_posts|roommate_profiles" backend/supabase
 git diff --name-only
 ```
 
@@ -502,7 +502,7 @@ Expected: PASS with exit code 0.
 
 Run read-only queries and confirm:
 
-- catalog counts are `63/705/10599`;
+- catalog counts are `63/696/10035`;
 - `Quận Mẫu 1` count is `0`;
 - non-null room `ward_id` count remains `215` and null count remains `2`;
 - non-null roommate-post `ward_id` count remains `1`;

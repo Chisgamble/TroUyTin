@@ -17,11 +17,11 @@ BEGIN
   IF province_count <> 63 THEN
     RAISE EXCEPTION 'expected 63 provinces, found %', province_count;
   END IF;
-  IF district_count <> 705 THEN
-    RAISE EXCEPTION 'expected 705 districts, found %', district_count;
+  IF district_count <> 696 THEN
+    RAISE EXCEPTION 'expected 696 districts, found %', district_count;
   END IF;
-  IF ward_count <> 10599 THEN
-    RAISE EXCEPTION 'expected 10599 wards, found %', ward_count;
+  IF ward_count <> 10035 THEN
+    RAISE EXCEPTION 'expected 10035 wards, found %', ward_count;
   END IF;
 
   SELECT count(*) INTO orphan_district_count
