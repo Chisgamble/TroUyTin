@@ -1,20 +1,27 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../contexts/AuthContext";
 import { roommateService } from "../services/roommates";
-import { MessageCircle, Trash2, Loader, Bookmark, ChevronLeft } from "lucide-react";
+import { MessageCircle, Trash2, Loader, Bookmark, ChevronLeft, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface SavedRoommate {
   id: number;
   userId: string;
-  fullName: string;
-  avatarUrl: string;
-  bio: string;
+  fullName?: string;
+  avatarUrl?: string;
+  gender?: string;
+  age?: number;
+  hometown?: string;
+  schoolOrJob?: string;
+  bio?: string;
+  hasPet?: boolean;
+  sleepSchedule?: string;
+  hasRoom?: boolean;
+  roomId?: number | string;
+  roomAddress?: string;
   savedAt: string;
 }
 
 export default function SavedRoommates() {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [saved, setSaved] = useState<SavedRoommate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,11 +59,18 @@ export default function SavedRoommates() {
     navigate(`/chat?userId=${roommateId}`);
   };
 
+  const getTags = (roommate: SavedRoommate) => {
+    const tags: Array<{ label: string; type: "error" | "info" }> = [];
+    if (roommate.hasPet) tags.push({ label: "🐕 Có thú cưng", type: "error" });
+    if (roommate.sleepSchedule) tags.push({ label: `⏰ ${roommate.sleepSchedule}`, type: "info" });
+    return tags;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
-          <Loader className="animate-spin mx-auto mb-3 text-emerald-600" size={36} />
+          <Loader className="animate-spin mx-auto mb-3 text-blue-600" size={36} />
           <div className="text-sm font-semibold text-gray-500">Đang lôi danh sách hồ sơ đã lưu...</div>
         </div>
       </div>
@@ -72,15 +86,15 @@ export default function SavedRoommates() {
           <div>
             <button 
               onClick={() => navigate("/roommate-matching")}
-              className="flex items-center gap-1 text-xs font-bold text-gray-400 hover:text-emerald-600 uppercase tracking-wider mb-2 transition-colors"
+              className="flex items-center gap-1 text-xs font-bold text-gray-400 hover:text-blue-600 uppercase tracking-wider mb-2 transition-colors"
             >
-              <ChevronLeft size={14} /> Trở về trang quẹt thẻ
+              <ChevronLeft size={14} /> Trở về trang khám phá
             </button>
             <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
               👤 Hồ Sơ Ở Ghép Đã Lưu
             </h1>
-            <p className="text-xs text-gray-400 mt-1">
-              Bạn đang lưu trữ <span className="font-bold text-emerald-600">{saved.length}</span> ứng viên tiềm năng để liên hệ trao đổi hợp đồng
+              <p className="text-xs text-gray-400 mt-1">
+              Bạn đang lưu trữ <span className="font-bold text-blue-600">{saved.length}</span> ứng viên tiềm năng để liên hệ trao đổi hợp đồng
             </p>
           </div>
         </div>
@@ -93,11 +107,11 @@ export default function SavedRoommates() {
             </div>
             <h2 className="text-lg font-bold text-gray-800">Danh sách trống</h2>
             <p className="text-xs text-gray-400 max-w-xs mx-auto mt-1 mb-6 leading-relaxed">
-              Bạn chưa lưu bất kỳ hồ sơ sinh viên nào. Hãy truy cập trang khám phá, quẹt tìm người hợp gu và nhấn nút "Lưu".
+              Bạn chưa lưu bất kỳ hồ sơ người ở ghép nào. Hãy truy cập trang khám phá, tìm người hợp gu và nhấn nút "Lưu".
             </p>
             <button
               onClick={() => navigate("/roommate-matching")}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 px-6 rounded-xl shadow-md shadow-emerald-50 transition"
+              className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 px-6 rounded-xl shadow-md shadow-blue-50 transition"
             >
               Khám phá ứng viên ngay
             </button>
@@ -108,60 +122,113 @@ export default function SavedRoommates() {
             {saved.map((roommate) => (
               <div
                 key={roommate.userId}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between"
+                className="bg-white rounded-2xl shadow-sm hover:shadow-md border border-gray-100 transition duration-200 overflow-hidden flex flex-col"
               >
-                {/* Image / Gradient Header Area */}
-                <div className="h-36 bg-gradient-to-br from-emerald-500 to-teal-400 flex items-center justify-center relative shrink-0">
+                <div className="h-44 bg-gradient-to-br from-[var(--brand-800)] via-[var(--brand-600)] to-[#7c3aed] flex items-center justify-center relative shrink-0">
+                  {roommate.hasRoom && (
+                    <div className="absolute top-4 left-4 bg-blue-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm z-10 flex items-center gap-1 border border-blue-400">
+                      <Home size={12} /> Đã có phòng
+                    </div>
+                  )}
+
                   {roommate.avatarUrl ? (
                     <img
                       src={roommate.avatarUrl}
-                      alt={roommate.fullName}
-                      className="w-20 h-20 rounded-full border-4 border-white object-cover shadow-sm"
+                      alt={roommate.fullName || "Sinh viên ẩn danh"}
+                      className="w-24 h-24 rounded-full border-4 border-white object-cover shadow-sm"
                     />
                   ) : (
-                    <div className="w-20 h-20 rounded-full border-4 border-white bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl shadow-sm select-none">
+                    <div className="w-24 h-24 rounded-full border-4 border-white bg-blue-100 flex items-center justify-center text-4xl shadow-sm select-none">
                       👤
                     </div>
                   )}
-                </div>
 
-                {/* Content Details Area */}
-                <div className="p-5 flex-1 flex flex-col justify-between">
-                  <div className="mb-4">
-                    <h3 className="text-base font-bold text-gray-900 mb-1 truncate">
-                      {roommate.fullName || "Sinh viên ẩn danh"}
-                    </h3>
-
-                    <p className="text-xs text-gray-500 line-clamp-3 leading-relaxed mb-3">
-                      {roommate.bio || "Thành viên này chưa cập nhật dòng giới thiệu bản thân."}
+                  <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-2xl p-2 min-w-[56px] text-center shadow-md border border-blue-100">
+                    <p className="text-lg font-black text-[var(--brand-600)] leading-none">
+                      {roommate.age ?? "--"}
+                    </p>
+                    <p className="text-[10px] font-bold text-gray-400 mt-0.5 uppercase tracking-wider">
+                      Tuổi
                     </p>
                   </div>
+                </div>
 
-                  {/* Operational Controls Footer Line */}
-                  <div className="pt-3 border-t border-gray-50 flex items-center justify-between gap-4">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">
-                      Lưu: {new Date(roommate.savedAt).toLocaleDateString("vi-VN")}
-                    </span>
+                <div className="p-5 flex-1 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <h3 className="text-lg font-bold text-gray-900 truncate">
+                        {roommate.fullName || "Sinh viên ẩn danh"}
+                      </h3>
 
-                    <div className="flex gap-1.5 shrink-0">
-                      {/* Trash action */}
-                      <button
-                        onClick={() => handleRemove(roommate.userId)}
-                        className="p-2 bg-gray-50 hover:bg-rose-50 border border-gray-100 text-gray-400 hover:text-rose-600 rounded-xl transition-colors"
-                        title="Xóa khỏi danh sách lưu trữ"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-
-                      {/* Chat action */}
                       <button
                         onClick={() => handleChat(roommate.userId)}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-1 shadow-sm transition-colors"
+                        className="text-gray-400 hover:text-blue-600 p-1.5 hover:bg-blue-50 rounded-lg transition-colors"
+                        title={`Nhắn tin ngay với ${roommate.fullName || "ứng viên"}`}
                       >
-                        <MessageCircle size={14} />
-                        Nhắn tin
+                        <MessageCircle size={18} />
                       </button>
                     </div>
+
+                    <p className="text-xs font-semibold text-[var(--brand-600)] bg-blue-50 inline-block px-2 py-0.5 rounded-md mb-4">
+                      {roommate.gender === "MALE" ? "Nam" : roommate.gender === "FEMALE" ? "Nữ" : roommate.gender || "Chưa cập nhật"}
+                      {roommate.age ? ` • ${roommate.age} tuổi` : ""}
+                    </p>
+
+                    <div className="space-y-2 text-sm text-gray-600 mb-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-400 shrink-0">📍</span>
+                        <span className="truncate">Quê quán: {roommate.hometown || "Chưa cập nhật"}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-400 shrink-0">🎓</span>
+                        <span className="line-clamp-1">Học vấn/Công việc: {roommate.schoolOrJob || "Chưa cập nhật"}</span>
+                      </div>
+                    </div>
+
+                    {roommate.hasRoom && roommate.roomAddress && (
+                      <div className="flex items-start gap-2 text-sm text-blue-700 mb-4 bg-blue-50/80 border border-blue-100 rounded-xl p-2.5">
+                        <span className="shrink-0">🏠</span>
+                        <span className="line-clamp-2">Địa chỉ phòng: {roommate.roomAddress}</span>
+                      </div>
+                    )}
+
+                    {getTags(roommate).length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mb-2">
+                        {getTags(roommate).map((tag, i) => (
+                          <span
+                            key={i}
+                            className={`text-[11px] font-medium px-2.5 py-0.5 rounded-md ${
+                              tag.type === "error"
+                                ? "bg-rose-50 text-rose-700 border border-rose-100"
+                                : "bg-blue-50 text-blue-700 border border-blue-100"
+                            }`}
+                          >
+                            {tag.label}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2 pt-4 border-t border-gray-100 mt-4">
+                    <button
+                      onClick={() => handleRemove(roommate.userId)}
+                      className="flex-1 bg-gray-50 hover:bg-gray-100 disabled:opacity-50 text-gray-600 py-2 rounded-xl flex items-center justify-center gap-1 transition-colors font-semibold text-xs border border-gray-200"
+                      title="Xóa khỏi danh sách lưu trữ"
+                    >
+                      <Trash2 size={14} />
+                      Bỏ lưu
+                    </button>
+
+                    {roommate.hasRoom && roommate.roomId && (
+                      <button
+                        onClick={() => navigate(`/roommate-posts/${roommate.roomId}`)}
+                        className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 py-2 rounded-xl flex items-center justify-center gap-1 transition-colors font-semibold text-xs border border-blue-200"
+                      >
+                        <Home size={14} />
+                        Xem phòng
+                      </button>
+                    )}
                   </div>
                 </div>
 

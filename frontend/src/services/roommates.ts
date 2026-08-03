@@ -42,6 +42,9 @@ export const roommateService = {
   getDiscover: () =>
     api.get("/api/roommates/profiles/discover"), // 🔥 Đã thêm /api
 
+  resetDiscover: () =>
+    api.delete("/api/roommates/matches/pass"),
+
   // Matches
   createMatch: (targetId: string, action: "LIKE" | "PASS") =>
     api.post("/api/roommates/matches", { targetId, action }), // 🔥 Đã thêm /api
@@ -55,6 +58,9 @@ export const roommateService = {
 
   getSavedRoommates: () =>
     api.get("/api/roommates/saved"), // 🔥 Đã thêm /api (Sửa lỗi trang SavedRoommates)
+
+  getSavedRoommatesCount: () =>
+    api.get("/api/roommates/saved/count"),
 
   removeSavedRoommate: (roommateId: string) =>
     api.delete(`/api/roommates/saved/${roommateId}`), // 🔥 Đã thêm /api

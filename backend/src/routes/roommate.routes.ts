@@ -5,6 +5,10 @@ import {
   roommateMatches,
   savedRoommates,
   profiles,
+  roommatePosts,
+  wards,
+  districts,
+  provinces,
 } from "../db/schema";
 import { eq, and, not, inArray } from "drizzle-orm";
 import { auth } from "../middlewares/auth";
@@ -34,11 +38,14 @@ router.post("/profiles", auth, async (req, res) => {
           gender, age, hometown, schoolOrJob, budgetMin, budgetMax,
           preferredDistrictId, smoking, drinking, sleepSchedule,
           tidiness, cleaningFreq, hasPet, allowOvernightGuest, cookingFreq, hasRoom,
-          isLookingForRoommate: true,
           updatedAt: new Date(),
         })
         .where(eq(roommateProfiles.userId, req.userId))
         .returning();
+      await db
+        .update(profiles)
+        .set({ isLookingForRoommate: true, updatedAt: new Date() })
+        .where(eq(profiles.id, req.userId));
       return res.status(200).json(updated[0]);
     } else {
       const created = await db
@@ -48,9 +55,12 @@ router.post("/profiles", auth, async (req, res) => {
           gender, age, hometown, schoolOrJob, budgetMin, budgetMax,
           preferredDistrictId, smoking, drinking, sleepSchedule,
           tidiness, cleaningFreq, hasPet, allowOvernightGuest, cookingFreq, hasRoom,
-          isLookingForRoommate: true
         })
         .returning();
+      await db
+        .update(profiles)
+        .set({ isLookingForRoommate: true, updatedAt: new Date() })
+        .where(eq(profiles.id, req.userId));
       return res.status(201).json(created[0]);
     }
   } catch (err) {
@@ -122,9 +132,43 @@ router.get("/profiles/discover", auth, async (req, res) => {
       return res.json([]);
     }
 
+    const candidateUserIds = candidates.map(({ profile }) => profile.userId);
+    const roomPosts = candidateUserIds.length > 0
+      ? await db
+          .select({
+            id: roommatePosts.id,
+            userId: roommatePosts.userId,
+            addressDetail: roommatePosts.addressDetail,
+            wardName: wards.name,
+            districtName: districts.name,
+            provinceName: provinces.name,
+            createdAt: roommatePosts.createdAt,
+          })
+          .from(roommatePosts)
+          .leftJoin(wards, eq(roommatePosts.wardId, wards.id))
+          .leftJoin(districts, eq(wards.districtId, districts.id))
+          .leftJoin(provinces, eq(districts.provinceId, provinces.id))
+          .where(inArray(roommatePosts.userId, candidateUserIds))
+      : [];
+
+    const latestRoomPostsByUser = new Map<string, (typeof roomPosts)[number]>();
+    roomPosts
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .forEach((post) => {
+        if (!latestRoomPostsByUser.has(post.userId)) {
+          latestRoomPostsByUser.set(post.userId, post);
+        }
+      });
+
     // 4. Tính toán độ tương thích (Compatibility Score) và format dữ liệu trả về Frontend
     const candidatesWithScore = candidates.map(({ profile, user }) => {
       const compatibilityScore = calculateCompatibility(userProfile[0], profile);
+      const roomPost = latestRoomPostsByUser.get(profile.userId);
+      const roomAddress = roomPost
+        ? [roomPost.addressDetail, roomPost.wardName, roomPost.districtName, roomPost.provinceName]
+            .filter(Boolean)
+            .join(", ")
+        : undefined;
 
       return {
         id: profile.id,
@@ -138,6 +182,9 @@ router.get("/profiles/discover", auth, async (req, res) => {
         compatibilityPct: compatibilityScore,
         hasPet: profile.hasPet,
         sleepSchedule: profile.sleepSchedule,
+        hasRoom: profile.hasRoom || Boolean(roomPost),
+        roomId: roomPost?.id,
+        roomAddress,
       };
     });
 
@@ -230,6 +277,29 @@ router.get("/matches/me", auth, async (req, res) => {
   }
 });
 
+// 5.1 DELETE /api/roommates/matches/pass - Xóa các lượt PASS để tải lại danh sách ứng viên
+router.delete("/matches/pass", auth, async (req, res) => {
+  try {
+    const deleted = await db
+      .delete(roommateMatches)
+      .where(
+        and(
+          eq(roommateMatches.requesterId, req.userId),
+          eq(roommateMatches.requesterAction, "PASS")
+        )
+      )
+      .returning({ id: roommateMatches.id });
+
+    return res.json({
+      message: "Đã làm mới danh sách ứng viên",
+      removedCount: deleted.length,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Lỗi server" });
+  }
+});
+
 // 6. POST /api/roommates/saved - Lưu hồ sơ người ở ghép
 router.post("/saved", auth, async (req, res) => {
   try {
@@ -256,6 +326,42 @@ router.post("/saved", auth, async (req, res) => {
 // 7. GET /api/roommates/saved - Lấy danh sách hồ sơ ở ghép đã lưu
 router.get("/saved", auth, async (req, res) => {
   try {
+    const savedRoommateIds = await db
+      .select({ savedRoommateId: savedRoommates.savedRoommateId })
+      .from(savedRoommates)
+      .where(eq(savedRoommates.userId, req.userId));
+
+    const ids = savedRoommateIds.map((item) => item.savedRoommateId).filter(Boolean);
+
+    if (ids.length === 0) {
+      return res.json([]);
+    }
+
+    const roomPosts = await db
+      .select({
+        id: roommatePosts.id,
+        userId: roommatePosts.userId,
+        addressDetail: roommatePosts.addressDetail,
+        wardName: wards.name,
+        districtName: districts.name,
+        provinceName: provinces.name,
+        createdAt: roommatePosts.createdAt,
+      })
+      .from(roommatePosts)
+      .leftJoin(wards, eq(roommatePosts.wardId, wards.id))
+      .leftJoin(districts, eq(wards.districtId, districts.id))
+      .leftJoin(provinces, eq(districts.provinceId, provinces.id))
+      .where(inArray(roommatePosts.userId, ids));
+
+    const latestRoomPostsByUser = new Map<string, (typeof roomPosts)[number]>();
+    roomPosts
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .forEach((post) => {
+        if (!latestRoomPostsByUser.has(post.userId)) {
+          latestRoomPostsByUser.set(post.userId, post);
+        }
+      });
+
     const saved = await db
       .select({
         id: savedRoommates.id,
@@ -263,13 +369,62 @@ router.get("/saved", auth, async (req, res) => {
         fullName: profiles.fullName,
         avatarUrl: profiles.avatarUrl,
         bio: profiles.bio,
+        gender: roommateProfiles.gender,
+        age: roommateProfiles.age,
+        hometown: roommateProfiles.hometown,
+        schoolOrJob: roommateProfiles.schoolOrJob,
+        hasPet: roommateProfiles.hasPet,
+        sleepSchedule: roommateProfiles.sleepSchedule,
+        hasRoom: roommateProfiles.hasRoom,
         savedAt: savedRoommates.createdAt,
+        roomId: roommatePosts.id,
+        roomAddress: roommatePosts.addressDetail,
+        roomWard: wards.name,
+        roomDistrict: districts.name,
+        roomProvince: provinces.name,
       })
       .from(savedRoommates)
+      .leftJoin(roommateProfiles, eq(savedRoommates.savedRoommateId, roommateProfiles.userId))
       .leftJoin(profiles, eq(savedRoommates.savedRoommateId, profiles.id))
+      .leftJoin(roommatePosts, eq(roommatePosts.userId, savedRoommates.savedRoommateId))
+      .leftJoin(wards, eq(roommatePosts.wardId, wards.id))
+      .leftJoin(districts, eq(wards.districtId, districts.id))
+      .leftJoin(provinces, eq(districts.provinceId, provinces.id))
       .where(eq(savedRoommates.userId, req.userId));
 
-    return res.json(saved);
+    const savedWithRoomData = saved.map((item) => {
+      const roommateUserId = String(item.userId);
+      const roomPost = latestRoomPostsByUser.get(roommateUserId);
+      return {
+        ...item,
+        hasRoom: item.hasRoom || Boolean(roomPost),
+        roomId: roomPost?.id ?? item.roomId,
+        roomAddress: roomPost
+          ? [roomPost.addressDetail, roomPost.wardName, roomPost.districtName, roomPost.provinceName]
+              .filter(Boolean)
+              .join(", ")
+          : [item.roomAddress, item.roomWard, item.roomDistrict, item.roomProvince]
+              .filter(Boolean)
+              .join(", ") || undefined,
+      };
+    });
+
+    return res.json(savedWithRoomData);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Lỗi server" });
+  }
+});
+
+// 7.1 GET /api/roommates/saved/count - Đếm hồ sơ đã lưu trong database
+router.get("/saved/count", auth, async (req, res) => {
+  try {
+    const countResult = await db
+      .select({ id: savedRoommates.id })
+      .from(savedRoommates)
+      .where(eq(savedRoommates.userId, req.userId));
+
+    return res.json({ count: countResult.length });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Lỗi server" });
@@ -279,7 +434,7 @@ router.get("/saved", auth, async (req, res) => {
 // 8. DELETE /api/roommates/saved/:roommateId - Gỡ một người ra khỏi danh sách lưu
 router.delete("/saved/:roommateId", auth, async (req, res) => {
   try {
-    const { roommateId } = req.params;
+    const roommateId = String(req.params.roommateId ?? "");
 
     // 1. Kiểm tra tính hợp lệ của UUID phòng hờ lỗi "invalid input syntax for type uuid"
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

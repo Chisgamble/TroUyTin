@@ -1,16 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
 import { roommateService } from "../services/roommates";
 import { 
   User, Calendar, MapPin, Briefcase, DollarSign, 
   Moon, Cigarette, Beer, Sparkles, Sliders, Loader 
 } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function RoommateOnboarding() {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(true);
 
   const [form, setForm] = useState({
     gender: "",
@@ -35,17 +35,18 @@ export default function RoommateOnboarding() {
     
     // HTML Validation bổ sung kiểm tra logic số liệu tài chính
     if (Number(form.budgetMin) > Number(form.budgetMax)) {
-      alert("Ngân sách tối thiểu không được lớn hơn ngân sách tối đa!");
+      toast.error("Ngân sách tối thiểu không được lớn hơn ngân sách tối đa!");
       return;
     }
 
     setLoading(true);
     try {
       await roommateService.createOrUpdateProfile(form);
+      toast.success("Cập nhật hồ sơ thành công!");
       navigate("/roommate-matching");
     } catch (error) {
       console.error("Error:", error);
-      alert("Lỗi khi lưu hồ sơ lối sống");
+      toast.error("Lỗi khi lưu hồ sơ lối sống");
     } finally {
       setLoading(false);
     }
@@ -55,13 +56,68 @@ export default function RoommateOnboarding() {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadExistingProfile = async () => {
+      try {
+        const res = await roommateService.getMyProfile();
+        const profile = res.data;
+
+        if (!isMounted || !profile) return;
+
+        setForm({
+          gender: profile.gender ?? "",
+          age: profile.age !== null && profile.age !== undefined ? String(profile.age) : "",
+          hometown: profile.hometown ?? "",
+          schoolOrJob: profile.schoolOrJob ?? "",
+          budgetMin: profile.budgetMin !== null && profile.budgetMin !== undefined ? String(profile.budgetMin) : "",
+          budgetMax: profile.budgetMax !== null && profile.budgetMax !== undefined ? String(profile.budgetMax) : "",
+          smoking: profile.smoking ?? "NO",
+          drinking: profile.drinking ?? "NO",
+          sleepSchedule: profile.sleepSchedule ?? "FLEXIBLE",
+          tidiness: profile.tidiness ?? "MODERATE",
+          cleaningFreq: profile.cleaningFreq ?? "WEEKLY",
+          hasPet: Boolean(profile.hasPet),
+          allowOvernightGuest: Boolean(profile.allowOvernightGuest),
+          hasRoom: Boolean(profile.hasRoom),
+        });
+      } catch (error: any) {
+        if (error?.response?.status !== 404) {
+          console.error("Error loading roommate profile:", error);
+        }
+      } finally {
+        if (isMounted) {
+          setLoadingProfile(false);
+        }
+      }
+    };
+
+    void loadExistingProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  if (loadingProfile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100 flex items-center justify-center p-6">
+        <div className="text-center">
+          <Loader className="animate-spin mx-auto mb-3 text-blue-600" size={40} />
+          <div className="text-gray-600 font-medium">Đang tải hồ sơ ở ghép...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100 p-4 sm:p-6 flex items-center justify-center">
-      <div className="max-w-2xl w-full bg-white rounded-3xl shadow-xl border border-emerald-100 p-6 sm:p-10 my-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100 p-4 sm:p-6 flex items-center justify-center">
+      <div className="max-w-2xl w-full bg-white rounded-3xl shadow-xl border border-blue-100 p-6 sm:p-10 my-4">
         
         {/* Header Section */}
         <div className="text-center mb-8">
-          <div className="inline-flex p-3 bg-emerald-50 text-emerald-600 rounded-2xl mb-3">
+          <div className="inline-flex p-3 bg-blue-50 text-blue-600 rounded-2xl mb-3">
             <Sparkles size={28} className="animate-pulse" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
@@ -76,18 +132,18 @@ export default function RoommateOnboarding() {
           
           {/* SECTION 1: THÔNG TIN CƠ BẢN */}
           <div className="bg-gray-50/60 border border-gray-100 rounded-2xl p-5 space-y-4">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-2 mb-2">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-blue-800 flex items-center gap-2 mb-2">
               <User size={16} /> 1. Thông tin cá nhân
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">Giới tính</label>
+                <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">Giới tính *</label>
                 <select
                   required
                   value={form.gender}
                   onChange={(e) => handleChange("gender", e.target.value)}
-                  className="w-full border border-gray-200 bg-white rounded-xl p-3 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-none transition-all"
+                  className="w-full border border-gray-200 bg-white rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all"
                 >
                   <option value="">-- Chọn giới tính --</option>
                   <option value="MALE">Nam</option>
@@ -97,7 +153,7 @@ export default function RoommateOnboarding() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">Tuổi của bạn</label>
+                <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">Tuổi của bạn *</label>
                 <div className="relative">
                   <input
                     type="number"
@@ -106,7 +162,7 @@ export default function RoommateOnboarding() {
                     max="80"
                     value={form.age}
                     onChange={(e) => handleChange("age", e.target.value)}
-                    className="w-full border border-gray-200 bg-white rounded-xl p-3 pl-9 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-none transition-all"
+                    className="w-full border border-gray-200 bg-white rounded-xl p-3 pl-9 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all"
                     placeholder="Nhập tuổi (18+)"
                   />
                   <Calendar className="absolute left-3 top-3.5 text-gray-400" size={16} />
@@ -115,30 +171,34 @@ export default function RoommateOnboarding() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Mục Quê quán: Bỏ required */}
               <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">Quê quán / Vùng miền</label>
+                <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">
+                  Quê quán / Vùng miền <span className="text-gray-400 font-normal lowercase"></span>
+                </label>
                 <div className="relative">
                   <input
                     type="text"
-                    required
                     value={form.hometown}
                     onChange={(e) => handleChange("hometown", e.target.value)}
-                    className="w-full border border-gray-200 bg-white rounded-xl p-3 pl-9 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-none transition-all"
+                    className="w-full border border-gray-200 bg-white rounded-xl p-3 pl-9 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all"
                     placeholder="VD: Huế, Hà Nội, TP.HCM"
                   />
                   <MapPin className="absolute left-3 top-3.5 text-gray-400" size={16} />
                 </div>
               </div>
 
+              {/* Mục Trường học/Nghề nghiệp: Bỏ required */}
               <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">Trường học / Nghề nghiệp</label>
+                <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">
+                  Trường học / Nghề nghiệp <span className="text-gray-400 font-normal lowercase"></span>
+                </label>
                 <div className="relative">
                   <input
                     type="text"
-                    required
                     value={form.schoolOrJob}
                     onChange={(e) => handleChange("schoolOrJob", e.target.value)}
-                    className="w-full border border-gray-200 bg-white rounded-xl p-3 pl-9 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-none transition-all"
+                    className="w-full border border-gray-200 bg-white rounded-xl p-3 pl-9 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all"
                     placeholder="VD: ĐH Khoa học Tự nhiên"
                   />
                   <Briefcase className="absolute left-3 top-3.5 text-gray-400" size={16} />
@@ -149,13 +209,13 @@ export default function RoommateOnboarding() {
 
           {/* SECTION 2: TÀI CHÍNH & VỊ TRÍ */}
           <div className="bg-gray-50/60 border border-gray-100 rounded-2xl p-5 space-y-4">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-2 mb-2">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-blue-800 flex items-center gap-2 mb-2">
               <DollarSign size={16} /> 2. Ngân sách chi trả gánh được
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">Tối thiểu (VNĐ / Tháng)</label>
+                <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">Tối thiểu (VNĐ / Tháng) *</label>
                 <div className="relative">
                   <input
                     type="number"
@@ -164,14 +224,14 @@ export default function RoommateOnboarding() {
                     step="50000"
                     value={form.budgetMin}
                     onChange={(e) => handleChange("budgetMin", e.target.value)}
-                    className="w-full border border-gray-200 bg-white rounded-xl p-3 pl-9 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-none transition-all"
+                    className="w-full border border-gray-200 bg-white rounded-xl p-3 pl-9 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all"
                     placeholder="VD: 1,500,000"
                   />
                   <span className="absolute left-3 top-3 font-bold text-gray-400 text-sm">₫</span>
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">Tối đa gánh được (VNĐ / Tháng)</label>
+                <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">Tối đa chi trả được (VNĐ / Tháng) *</label>
                 <div className="relative">
                   <input
                     type="number"
@@ -180,7 +240,7 @@ export default function RoommateOnboarding() {
                     step="50000"
                     value={form.budgetMax}
                     onChange={(e) => handleChange("budgetMax", e.target.value)}
-                    className="w-full border border-gray-200 bg-white rounded-xl p-3 pl-9 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-none transition-all"
+                    className="w-full border border-gray-200 bg-white rounded-xl p-3 pl-9 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all"
                     placeholder="VD: 3,500,000"
                   />
                   <span className="absolute left-3 top-3 font-bold text-gray-400 text-sm">₫</span>
@@ -191,7 +251,7 @@ export default function RoommateOnboarding() {
 
           {/* SECTION 3: THÓI QUEN TRỰC QUAN (CARD SELECTION) */}
           <div className="space-y-5">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-2">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-blue-800 flex items-center gap-2">
               <Sliders size={16} /> 3. Thói quen sinh hoạt cá nhân
             </h2>
 
@@ -213,8 +273,8 @@ export default function RoommateOnboarding() {
                       onClick={() => handleChange("sleepSchedule", item.value)}
                       className={`py-2 text-xs font-semibold rounded-xl border transition-all ${
                         form.sleepSchedule === item.value
-                          ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
-                          : "bg-white text-gray-600 border-gray-200 hover:border-emerald-300"
+                          ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                          : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
                       }`}
                     >
                       {item.label}
@@ -240,8 +300,8 @@ export default function RoommateOnboarding() {
                       onClick={() => handleChange("tidiness", item.value)}
                       className={`py-2 text-xs font-semibold rounded-xl border transition-all ${
                         form.tidiness === item.value
-                          ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
-                          : "bg-white text-gray-600 border-gray-200 hover:border-emerald-300"
+                          ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                          : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
                       }`}
                     >
                       {item.label}
@@ -267,8 +327,8 @@ export default function RoommateOnboarding() {
                       onClick={() => handleChange("smoking", item.value)}
                       className={`py-2 text-xs font-semibold rounded-xl border transition-all ${
                         form.smoking === item.value
-                          ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
-                          : "bg-white text-gray-600 border-gray-200 hover:border-emerald-300"
+                          ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                          : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
                       }`}
                     >
                       {item.label}
@@ -294,8 +354,8 @@ export default function RoommateOnboarding() {
                       onClick={() => handleChange("drinking", item.value)}
                       className={`py-2 text-xs font-semibold rounded-xl border transition-all ${
                         form.drinking === item.value
-                          ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
-                          : "bg-white text-gray-600 border-gray-200 hover:border-emerald-300"
+                          ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                          : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
                       }`}
                     >
                       {item.label}
@@ -305,7 +365,7 @@ export default function RoommateOnboarding() {
               </div>
             </div>
 
-            {/* Các tùy chọn Boolean nhanh dạng dải hàng ngang */}
+            {/* Các tùy chọn Boolean nhanh */}
             <div className="space-y-3 pt-2">
               {[
                 { field: "hasPet", label: "🐾 Tôi định nuôi hoặc mang theo thú cưng vào phòng" },
@@ -316,7 +376,7 @@ export default function RoommateOnboarding() {
                   key={item.field}
                   className={`flex items-center gap-4 p-3 border rounded-xl cursor-pointer select-none transition-all ${
                     (form as any)[item.field]
-                      ? "bg-emerald-50/60 border-emerald-400 text-emerald-900 font-medium"
+                      ? "bg-blue-50/60 border-blue-400 text-blue-900 font-medium"
                       : "bg-white border-gray-100 text-gray-600 hover:border-gray-200"
                   }`}
                 >
@@ -324,7 +384,7 @@ export default function RoommateOnboarding() {
                     type="checkbox"
                     checked={(form as any)[item.field]}
                     onChange={(e) => handleChange(item.field, e.target.checked)}
-                    className="w-4 h-4 accent-emerald-600 rounded"
+                    className="w-4 h-4 accent-blue-600 rounded"
                   />
                   <span className="text-xs sm:text-sm">{item.label}</span>
                 </label>
@@ -336,7 +396,7 @@ export default function RoommateOnboarding() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-emerald-100 transition disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-100 transition disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
           >
             {loading ? (
               <>
