@@ -11,7 +11,8 @@ Cơ sở dữ liệu hiện chỉ có 6 tỉnh/thành, 11 quận/huyện và 13 
 Đây là thay đổi database-only:
 
 - thêm một migration SQL để thay dữ liệu trong `provinces`, `districts` và `wards`;
-- remap địa chỉ của 215 phòng mẫu;
+- remap địa chỉ của 215 phòng mẫu và 1 bài tìm bạn ở ghép đang dùng phường giả;
+- bảo toàn lựa chọn quận của 27 hồ sơ ở ghép khi thay khóa danh mục;
 - xóa hoàn toàn `Quận Mẫu 1` và các phường giả trực thuộc;
 - giữ nguyên cấu trúc bảng, kiểu dữ liệu và API hiện có;
 - không sửa source code backend hoặc frontend nếu kiểm thử không phát hiện lỗi tương thích.
@@ -62,14 +63,15 @@ Migration chạy trong một transaction duy nhất:
 
 1. Nạp snapshot vào các bảng staging tạm thời có mã hành chính dạng chuỗi.
 2. Xác nhận staging có đúng 63 tỉnh/thành, 705 quận/huyện và 10.599 phường/xã; sai số lượng sẽ làm transaction thất bại.
-3. Tạo bảng ánh xạ tạm cho 215 phòng thuộc cây `Quận Mẫu 1`, gồm `room_id`, mã phường/xã đích và địa chỉ đường mới.
-4. Xác nhận mọi phòng có `ward_id` khác null trong dữ liệu hiện tại đều thuộc cây dữ liệu giả. Nếu có địa chỉ ngoài cây này, migration dừng để không xóa dữ liệu thật ngoài dự kiến.
-5. Tạm đặt `ward_id = null` cho 215 phòng đã lưu ánh xạ.
-6. Xóa danh mục cũ theo thứ tự `wards -> districts -> provinces`. Bước này loại bỏ cả `Quận Mẫu 1` và các phường giả.
-7. Chèn lại đủ danh mục thật, dùng mã hành chính chuyển sang số nguyên làm `id` và thiết lập khóa ngoại theo mã cha.
-8. Cập nhật `ward_id` và `address_detail` của 215 phòng từ bảng ánh xạ tạm.
-9. Đồng bộ lại sequence của ba khóa `serial` tới giá trị lớn nhất để các insert về sau không va chạm.
-10. Chạy các assertion cuối về số lượng, khóa ngoại và tên giả rồi commit transaction.
+3. Tạo bảng ánh xạ tạm cho 215 phòng và 1 bài tìm bạn ở ghép thuộc cây `Quận Mẫu 1`, gồm id bản ghi, mã phường/xã đích và địa chỉ đường mới.
+4. Tạo bảng ánh xạ tạm cho 27 `roommate_profiles.preferred_district_id`: giữ quận tương ứng theo tên, đổi `Quận 2` sang `Thành phố Thủ Đức`, và phân bổ các lựa chọn `Quận Mẫu 1` sang quận thật tại Thành phố Hồ Chí Minh.
+5. Xác nhận mọi tham chiếu tới `wards` và `districts` từ `room_listings`, `roommate_posts` và `roommate_profiles` đã có ánh xạ. Nếu có tham chiếu ngoài phạm vi này, migration dừng để không xóa dữ liệu thật ngoài dự kiến.
+6. Tạm đặt các khóa ngoại địa chỉ đã lưu ánh xạ thành null.
+7. Xóa danh mục cũ theo thứ tự `wards -> districts -> provinces`. Bước này loại bỏ cả `Quận Mẫu 1` và các phường giả.
+8. Chèn lại đủ danh mục thật, dùng mã hành chính chuyển sang số nguyên làm `id` và thiết lập khóa ngoại theo mã cha.
+9. Khôi phục các khóa ngoại và địa chỉ mới cho phòng, bài tìm bạn ở ghép và hồ sơ ở ghép từ các bảng ánh xạ tạm.
+10. Đồng bộ lại sequence của ba khóa `serial` tới giá trị lớn nhất để các insert về sau không va chạm.
+11. Chạy các assertion cuối về số lượng, khóa ngoại và tên giả rồi commit transaction.
 
 Migration không phụ thuộc vào việc `Quận Mẫu 1` có `id = 1`; nó nhận diện dữ liệu giả bằng tên chính xác và quan hệ cha-con. Khi chạy trên database mới không có phòng mẫu, các bước remap không cập nhật dòng nào nhưng danh mục địa chỉ vẫn được nạp đầy đủ.
 
@@ -103,7 +105,9 @@ Nếu kiểm thử phát hiện code ứng dụng không tương thích với d�
 - Transaction rollback toàn bộ nếu bất kỳ assertion nào thất bại.
 - Chỉ các phòng dưới `Quận Mẫu 1` được remap.
 - Hai phòng hiện có `ward_id = null` được giữ nguyên.
-- Migration dừng nếu phát hiện phòng đang tham chiếu một ward ngoài cây dữ liệu giả.
+- Bài tìm bạn ở ghép đang thuộc `Quận Mẫu 1` được remap theo cùng quy tắc địa chỉ thật.
+- Lựa chọn quận của hồ sơ ở ghép được chuyển sang mã quận thật tương ứng; `Quận 2` chuyển sang `Thành phố Thủ Đức`.
+- Migration dừng nếu phát hiện khóa ngoại địa chỉ không có ánh xạ an toàn.
 - `Quận Mẫu 1` và phường giả chỉ bị xóa sau khi ánh xạ của các phòng đã được lưu trong bảng tạm.
 - Dữ liệu không được tải từ API trong lúc migration chạy.
 
@@ -114,6 +118,8 @@ Nếu kiểm thử phát hiện code ứng dụng không tương thích với d�
 - Mọi huyện tham chiếu tỉnh hợp lệ và mọi xã tham chiếu huyện hợp lệ.
 - Không còn `Quận Mẫu 1` hoặc các phường giả trực thuộc.
 - 215 phòng cũ có tỉnh-huyện-xã thật và `address_detail` mới.
+- 1 bài tìm bạn ở ghép cũ có tỉnh-huyện-xã thật và `address_detail` mới.
+- 27 hồ sơ ở ghép vẫn có `preferred_district_id` hợp lệ sau khi thay danh mục.
 - Hai phòng có `ward_id = null` vẫn giữ nguyên.
 - API danh sách phòng trả đúng địa chỉ sau join.
 - Bộ lọc đăng tin và tìm kiếm hiển thị danh mục đầy đủ.
