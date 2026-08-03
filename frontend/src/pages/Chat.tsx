@@ -19,7 +19,7 @@ export const Chat: React.FC = () => {
   }, [location.state]);
 
   return (
-    <div className="flex h-[calc(100vh-64px)] bg-white border-t border-gray-200 overflow-hidden">
+    <div className="fixed inset-0 top-[64px] bg-white border-t border-gray-200 overflow-hidden flex z-40">
       {/* Cột trái: Danh sách Inbox */}
       <div className="w-[320px] md:w-[380px] border-r border-gray-200 flex flex-col h-full shrink-0 min-w-0">
         <InboxList 
