@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { roommatePostService } from "../services/roommates";
 import { getAmenities, type Amenity } from "../services/roomListing";
 import { getIcon } from "../utils/iconMap";
@@ -11,7 +11,10 @@ import toast from "react-hot-toast";
 
 export default function RoommatePostCreate() {
   const navigate = useNavigate();
+  const { postId } = useParams<{ postId: string }>();
+  const isEditMode = Boolean(postId);
   const [loading, setLoading] = useState(false);
+  const [loadingPost, setLoadingPost] = useState(isEditMode);
   const [currentStep, setCurrentStep] = useState(1);
   const [images, setImages] = useState<string[]>([]);
   const [imageInput, setImageInput] = useState("");
@@ -39,6 +42,52 @@ export default function RoommatePostCreate() {
       .then(setAmenitiesList)
       .catch((err) => console.error("Lỗi lấy amenities:", err));
   }, []);
+
+  useEffect(() => {
+    if (!postId) return;
+
+    const loadPost = async () => {
+      try {
+        const { data: post } = await roommatePostService.getPostDetail(Number(postId));
+        let amenityIds: number[] = [];
+
+        if (post.amenities) {
+          try {
+            const amenities = typeof post.amenities === "string"
+              ? JSON.parse(post.amenities)
+              : post.amenities;
+            amenityIds = Array.isArray(amenities)
+              ? amenities.map(Number).filter(Number.isFinite)
+              : [];
+          } catch {
+            amenityIds = [];
+          }
+        }
+
+        setForm({
+          title: post.title ?? "",
+          description: post.description ?? "",
+          area: post.area?.toString() ?? "",
+          pricePerMonth: post.pricePerMonth?.toString() ?? "",
+          roomType: post.roomType ?? "PHONG_TRO",
+          wardId: post.wardId?.toString() ?? "",
+          addressDetail: post.addressDetail ?? "",
+          availableFrom: post.availableFrom ? new Date(post.availableFrom).toISOString().slice(0, 10) : "",
+          amenityIds,
+          rules: post.rules ?? "",
+        });
+        setImages((post.images ?? []).map((image: { imageUrl: string }) => image.imageUrl));
+      } catch (error) {
+        console.error("Error loading post for editing:", error);
+        toast.error("Không thể tải nội dung bài đăng để chỉnh sửa.");
+        navigate("/roommate-posts");
+      } finally {
+        setLoadingPost(false);
+      }
+    };
+
+    loadPost();
+  }, [navigate, postId]);
 
   const handleChange = (field: string, value: any) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -107,21 +156,26 @@ export default function RoommatePostCreate() {
 
     setLoading(true);
     try {
-      const postRes = await roommatePostService.createPost({
+      const postData = {
         ...form,
         area: form.area ? parseFloat(form.area) : null,
         wardId: form.wardId ? parseInt(form.wardId) : null,
-        amenityIds: form.amenityIds, // Gửi mảng ID
-      });
+        amenities: form.amenityIds,
+      };
+      const postRes = isEditMode
+        ? await roommatePostService.updatePost(Number(postId), postData)
+        : await roommatePostService.createPost(postData);
 
-      const postId = postRes.data.id;
+      const savedPostId = postRes.data.id;
 
-      // Upload chuỗi danh sách ảnh lên backend (roommate_post_images)
-      for (let i = 0; i < images.length; i++) {
-        await roommatePostService.uploadImage(postId, images[i], i);
+      // Existing images remain intact during an edit.
+      if (!isEditMode) {
+        for (let i = 0; i < images.length; i++) {
+          await roommatePostService.uploadImage(savedPostId, images[i], i);
+        }
       }
 
-      toast.success("Bài đăng tuyển ở ghép đã được tạo thành công!");
+      toast.success(isEditMode ? "Bài đăng đã được cập nhật thành công!" : "Bài đăng tuyển ở ghép đã được tạo thành công!");
       navigate("/roommate-posts");
     } catch (error) {
       console.error("Error:", error);
@@ -138,6 +192,14 @@ export default function RoommatePostCreate() {
     { step: 4, label: "Hình ảnh", icon: <Image size={16} /> }
   ];
 
+  if (loadingPost) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader className="animate-spin text-blue-600" size={36} />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 flex items-center justify-center">
       <div className="max-w-3xl w-full bg-white rounded-3xl shadow-xl border border-gray-100 p-6 sm:p-10 my-4">
@@ -145,7 +207,7 @@ export default function RoommatePostCreate() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
-            📝 Đăng bài tìm người ở ghép
+            {isEditMode ? "✏️ Chỉnh sửa bài đăng tìm người ở ghép" : "📝 Đăng bài tìm người ở ghép"}
           </h1>
           <p className="text-sm text-gray-500 mt-1.5">
             Chia sẻ không gian phòng trọ của bạn để tìm kiếm mảnh ghép lối sống phù hợp nhất
@@ -476,7 +538,7 @@ export default function RoommatePostCreate() {
                     Đang truyền tải...
                   </>
                 ) : (
-                  "Đăng bài lên hệ thống"
+                  isEditMode ? "Lưu thay đổi" : "Đăng bài lên hệ thống"
                 )}
               </button>
             )}

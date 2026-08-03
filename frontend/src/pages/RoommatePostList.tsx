@@ -229,7 +229,7 @@ export default function RoommatePostList() {
           )}
         </div>
 
-        {/* RIGHT COLUMN: MAP PLATFORM MOCKUP INTERACTIVE VIEW */}
+        {/* RIGHT COLUMN: MAP PLATFORM MOCKUP INTERACTIVE VIEW
         <div className="hidden md:block md:w-[45%] lg:w-[40%] border-l border-gray-100 bg-gray-100 relative overflow-hidden">
           <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-gray-400 bg-blue-50/30">
             <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center mb-3 shadow-md animate-bounce">
@@ -237,7 +237,7 @@ export default function RoommatePostList() {
             </div>
             <h4 className="text-sm font-bold text-gray-800">Bản đồ tương tác TroUyTin</h4>
             <p className="text-xs text-gray-400 max-w-xs mt-1">
-              Đang đồng bộ hóa tọa độ vệ tinh các tin trọ quanh khu vực ĐH KHTN và nội thành TP. Hồ Chí Minh
+              Đang đồng bộ hóa tọa độ vệ tinh các tin đăng phòng ở ghép của bạn lên bản đồ. Bạn có thể nhấp vào các ghim để xem chi tiết phòng.
             </p>
             {posts.length > 0 && (
               <div className="mt-4 bg-white/90 backdrop-blur-sm border border-blue-100 px-3 py-1.5 rounded-xl text-[11px] font-bold text-blue-700 shadow-sm">
@@ -247,7 +247,7 @@ export default function RoommatePostList() {
           </div>
           
           <div className="absolute inset-0 opacity-15 pointer-events-none bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:24px_24px]" />
-        </div>
+        </div> */}
 
       </div>
     </div>

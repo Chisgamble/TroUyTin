@@ -388,9 +388,9 @@ export default function RoommatePostDetailPage() {
                       <div className="flex items-start gap-2 text-gray-600 font-medium text-sm">
                         <MapPin size={18} className="text-blue-500 shrink-0 mt-0.5" />
                         <span>
-                          {[post.addressDetail, post.wardName, post.districtName, "TP.HCM"].filter(Boolean).join(", ")}
+                          {[post.addressDetail, post.wardName, post.districtName].filter(Boolean).join(", ")}
                         </span>
-                        <a href="#detail-sidebar" className="detail-map-link shrink-0">Xem liên hệ</a>
+                        {/* <a href="#detail-sidebar" className="detail-map-link shrink-0">Xem liên hệ</a> */}
                       </div>
                     </div>
                   </div>
