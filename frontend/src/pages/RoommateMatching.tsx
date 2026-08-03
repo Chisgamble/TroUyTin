@@ -294,13 +294,6 @@ export default function RoommateMatching() {
                         </div>
                       </div>
 
-                      {candidate.hasRoom && candidate.roomAddress && (
-                        <div className="flex items-start gap-2 text-sm text-blue-700 mb-4 bg-blue-50/80 border border-blue-100 rounded-xl p-2.5">
-                          <span className="shrink-0">🏠</span>
-                          <span className="line-clamp-2">Địa chỉ phòng: {candidate.roomAddress}</span>
-                        </div>
-                      )}
-
                       {/* Behavior Tags */}
                       {getTags(candidate).length > 0 && (
                         <div className="flex flex-wrap gap-1.5 mb-2">
@@ -319,6 +312,13 @@ export default function RoommateMatching() {
                         </div>
                       )}
                     </div>
+                    
+                      {candidate.hasRoom && candidate.roomAddress && (
+                        <div className="flex items-start gap-2 text-sm text-blue-700 mb-4 bg-blue-50/80 border border-blue-100 rounded-xl p-2.5">
+                          <span className="shrink-0">🏠</span>
+                          <span className="line-clamp-2">Địa chỉ phòng: {candidate.roomAddress}</span>
+                        </div>
+                      )}
 
                     {/* BỔ SUNG: Nút Xem Phòng (Nằm trên Footer Actions) */}
                     {candidate.hasRoom && candidate.roomId && (
