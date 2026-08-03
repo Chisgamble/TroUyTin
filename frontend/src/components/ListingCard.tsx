@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import type { RoomListing } from "../types";
+import { formatListingUpdatedAgo } from "../utils/dateTime";
 import { formatPriceVND, getRoomTypeLabel } from "../utils/formatters";
 
 type ListingCardProps = {
@@ -15,6 +17,16 @@ export default function ListingCard({
   onToggleSave,
   showVerifiedBadge = true,
 }: ListingCardProps) {
+  const [relativeClock, setRelativeClock] = useState(() => new Date());
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setRelativeClock(new Date());
+    }, 60_000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
+
   return (
     <div className="legacy-page-wrapper listing-card-wrapper">
       <Link
@@ -63,6 +75,9 @@ export default function ListingCard({
             {formatPriceVND(listing.price)}
             <span>/tháng</span>
           </div>
+          <p className="listing-card-updated">
+            {formatListingUpdatedAgo(listing.updated_at, relativeClock)}
+          </p>
         </div>
       </Link>
       {onToggleSave && (

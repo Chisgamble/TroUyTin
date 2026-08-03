@@ -1071,6 +1071,13 @@ body {
     color: var(--gray-500);
   }
 
+  .listing-card-updated {
+    margin-top: 5px;
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--gray-400);
+  }
+
   /* ============================================================
     HOMEPAGE
     ============================================================ */
