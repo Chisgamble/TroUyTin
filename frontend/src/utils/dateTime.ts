@@ -28,3 +28,36 @@ export function formatListingUpdatedAt(value?: string | null): string {
 
   return `${hour}:${minute}, ${day}/${month}/${year}`;
 }
+
+const MINUTE_MS = 60_000;
+const HOUR_MS = 60 * MINUTE_MS;
+const DAY_MS = 24 * HOUR_MS;
+const UNKNOWN_RELATIVE_UPDATED_AT = "Cập nhật: Không rõ";
+
+export function formatListingUpdatedAgo(
+  value?: string | null,
+  now: Date = new Date(),
+): string {
+  const updatedAtMs = value ? Date.parse(value) : Number.NaN;
+  const nowMs = now.getTime();
+
+  if (Number.isNaN(updatedAtMs) || Number.isNaN(nowMs)) {
+    return UNKNOWN_RELATIVE_UPDATED_AT;
+  }
+
+  const elapsedMs = Math.max(0, nowMs - updatedAtMs);
+
+  if (elapsedMs < MINUTE_MS) {
+    return "Cập nhật vừa xong";
+  }
+
+  if (elapsedMs < HOUR_MS) {
+    return `Cập nhật ${Math.floor(elapsedMs / MINUTE_MS)} phút trước`;
+  }
+
+  if (elapsedMs < DAY_MS) {
+    return `Cập nhật ${Math.floor(elapsedMs / HOUR_MS)} giờ trước`;
+  }
+
+  return `Cập nhật ${Math.floor(elapsedMs / DAY_MS)} ngày trước`;
+}
