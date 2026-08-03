@@ -84,6 +84,9 @@ export interface RoomListing {
   images: string[];
   amenities?: Amenity[];
   amenity_ids: number[];
+  district_id?: number | null;
+  province_id?: number | null;
+  province_name?: string;
   district_name: string;
   ward_name: string;
   landlord?: Profile;
@@ -119,8 +122,14 @@ export interface RoomListingDbRow {
   created_at: string;
   updated_at: string;
   listing_images: ListingImage[] | null;
+  landlord_info?: Profile | null;
   wards: {
     name: string;
-    districts: { name: string } | null;
+    districts: {
+      id: number;
+      name: string;
+      province_id: number;
+      provinces: { name: string } | null;
+    } | null;
   } | null;
 }

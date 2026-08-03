@@ -1,20 +1,34 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import type { RoomListing } from "../types";
+import { formatListingUpdatedAgo } from "../utils/dateTime";
 import { formatPriceVND, getRoomTypeLabel } from "../utils/formatters";
 
 type ListingCardProps = {
   listing: RoomListing;
   saved?: boolean;
   onToggleSave?: (id: number) => void;
+  showVerifiedBadge?: boolean;
 };
 
 export default function ListingCard({
   listing,
   saved = false,
   onToggleSave,
+  showVerifiedBadge = true,
 }: ListingCardProps) {
+  const [relativeClock, setRelativeClock] = useState(() => new Date());
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setRelativeClock(new Date());
+    }, 60_000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
+
   return (
-    <div className="legacy-page-wrapper">
+    <div className="legacy-page-wrapper listing-card-wrapper">
       <Link
         to={`/phong/${listing.id}`}
         className="listing-card"
@@ -27,34 +41,12 @@ export default function ListingCard({
             className="listing-card-image"
             loading="lazy"
           />
-          {listing.is_verified && (
+          {showVerifiedBadge && listing.is_verified && (
             <span className="listing-card-verified">Đã xác minh</span>
           )}
           <span className="listing-card-type">
             {getRoomTypeLabel(listing.room_type)}
           </span>
-          {onToggleSave && (
-            <button
-              className={`listing-card-save ${saved ? "saved" : ""}`}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onToggleSave(listing.id);
-              }}
-              aria-label={saved ? "Bỏ lưu" : "Lưu phòng"}
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill={saved ? "currentColor" : "none"}
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-              </svg>
-            </button>
-          )}
         </div>
         <div className="listing-card-content">
           <h3 className="listing-card-title">{listing.title}</h3>
@@ -83,8 +75,31 @@ export default function ListingCard({
             {formatPriceVND(listing.price)}
             <span>/tháng</span>
           </div>
+          <p className="listing-card-updated">
+            {formatListingUpdatedAgo(listing.updated_at, relativeClock)}
+          </p>
         </div>
       </Link>
+      {onToggleSave && (
+        <button
+          type="button"
+          className={`listing-card-save ${saved ? "saved" : ""}`}
+          onClick={() => onToggleSave(listing.id)}
+          aria-label={saved ? "Bỏ lưu" : "Lưu phòng"}
+          aria-pressed={saved}
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill={saved ? "currentColor" : "none"}
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
+        </button>
+      )}
     </div>
   );
 }

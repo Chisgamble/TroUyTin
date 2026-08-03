@@ -19,6 +19,9 @@
   padding: 20px;
   position: sticky;
   top: 88px;
+  max-height: calc(100vh - 112px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .search-sidebar-header {
@@ -112,6 +115,19 @@
 
 .search-filter-select:focus {
   border-color: var(--brand-400);
+}
+
+.search-filter-select:disabled {
+  background-color: var(--gray-100);
+  color: var(--gray-400);
+  cursor: not-allowed;
+}
+
+.search-location-error {
+  margin: -8px 0 18px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--danger);
 }
 
 .search-filter-chips {
@@ -212,12 +228,60 @@
   font-size: 13px;
 }
 
+.search-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 28px;
+}
+
+.search-pagination-button {
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  background: white;
+  color: var(--gray-700);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.search-pagination-button:hover:not(:disabled) {
+  border-color: var(--brand-400);
+  background: var(--brand-50);
+  color: var(--brand-700);
+}
+
+.search-pagination-button:focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 2px;
+}
+
+.search-pagination-button.active {
+  border-color: var(--brand-600);
+  background: var(--brand-600);
+  color: white;
+}
+
+.search-pagination-button:disabled {
+  border-color: var(--gray-200);
+  background: var(--gray-100);
+  color: var(--gray-400);
+  cursor: not-allowed;
+}
+
 @media (max-width: 1024px) {
   .search-layout {
     grid-template-columns: 1fr;
   }
   .search-sidebar {
     position: static;
+    max-height: none;
+    overflow: visible;
   }
   .search-grid {
     grid-template-columns: repeat(2, 1fr);

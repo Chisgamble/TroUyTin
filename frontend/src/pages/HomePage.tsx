@@ -10,6 +10,7 @@ import {
   unsaveListing,
 } from "../services/roomListing";
 import type { RoomListing, RoomListingDbRow } from "../types";
+import { selectHomeListings } from "../utils/homeListings";
 
 export default function HomePage() {
   const [heroQuery, setHeroQuery] = useState("");
@@ -60,6 +61,7 @@ export default function HomePage() {
       amenity_ids: [],
       district_name: row.wards?.districts?.name ?? "",
       ward_name: row.wards?.name ?? "",
+      landlord: row.landlord_info ?? undefined,
     };
   }
 
@@ -69,9 +71,11 @@ export default function HomePage() {
       return;
     }
 
+    const userId = user.id;
+
     async function fetchSaved() {
       try {
-        const ids = await getSavedListingIds(user.id);
+        const ids = await getSavedListingIds(userId);
         setSavedIds(ids);
       } catch (err) {
         console.error(err);
@@ -87,9 +91,9 @@ export default function HomePage() {
       setError(null);
 
       const { data, error: fetchError } = await supabase
-        .from<RoomListingDbRow>("room_listings")
+        .from("room_listings")
         .select(
-          "*, listing_images(image_url, display_order), wards(name, districts(name))",
+          "*, listing_images(image_url, display_order), wards(name, districts(name)), landlord_info:profiles(id, email, full_name, avatar_url, role, is_verified, is_active, bio, created_at, updated_at)",
         )
         .eq("status", "AVAILABLE")
         .order("created_at", { ascending: false });
@@ -100,16 +104,15 @@ export default function HomePage() {
         return;
       }
 
-      setRooms((data ?? []).map(mapRowToListing));
+      setRooms(((data ?? []) as RoomListingDbRow[]).map(mapRowToListing));
       setLoading(false);
     }
 
     loadRooms();
   }, []);
 
-  const featuredListings = rooms
-    .filter((l) => l.status === "AVAILABLE" && l.is_verified)
-    .slice(0, 4);
+  const { featured: featuredListings, verifiedLandlords } =
+    selectHomeListings(rooms);
 
   const toggleSave = async (id: number) => {
     if (!user) {
@@ -209,6 +212,8 @@ export default function HomePage() {
               <p>Đang tải phòng trọ...</p>
             ) : error ? (
               <p>{error}</p>
+            ) : featuredListings.length === 0 ? (
+              <p>Chưa có phòng trọ nổi bật.</p>
             ) : (
               <div className="home-grid">
                 {featuredListings.map((listing) => (
@@ -217,11 +222,53 @@ export default function HomePage() {
                     listing={listing}
                     saved={savedIds.includes(listing.id)}
                     onToggleSave={toggleSave}
+                    showVerifiedBadge={false}
                   />
                 ))}
               </div>
             )}
           </section>
+
+          {!error && (
+            <section className="home-featured home-featured--last">
+              <div className="home-featured-header">
+                <h2>Phòng trọ từ chủ nhà xác thực</h2>
+                <button
+                  className="home-see-all"
+                  onClick={() => navigate("/tim-kiem")}
+                >
+                  Xem tất cả
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <polyline points="9,18 15,12 9,6" />
+                  </svg>
+                </button>
+              </div>
+              {loading ? (
+                <p>Đang tải phòng trọ...</p>
+              ) : verifiedLandlords.length === 0 ? (
+                <p>Chưa có phòng trọ từ chủ nhà xác thực.</p>
+              ) : (
+                <div className="home-grid">
+                  {verifiedLandlords.map((listing) => (
+                    <ListingCard
+                      key={listing.id}
+                      listing={listing}
+                      saved={savedIds.includes(listing.id)}
+                      onToggleSave={toggleSave}
+                      showVerifiedBadge={false}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
         </div>
       </div>
     </>

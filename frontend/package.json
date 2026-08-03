@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --test src/utils/homeListings.test.ts src/utils/searchListings.test.ts src/utils/dateTime.test.ts"
   },
   "dependencies": {
     "@openmapvn/openmapvn-gl": "^1.0.1",

@@ -121,6 +121,10 @@
   padding: 36px 24px 0;
 }
 
+.home-featured--last {
+  padding-bottom: 36px;
+}
+
 .home-featured-header {
   display: flex;
   align-items: baseline;
