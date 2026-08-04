@@ -34,6 +34,21 @@ export type Ward = {
   name: string;
 };
 
+// Phường/xã kèm tên quận-huyện và tỉnh-thành, dùng cho danh sách gợi ý.
+export type WardSuggestion = {
+  id: number;
+  name: string;
+  districtName: string;
+  provinceName: string;
+};
+
+type WardProvinceRelation = { name: string | null };
+
+type WardDistrictRelation = {
+  name: string | null;
+  provinces: WardProvinceRelation | WardProvinceRelation[] | null;
+};
+
 export type RoomListing = {
   id: number;
   landlordId: string;
@@ -149,6 +164,48 @@ export async function getWards(districtId: number): Promise<Ward[]> {
     districtId: row.district_id,
     name: row.name,
   }));
+}
+
+// Tìm phường/xã theo tên hoặc theo mã (id). Dùng cho ô gợi ý khi đăng tin.
+export async function searchWards(
+  keyword: string,
+  limit = 20,
+): Promise<WardSuggestion[]> {
+  const term = keyword.trim();
+  if (!term) return [];
+
+  let query = supabase
+    .from('wards')
+    .select('id, name, districts(name, provinces(name))');
+
+  // Nếu người dùng nhập số thì tra theo mã phường, ngược lại tìm theo tên.
+  if (/^\d+$/.test(term)) {
+    query = query.eq('id', Number(term));
+  } else {
+    query = query.ilike('name', `%${term}%`).order('name');
+  }
+
+  const { data, error } = await query.limit(limit);
+
+  if (error) throw error;
+
+  // PostgREST có thể trả quan hệ lồng dưới dạng object hoặc mảng, nên chuẩn hoá cả hai.
+  const firstOf = <T,>(value: T | T[] | null | undefined): T | null => {
+    if (Array.isArray(value)) return value[0] ?? null;
+    return value ?? null;
+  };
+
+  return (data ?? []).map((row) => {
+    const district = firstOf(row.districts as WardDistrictRelation | WardDistrictRelation[] | null);
+    const province = firstOf(district?.provinces);
+
+    return {
+      id: row.id as number,
+      name: row.name as string,
+      districtName: district?.name ?? '',
+      provinceName: province?.name ?? '',
+    };
+  });
 }
 
 // ─── Listings ─────────────────────────────────────────────────────────────────

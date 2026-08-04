@@ -35,6 +35,22 @@ const AREA_RANGES = [
   { label: "Trên 50 m²", min: 50, max: Infinity },
 ];
 
+// Khớp khoảng giá từ URL (minPrice/maxPrice) với danh sách PRICE_RANGES có sẵn.
+function findPriceRangeIndex(
+  minPriceParam: string | null,
+  maxPriceParam: string | null,
+): number {
+  if (!minPriceParam && !maxPriceParam) return 0;
+
+  const min = Number(minPriceParam) || 0;
+  const max = maxPriceParam ? Number(maxPriceParam) : Infinity;
+  const matchedIndex = PRICE_RANGES.findIndex(
+    (range) => range.min === min && range.max === max,
+  );
+
+  return matchedIndex === -1 ? 0 : matchedIndex;
+}
+
 async function fetchRooms(): Promise<RoomListing[]> {
   const res = await fetch("http://localhost:3000/api/rooms", {
     cache: "no-store",
@@ -50,17 +66,24 @@ async function fetchRooms(): Promise<RoomListing[]> {
 export default function SearchResultsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
+  const initialProvinceId = Number(searchParams.get("province")) || 0;
+  const initialDistrictId = Number(searchParams.get("district")) || 0;
+  const initialRoomType = searchParams.get("type") || "";
+  const initialPriceIdx = findPriceRangeIndex(
+    searchParams.get("minPrice"),
+    searchParams.get("maxPrice"),
+  );
 
   const [query, setQuery] = useState(initialQuery);
-  const [provinceId, setProvinceId] = useState(0);
-  const [districtId, setDistrictId] = useState(0);
+  const [provinceId, setProvinceId] = useState(initialProvinceId);
+  const [districtId, setDistrictId] = useState(initialDistrictId);
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
   const [provinceCatalogFailed, setProvinceCatalogFailed] = useState(false);
   const [districtCatalogFailed, setDistrictCatalogFailed] = useState(false);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
-  const [roomType, setRoomType] = useState("");
-  const [priceIdx, setPriceIdx] = useState(0);
+  const [roomType, setRoomType] = useState(initialRoomType);
+  const [priceIdx, setPriceIdx] = useState(initialPriceIdx);
   const [areaIdx, setAreaIdx] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [savedIds, setSavedIds] = useState<number[]>([]);
@@ -90,6 +113,25 @@ export default function SearchResultsPage() {
       cancelled = true;
     };
   }, []);
+
+  // Nạp sẵn quận/huyện khi vào trang với tỉnh/thành đã chọn từ URL (bộ lọc nhanh ở landing page).
+  useEffect(() => {
+    if (!initialProvinceId) return;
+
+    let cancelled = false;
+
+    getDistricts(initialProvinceId)
+      .then((loadedDistricts) => {
+        if (!cancelled) setDistricts(loadedDistricts);
+      })
+      .catch(() => {
+        if (!cancelled) setDistrictCatalogFailed(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initialProvinceId]);
 
   const fallbackProvinces = deriveProvinceOptions(rooms);
   const fallbackDistricts = deriveDistrictOptions(rooms, provinceId);

@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
-import { Heart, MapPin, CheckCircle, ShieldAlert, Loader } from "lucide-react";
+import { Heart, MapPin, CheckCircle, ShieldAlert, Loader, Flag } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { chatService } from "../services/chatService";
 import { roommatePostService } from "../services/roommates";
+import { getAmenities, type Amenity } from "../services/roomListing";
 import { formatPriceVND } from "../utils/formatters";
 import { getIcon } from "../utils/iconMap";
 import { api } from "../lib/axios";
 import StarRating from "../components/StarRating";
 import ReviewCard from "../components/ReviewCard";
+import ReportModal from "../components/ReportModal";
 import type { Review } from "../types";
 import "./ListingDetailPage.css"; 
 import "../components/ui/Button.css";
@@ -33,7 +35,7 @@ interface RoommatePostDetail {
   status: string;
   viewCount: number;
   createdAt: string;
-  amenities: { id: number; name: string; icon: string }[];
+  amenities: Amenity[];
   author: {
     id: string;
     fullName: string;
@@ -101,6 +103,79 @@ function getStatusBadgeClass(status: string) {
   return badges[status] || "bg-gray-100 text-gray-700 border-gray-200";
 }
 
+// Backend (Drizzle) trả về imageUrl/displayOrder dạng camelCase, nhưng một số nơi
+// vẫn dùng snake_case. Hàm này chuẩn hoá cả hai và chỉ giữ lại link ảnh hợp lệ.
+function normalizePostImages(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item, index) => {
+      if (typeof item === "string") {
+        return { url: item.trim(), order: index };
+      }
+
+      if (typeof item === "object" && item !== null) {
+        const image = item as {
+          imageUrl?: unknown;
+          image_url?: unknown;
+          displayOrder?: unknown;
+          display_order?: unknown;
+        };
+        const rawUrl = image.imageUrl ?? image.image_url;
+        const rawOrder = image.displayOrder ?? image.display_order;
+        const order = Number(rawOrder);
+
+        return {
+          url: typeof rawUrl === "string" ? rawUrl.trim() : "",
+          order: Number.isFinite(order) ? order : index,
+        };
+      }
+
+      return { url: "", order: index };
+    })
+    .filter((image) => image.url.length > 0)
+    .sort((a, b) => a.order - b.order)
+    .map((image) => image.url);
+}
+
+function normalizePostAmenities(value: unknown, catalog: Amenity[]): Amenity[] {
+  let parsedValue = value;
+
+  if (typeof parsedValue === "string") {
+    try {
+      parsedValue = JSON.parse(parsedValue);
+    } catch {
+      return [];
+    }
+  }
+
+  if (!Array.isArray(parsedValue)) return [];
+
+  return parsedValue
+    .map((item): Amenity | null => {
+      if (typeof item === "object" && item !== null && "id" in item) {
+        const rawAmenity = item as { id: unknown; name?: unknown; icon?: unknown };
+        const id = Number(rawAmenity.id);
+        if (!Number.isFinite(id)) return null;
+
+        if (typeof rawAmenity.name === "string" && rawAmenity.name.trim()) {
+          return {
+            id,
+            name: rawAmenity.name,
+            icon: typeof rawAmenity.icon === "string" ? rawAmenity.icon : null,
+          };
+        }
+
+        return catalog.find((amenity) => amenity.id === id) ?? null;
+      }
+
+      const id = Number(item);
+      if (!Number.isFinite(id)) return null;
+      return catalog.find((amenity) => amenity.id === id) ?? null;
+    })
+    .filter((amenity): amenity is Amenity => amenity !== null);
+}
+
 export default function RoommatePostDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -117,6 +192,7 @@ export default function RoommatePostDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState(0);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -132,7 +208,13 @@ export default function RoommatePostDetailPage() {
       setLoading(true);
       try {
         // Sử dụng hàm getPostDetail có sẵn trong service
-        const res = await roommatePostService.getPostDetail(Number(id));
+        const [res, amenitiesCatalog] = await Promise.all([
+          roommatePostService.getPostDetail(Number(id)),
+          getAmenities().catch((amenitiesError) => {
+            console.error("Lỗi lấy danh mục tiện ích:", amenitiesError);
+            return [] as Amenity[];
+          }),
+        ]);
         const rawData = res.data;
 
         // Map dữ liệu từ Backend trả về (cover cả snake_case và camelCase)
@@ -150,16 +232,12 @@ export default function RoommatePostDetailPage() {
           viewCount: Number(rawData.viewCount || rawData.view_count || 0),
           createdAt: rawData.createdAt || rawData.created_at || "",
           
-          images: Array.isArray(rawData.images) 
-            ? rawData.images
-                .sort((a: any, b: any) => (a.display_order || 0) - (b.display_order || 0))
-                .map((img: any) => img.image_url || img)
-            : [],
+          images: normalizePostImages(rawData.images),
             
           wardName: rawData.ward?.name || rawData.wardName || "",
           districtName: rawData.ward?.district?.name || rawData.districtName || "",
           
-          amenities: rawData.amenities || [], 
+          amenities: normalizePostAmenities(rawData.amenities, amenitiesCatalog),
           
           author: {
             id: String(rawData.userId || rawData.user_id || rawData.author?.id || ""),
@@ -542,6 +620,14 @@ export default function RoommatePostDetailPage() {
                       <Heart className={isSaved ? "text-rose-500 fill-rose-500" : "text-gray-400"} size={22} />
                     </button>
                   </div>
+                  <button
+                    type="button"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100"
+                    onClick={() => setShowReportModal(true)}
+                  >
+                    <Flag size={18} />
+                    Báo cáo / Khiếu nại tin đăng
+                  </button>
                 </div>
               </div>
 
@@ -709,6 +795,13 @@ export default function RoommatePostDetailPage() {
           </div>
         </div>
       )}
+
+      <ReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        postId={post.id}
+        postTitle={post.title}
+      />
     </>
   );
 }

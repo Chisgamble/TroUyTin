@@ -1,11 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { roommatePostService } from "../services/roommates";
-import { getAmenities, type Amenity } from "../services/roomListing";
+import {
+  getAmenities,
+  searchWards,
+  uploadListingImage,
+  type Amenity,
+  type WardSuggestion,
+} from "../services/roomListing";
 import { getIcon } from "../utils/iconMap";
-import { 
-  Loader, ChevronRight, ChevronLeft, Check, Plus, Trash2, 
-  MapPin, ListPlus, ShieldAlert, Image, Search, X 
+import {
+  Loader, ChevronRight, ChevronLeft, Check, Plus, Trash2,
+  MapPin, ListPlus, ShieldAlert, Image, Search, X, Upload
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -22,6 +28,17 @@ export default function RoommatePostCreate() {
   // State quản lý tiện ích từ DB
   const [amenitiesList, setAmenitiesList] = useState<Amenity[]>([]);
   const [searchAmenity, setSearchAmenity] = useState("");
+
+  // State cho ô gợi ý phường/xã
+  const [wardQuery, setWardQuery] = useState("");
+  const [wardOptions, setWardOptions] = useState<WardSuggestion[]>([]);
+  const [wardLoading, setWardLoading] = useState(false);
+  const [showWardList, setShowWardList] = useState(false);
+  const wardBoxRef = useRef<HTMLDivElement>(null);
+
+  // State cho việc tải ảnh từ máy tính
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
     title: "",
@@ -77,6 +94,14 @@ export default function RoommatePostCreate() {
           rules: post.rules ?? "",
         });
         setImages((post.images ?? []).map((image: { imageUrl: string }) => image.imageUrl));
+
+        // Hiện sẵn tên phường/xã đã lưu để người dùng biết đang chọn ở đâu.
+        const savedWardName = post.wardName ?? post.ward?.name;
+        if (savedWardName) {
+          setWardQuery(savedWardName);
+        } else if (post.wardId) {
+          setWardQuery(String(post.wardId));
+        }
       } catch (error) {
         console.error("Error loading post for editing:", error);
         toast.error("Không thể tải nội dung bài đăng để chỉnh sửa.");
@@ -88,6 +113,51 @@ export default function RoommatePostCreate() {
 
     loadPost();
   }, [navigate, postId]);
+
+  // Tìm phường/xã theo từ khoá, có debounce để không gọi API liên tục.
+  useEffect(() => {
+    const term = wardQuery.trim();
+    if (!term) {
+      setWardOptions([]);
+      setWardLoading(false);
+      return;
+    }
+
+    setWardLoading(true);
+    const timer = window.setTimeout(() => {
+      let ignore = false;
+
+      searchWards(term)
+        .then((results) => {
+          if (!ignore) setWardOptions(results);
+        })
+        .catch((error) => {
+          console.error("Lỗi tìm phường/xã:", error);
+          if (!ignore) setWardOptions([]);
+        })
+        .finally(() => {
+          if (!ignore) setWardLoading(false);
+        });
+
+      return () => {
+        ignore = true;
+      };
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+  }, [wardQuery]);
+
+  // Bấm ra ngoài thì đóng danh sách gợi ý phường/xã.
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (wardBoxRef.current && !wardBoxRef.current.contains(event.target as Node)) {
+        setShowWardList(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleChange = (field: string, value: any) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -111,6 +181,68 @@ export default function RoommatePostCreate() {
     toast.success("Đã xóa ảnh");
   };
 
+  // Tải ảnh từ máy tính lên Supabase Storage rồi lưu link công khai vào danh sách.
+  const handleUploadFiles = async (fileList: FileList | null) => {
+    if (!fileList || fileList.length === 0) return;
+
+    const picked = Array.from(fileList).filter((file) => file.type.startsWith("image/"));
+    if (picked.length === 0) {
+      toast.error("Vui lòng chọn tệp hình ảnh (JPG, PNG, WebP...).");
+      return;
+    }
+
+    const remainingSlots = 20 - images.length;
+    if (remainingSlots <= 0) {
+      toast.error("Hệ thống giới hạn tối đa 20 ảnh đầu vào.");
+      return;
+    }
+
+    const oversized = picked.filter((file) => file.size > 5 * 1024 * 1024);
+    if (oversized.length > 0) {
+      toast.error("Mỗi ảnh không được vượt quá 5MB.");
+    }
+
+    const accepted = picked
+      .filter((file) => file.size <= 5 * 1024 * 1024)
+      .slice(0, remainingSlots);
+
+    if (accepted.length < picked.length - oversized.length) {
+      toast.error(`Chỉ còn chỗ cho ${remainingSlots} ảnh.`);
+    }
+
+    if (accepted.length === 0) return;
+
+    setUploadingImages(true);
+    try {
+      const results = await Promise.all(
+        accepted.map(async (file) => {
+          try {
+            const { publicUrl } = await uploadListingImage(file);
+            return publicUrl;
+          } catch (error) {
+            console.error("Lỗi tải ảnh lên:", error);
+            return null;
+          }
+        }),
+      );
+
+      const uploadedUrls = results.filter((url): url is string => Boolean(url));
+      const failedCount = results.length - uploadedUrls.length;
+
+      if (uploadedUrls.length > 0) {
+        setImages((prev) => [...prev, ...uploadedUrls]);
+        toast.success(`Đã tải lên ${uploadedUrls.length} ảnh thành công!`);
+      }
+
+      if (failedCount > 0) {
+        toast.error(`${failedCount} ảnh tải lên thất bại. Vui lòng thử lại.`);
+      }
+    } finally {
+      setUploadingImages(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   // 🔥 ĐIỀU HƯỚNG BƯỚC BẰNG TYPE="BUTTON" + VALIDATION TỪNG BƯỚC
   const nextStep = (e: React.MouseEvent) => {
     e.preventDefault(); // Chặn mọi trigger submit form
@@ -128,7 +260,7 @@ export default function RoommatePostCreate() {
 
     if (currentStep === 2) {
       if (!form.wardId) {
-        toast.error("Vui lòng nhập Mã phường / Xã (Ward ID)!");
+        toast.error("Vui lòng chọn phường/xã từ danh sách gợi ý!");
         return;
       }
     }
@@ -335,14 +467,71 @@ export default function RoommatePostCreate() {
             <div className="space-y-5 animate-fadeIn">
               <h3 className="text-lg font-bold text-gray-800 border-b pb-2 mb-4">Bước 2: Xác định vị trí</h3>
               <div>
-                <label className="block text-xs font-bold text-gray-600 uppercase mb-2">Mã phường / Xã (Ward ID) *</label>
-                <input
-                  type="number"
-                  value={form.wardId}
-                  onChange={(e) => handleChange("wardId", e.target.value)}
-                  className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all"
-                  placeholder="Nhập mã ID hành chính của Phường (VD: 1)"
-                />
+                <label className="block text-xs font-bold text-gray-600 uppercase mb-2">Phường / Xã *</label>
+                <div className="relative" ref={wardBoxRef}>
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={wardQuery}
+                    onChange={(e) => {
+                      setWardQuery(e.target.value);
+                      setShowWardList(true);
+                      // Người dùng sửa lại chữ thì bỏ phường đã chọn trước đó.
+                      if (form.wardId) handleChange("wardId", "");
+                    }}
+                    onFocus={() => setShowWardList(true)}
+                    placeholder="Nhập tên phường/xã hoặc mã (VD: Bến Nghé hoặc 26740)"
+                    className="w-full border border-gray-200 rounded-xl p-3 pl-10 pr-24 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all"
+                    autoComplete="off"
+                  />
+
+                  {/* Hiển thị mã đã chọn ở góc phải ô nhập */}
+                  {form.wardId && (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700 border border-blue-100">
+                      <Check className="w-3 h-3" />
+                      Mã: {form.wardId}
+                    </span>
+                  )}
+
+                  {showWardList && wardQuery.trim() && (
+                    <div className="absolute z-20 mt-1.5 w-full max-h-64 overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg">
+                      {wardLoading ? (
+                        <div className="flex items-center gap-2 px-4 py-3 text-sm text-gray-500">
+                          <Loader size={14} className="animate-spin" />
+                          Đang tìm phường/xã...
+                        </div>
+                      ) : wardOptions.length === 0 ? (
+                        <p className="px-4 py-3 text-sm text-gray-400">Không tìm thấy phường/xã phù hợp.</p>
+                      ) : (
+                        wardOptions.map((ward) => (
+                          <button
+                            key={ward.id}
+                            type="button"
+                            onClick={() => {
+                              handleChange("wardId", String(ward.id));
+                              setWardQuery(ward.name);
+                              setShowWardList(false);
+                            }}
+                            className="flex w-full items-start justify-between gap-3 border-b border-gray-50 px-4 py-2.5 text-left transition hover:bg-blue-50 last:border-b-0"
+                          >
+                            <span className="min-w-0">
+                              <span className="block truncate text-sm font-semibold text-gray-800">{ward.name}</span>
+                              <span className="block truncate text-xs text-gray-500">
+                                {[ward.districtName, ward.provinceName].filter(Boolean).join(", ")}
+                              </span>
+                            </span>
+                            <span className="shrink-0 rounded-md bg-gray-100 px-2 py-0.5 text-xs font-bold text-gray-600">
+                              {ward.id}
+                            </span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+                <p className="text-[10px] text-gray-400 mt-2">
+                  Gõ tên phường/xã để chọn từ danh sách gợi ý — hệ thống sẽ tự lưu mã phường (dạng số).
+                </p>
               </div>
 
               <div>
@@ -453,6 +642,52 @@ export default function RoommatePostCreate() {
             <div className="space-y-5 animate-fadeIn">
               <h3 className="text-lg font-bold text-gray-800 border-b pb-2 mb-4">Bước 4: Cập nhật hình ảnh không gian phòng</h3>
               
+              {/* Tải ảnh trực tiếp từ máy tính */}
+              <div
+                className="bg-blue-50/50 border-2 border-dashed border-blue-200 rounded-2xl p-6 text-center transition hover:border-blue-400 hover:bg-blue-50"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (!uploadingImages) void handleUploadFiles(e.dataTransfer.files);
+                }}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => void handleUploadFiles(e.target.files)}
+                />
+
+                <span className="mx-auto mb-3 inline-flex rounded-xl bg-blue-100 p-3 text-blue-600">
+                  {uploadingImages ? <Loader size={22} className="animate-spin" /> : <Upload size={22} />}
+                </span>
+
+                <p className="text-sm font-bold text-gray-800">
+                  {uploadingImages ? "Đang tải ảnh lên..." : "Tải ảnh từ máy tính của bạn"}
+                </p>
+                <p className="mt-1 text-xs text-gray-500">
+                  Kéo &amp; thả ảnh vào đây, hoặc bấm nút bên dưới để chọn tệp. Tối đa 5MB mỗi ảnh.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingImages}
+                  className="mt-4 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <Image size={16} />
+                  Chọn ảnh từ máy
+                </button>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className="h-px flex-1 bg-gray-200" />
+                <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Hoặc dán liên kết</span>
+                <span className="h-px flex-1 bg-gray-200" />
+              </div>
+
               <div className="bg-gray-50 border border-dashed border-gray-200 rounded-2xl p-5">
                 <label className="block text-xs font-bold text-gray-600 uppercase mb-2">Đường dẫn liên kết hình ảnh (Image URL)</label>
                 <div className="flex gap-2">

@@ -124,7 +124,7 @@ export default function RoommateOnboarding() {
             Thiết lập hồ sơ ở ghép
           </h1>
           <p className="text-sm text-gray-500 mt-2 max-w-sm mx-auto">
-            Hệ thống dựa trên thói quen của bạn để tự động tính toán mức độ hợp cạ (Cosine Similarity)
+            Hệ thống dựa trên thói quen của bạn để tự động tính toán mức độ phù hợp
           </p>
         </div>
 

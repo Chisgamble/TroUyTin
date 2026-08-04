@@ -14,7 +14,6 @@ import { TestReview } from './pages/TestReview'
 import { Chat } from './pages/Chat'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import MainLayout from './components/Layout/MainLayout'
-import HomePage from './pages/HomePage'
 import ProfileLayout from './components/Layout/ProfileLayout'
 import PostListingPage from './pages/PostListingPage'
 import SavedRoomListings from './pages/SavedRoomListings'
@@ -24,6 +23,8 @@ import RoomSearchLLM from './pages/RoomSearchLLM'
 import ResetPassword from './pages/ResetPassword'
 import MyListingsPage from './pages/MyListingsPage'
 import RoommatePostDetailPage from './pages/RoommatePostDetailPage'
+import LandingPage from './pages/LandingPage'
+import { Toaster } from 'react-hot-toast'
 
 function AppRoutes() {
   const { user, loading } = useAuth()
@@ -54,8 +55,11 @@ function AppRoutes() {
             3. CORE DỰ ÁN BỌC TRONG MAIN LAYOUT CHUNG
            ========================================== */}
         <Route element={<MainLayout />}>
-          {/* Trang chủ công khai / Dashboard */}
-          <Route path="/" element={user ? <Home /> : <HomePage />} />
+          {/* Trang chủ: khách xem landing page, người đã đăng nhập vào dashboard */}
+          <Route path="/" element={user ? <Home /> : <LandingPage />} />
+
+          {/* Giới thiệu: landing page luôn xem được, kể cả khi đã đăng nhập */}
+          <Route path="/about" element={<LandingPage />} />
 
           {/* Các trang tìm kiếm chung */}
           <Route path="/tim-kiem" element={<SearchResultsPage />} />
@@ -101,6 +105,7 @@ export default function App() {
   return (
     <AuthProvider>
       <AppRoutes />
+      <Toaster position="top-center" toastOptions={{ duration: 2000 }} />
     </AuthProvider>
   )
 }

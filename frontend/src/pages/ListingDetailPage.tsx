@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { Heart } from "lucide-react";
+import { Flag, Heart } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { chatService } from "../services/chatService";
 import StarRating from "../components/StarRating";
 import ReviewCard from "../components/ReviewCard";
 import { ReviewModal } from "../components/ReviewModal";
+import ReportModal from "../components/ReportModal";
 import { api } from "../lib/axios";
 import { supabase } from "../services/supabase";
 import {
@@ -141,6 +142,7 @@ export default function ListingDetailPage() {
   const [activeImage, setActiveImage] = useState(0);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const currentListingId = listing?.id;
@@ -583,6 +585,14 @@ export default function ListingDetailPage() {
                     />
                   </button>
                 </div>
+                <button
+                  type="button"
+                  className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100"
+                  onClick={() => setShowReportModal(true)}
+                >
+                  <Flag size={18} />
+                  Báo cáo / Khiếu nại tin đăng
+                </button>
               </div>
 
               <div className="detail-landlord-card">
@@ -861,6 +871,13 @@ export default function ListingDetailPage() {
           listingId={listing.id}
         />
       )}
+
+      <ReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        postId={listing.id}
+        postTitle={listing.title}
+      />
     </>
   );
 }

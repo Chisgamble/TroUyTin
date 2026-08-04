@@ -54,6 +54,9 @@ export default function Navbar() {
   const isRoommateArea =
     location.pathname === "/roommate-matching" ||
     location.pathname.startsWith("/roommate-posts");
+  // Khách chưa đăng nhập vào "/" sẽ thấy landing page (giới thiệu),
+  // nên tô sáng "Về chúng tôi" thay vì "Tìm phòng".
+  const isLandingPage = location.pathname === "/" && !user;
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -111,7 +114,7 @@ export default function Navbar() {
               to="/"
               end
               className={({ isActive }) =>
-                `navbar-link ${isActive ? "active" : ""}`
+                `navbar-link ${isActive && !isLandingPage ? "active" : ""}`
               }
             >
               Tìm phòng
@@ -138,7 +141,7 @@ export default function Navbar() {
             <NavLink
               to="/about"
               className={({ isActive }) =>
-                `navbar-link ${isActive ? "active" : ""}`
+                `navbar-link ${isActive || isLandingPage ? "active" : ""}`
               }
             >
               Về chúng tôi
