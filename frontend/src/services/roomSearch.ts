@@ -9,6 +9,9 @@ export type RoomSearchFilter = {
   area_min: number | null;
   area_max: number | null;
   keywords: string | null;
+  landmark?: string | null;
+  target_lat?: number | null;
+  target_lng?: number | null;
 };
 
 type DbRoomRow = {
@@ -29,11 +32,26 @@ type DbRoomRow = {
   view_count: number;
   created_at: string;
   updated_at: string;
+  distance?: number | null;
+  total_count?: number;
   listing_images: { image_url: string; display_order: number }[] | null;
   wards: { name: string; districts: { name: string } | null } | null;
 };
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+type SearchRoomsWithFilterOptions = {
+  page?: number;
+  pageSize?: number;
+};
+
+type SearchRoomsWithFilterResult = {
+  rooms: RoomListing[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};
 
 export async function parseSearchQueryWithLLM(
   query: string,
@@ -70,6 +88,13 @@ async function resolveWardIdsByDistrict(
     .in("district_id", districtIds);
 
   return wards?.map((w) => w.id) ?? [];
+}
+
+function sanitizeKeywordForSearch(keyword: string): string {
+  return keyword
+    .replace(/[,()\.;:<>\[\]{}"'`]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function mapRowToListing(row: DbRoomRow): RoomListing {
@@ -110,55 +135,50 @@ function mapRowToListing(row: DbRoomRow): RoomListing {
 
 export async function searchRoomsWithFilter(
   filters: RoomSearchFilter,
-): Promise<RoomListing[]> {
-  let query = supabase
-    .from("room_listings")
-    .select(
-      `
-      *,
-      listing_images ( image_url, display_order ),
-      wards ( name, districts ( name ) )
-    `,
-    )
-    .eq("status", "AVAILABLE");
+  options: SearchRoomsWithFilterOptions = {},
+): Promise<SearchRoomsWithFilterResult> {
+  const page = Math.max(1, options.page ?? 1);
+  const pageSize = Math.max(1, options.pageSize ?? 6);
+  const from = (page - 1) * pageSize;
 
-  if (filters.room_type) {
-    query = query.eq("room_type", filters.room_type);
-  }
-  if (filters.price_min != null) {
-    query = query.gte("price", filters.price_min);
-  }
-  if (filters.price_max != null) {
-    query = query.lte("price", filters.price_max);
-  }
-  if (filters.area_min != null) {
-    query = query.gte("area", filters.area_min);
-  }
-  if (filters.area_max != null) {
-    query = query.lte("area", filters.area_max);
-  }
-
+  let wardIds: number[] | null = null;
   if (filters.district_name) {
-    const wardIds = await resolveWardIdsByDistrict(filters.district_name);
-    if (wardIds.length > 0) {
-      query = query.in("ward_id", wardIds);
-    } else {
-      query = query.ilike("address_detail", `%${filters.district_name}%`);
+    const resolvedIds = await resolveWardIdsByDistrict(filters.district_name);
+    if (resolvedIds.length > 0) {
+      wardIds = resolvedIds;
     }
   }
 
-  if (filters.keywords) {
-    const kw = filters.keywords.trim();
-    query = query.or(
-      `title.ilike.%${kw}%,description.ilike.%${kw}%,address_detail.ilike.%${kw}%`,
-    );
-  }
+  const hasGeoTarget = filters.target_lat != null && filters.target_lng != null;
 
-  const { data, error } = await query.order("created_at", { ascending: false });
+  const rpcParams = {
+    target_lat: filters.target_lat ?? null,
+    target_lng: filters.target_lng ?? null,
+    p_room_type: filters.room_type ?? null,
+    p_price_min: filters.price_min ?? null,
+    p_price_max: filters.price_max ?? null,
+    p_area_min: filters.area_min ?? null,
+    p_area_max: filters.area_max ?? null,
+    p_keywords:
+      hasGeoTarget || !filters.keywords
+        ? null
+        : sanitizeKeywordForSearch(filters.keywords),
+    p_ward_ids: wardIds,
+    p_limit: pageSize,
+    p_offset: from,
+  };
+
+  const { data, error } = await supabase.rpc("search_rooms_unified", rpcParams);
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return (data as DbRoomRow[]).map(mapRowToListing);
+  const rows = (data ?? []) as DbRoomRow[];
+  const rooms = rows.map(mapRowToListing);
+  const totalCount =
+    rows.length > 0 ? Number(rows[0].total_count ?? rows.length) : 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+
+  return { rooms, totalCount, page, pageSize, totalPages };
 }
