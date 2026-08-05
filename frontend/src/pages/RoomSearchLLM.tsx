@@ -11,6 +11,20 @@ import {
 
 type SearchState = "idle" | "parsing" | "fetching" | "done" | "error";
 
+const PAGE_SIZE = 6;
+const EMPTY_FILTERS: RoomSearchFilter = {
+  district_name: null,
+  room_type: null,
+  price_min: null,
+  price_max: null,
+  area_min: null,
+  area_max: null,
+  keywords: null,
+  landmark: null,
+  target_lat: null,
+  target_lng: null,
+};
+
 export default function RoomSearchLLM() {
   const [searchParams, setSearchParams] = useSearchParams();
   const queryParam = searchParams.get("q") || "";
@@ -21,13 +35,65 @@ export default function RoomSearchLLM() {
   const [state, setState] = useState<SearchState>("idle");
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<number | string | null>(null);
-  const [isFallback, setIsFallback] = useState(false); // test all room.
+  const [isFallback, setIsFallback] = useState(false);
   const [savedIds, setSavedIds] = useState<number[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
+  // HÀM MỚI: Chỉ chuyên gọi Supabase dựa trên Filter có sẵn
+  const fetchRoomsForPage = async (
+    currentFilters: RoomSearchFilter,
+    targetPage: number,
+  ) => {
+    setState("fetching");
+    setError(null);
+
+    try {
+      setIsFallback(false);
+      const result = await searchRoomsWithFilter(currentFilters, {
+        page: targetPage,
+        pageSize: PAGE_SIZE,
+      });
+
+      // Chỉ hiển thị fallback nếu ở trang 1 mà không có kết quả
+      if (result.totalCount === 0 && targetPage === 1) {
+        const fallbackResult = await searchRoomsWithFilter(EMPTY_FILTERS, {
+          page: 1,
+          pageSize: 5,
+        });
+
+        setRooms(fallbackResult.rooms);
+        setTotalCount(0);
+        setTotalPages(1);
+        setPage(1);
+        setIsFallback(true);
+      } else {
+        setRooms(result.rooms);
+        setTotalCount(result.totalCount);
+        setTotalPages(result.totalPages);
+        setPage(result.page);
+      }
+
+      setState("done");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Đã xảy ra lỗi khi truy vấn dữ liệu",
+      );
+      setState("error");
+    }
+  };
+
+  // HÀM ĐÃ SỬA: Chỉ gọi AI khi có câu tìm kiếm mới
   const runSearch = useCallback(async (searchText: string) => {
     if (!searchText.trim()) {
       setFilters(null);
       setRooms([]);
+      setTotalCount(0);
+      setTotalPages(1);
+      setPage(1);
       setState("idle");
       return;
     }
@@ -35,49 +101,18 @@ export default function RoomSearchLLM() {
     setState("parsing");
     setError(null);
 
-    // try {
-    //   const parsedFilters = await parseSearchQueryWithLLM(searchText);
-    //   setFilters(parsedFilters);
-
-    //   setState("fetching");
-    //   const results = await searchRoomsWithFilter(parsedFilters);
-    //   setRooms(results);
-    //   setState("done");
-    // } catch (err) {
-    //   setError(err instanceof Error ? err.message : "Đã xảy ra lỗi");
-    //   setState("error");
-    // }
-
     try {
-      setIsFallback(false); // Đặt lại trạng thái trước khi tìm kiếm mới
       const parsedFilters = await parseSearchQueryWithLLM(searchText);
       setFilters(parsedFilters);
 
-      setState("fetching");
-      const results = await searchRoomsWithFilter(parsedFilters);
-
-      if (results.length === 0) {
-        // Gọi lại hàm với bộ lọc trống để lấy danh sách phòng bất kỳ
-        const fallbackResults = await searchRoomsWithFilter({
-          district_name: null,
-          room_type: null,
-          price_min: null,
-          price_max: null,
-          area_min: null,
-          area_max: null,
-          keywords: null,
-        });
-
-        // Lấy 5 phòng đầu tiên
-        setRooms(fallbackResults.slice(0, 5));
-        setIsFallback(true); // Kích hoạt trạng thái gợi ý
-      } else {
-        setRooms(results);
-      }
-
-      setState("done");
+      // Sau khi AI parse xong, gọi Supabase lấy trang 1
+      await fetchRoomsForPage(parsedFilters, 1);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Đã xảy ra lỗi");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Đã xảy ra lỗi khi phân tích bằng AI",
+      );
       setState("error");
     }
   }, []);
@@ -85,6 +120,7 @@ export default function RoomSearchLLM() {
   useEffect(() => {
     setQuery(queryParam);
     if (queryParam) {
+      setPage(1);
       runSearch(queryParam);
     }
   }, [queryParam, runSearch]);
@@ -92,7 +128,15 @@ export default function RoomSearchLLM() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = query.trim();
+    setPage(1);
     setSearchParams(trimmed ? { q: trimmed } : {});
+  };
+
+  // HÀM ĐÃ SỬA: Lấy JSON đã lưu trong state gọi thẳng Supabase, bỏ qua AI
+  const handlePageChange = (nextPage: number) => {
+    if (!filters) return;
+    setPage(nextPage);
+    fetchRoomsForPage(filters, nextPage);
   };
 
   const toggleSave = (id: number | string) => {
@@ -138,6 +182,18 @@ export default function RoomSearchLLM() {
         {filters && state === "done" && (
           <div className="room-search-llm-filters">
             <span className="room-search-llm-filters-label">Bộ lọc AI:</span>
+            {filters.landmark && (
+              <span
+                className="search-chip active"
+                style={{
+                  backgroundColor: "#dbeafe",
+                  color: "#1d4ed8",
+                  borderColor: "#bfdbfe",
+                }}
+              >
+                📍 Gần: {filters.landmark}
+              </span>
+            )}
             {filters.district_name && (
               <span className="search-chip active">
                 {filters.district_name}
@@ -176,7 +232,7 @@ export default function RoomSearchLLM() {
               <h1>Kết quả tìm kiếm AI</h1>
               {state === "done" && (
                 <span className="search-results-count">
-                  {rooms.length} phòng
+                  {isFallback ? rooms.length : totalCount} phòng
                 </span>
               )}
             </div>
@@ -190,16 +246,6 @@ export default function RoomSearchLLM() {
                 </p>
               </div>
             )}
-
-            {/* {!isLoading && state === "done" && rooms.length === 0 && (
-              <div className="search-empty">
-                <h3>Không tìm thấy phòng phù hợp</h3>
-                <p>
-                  Thử mô tả khác, ví dụ: "phòng trọ quận 1 dưới 4 triệu có điều
-                  hòa"
-                </p>
-              </div>
-            )} */}
 
             {!isLoading && state === "done" && isFallback && (
               <div
@@ -243,6 +289,75 @@ export default function RoomSearchLLM() {
                     />
                   </div>
                 ))}
+              </div>
+            )}
+
+            {!isLoading && totalPages > 1 && !isFallback && (
+              <div
+                className="search-pagination"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                  marginTop: "24px",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => handlePageChange(Math.max(1, page - 1))}
+                  disabled={page === 1}
+                  style={{
+                    padding: "8px 10px",
+                    borderRadius: "8px",
+                    border: "1px solid #dbe2ea",
+                    cursor: page === 1 ? "not-allowed" : "pointer",
+                    opacity: page === 1 ? 0.5 : 1,
+                  }}
+                >
+                  ←
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => handlePageChange(p)}
+                      style={{
+                        minWidth: "36px",
+                        height: "36px",
+                        borderRadius: "8px",
+                        border:
+                          p === page
+                            ? "1px solid #2563eb"
+                            : "1px solid #dbe2ea",
+                        backgroundColor: p === page ? "#2563eb" : "#fff",
+                        color: p === page ? "#fff" : "#1f2937",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {p}
+                    </button>
+                  ),
+                )}
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    handlePageChange(Math.min(totalPages, page + 1))
+                  }
+                  disabled={page === totalPages}
+                  style={{
+                    padding: "8px 10px",
+                    borderRadius: "8px",
+                    border: "1px solid #dbe2ea",
+                    cursor: page === totalPages ? "not-allowed" : "pointer",
+                    opacity: page === totalPages ? 0.5 : 1,
+                  }}
+                >
+                  →
+                </button>
               </div>
             )}
           </div>

@@ -1,15 +1,15 @@
-import { supabase } from './supabase';
-import { v4 as uuidv4 } from 'uuid';
+import { supabase } from "./supabase";
+import { v4 as uuidv4 } from "uuid";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type RoomType =
-  | 'PHONG_TRO'
-  | 'CAN_HO_MINI'
-  | 'CAN_HO'
-  | 'NGUYEN_CAN'
-  | 'KTX';
-export type ListingStatus = 'PENDING' | 'AVAILABLE' | 'RENTED' | 'HIDDEN';
+  | "PHONG_TRO"
+  | "CAN_HO_MINI"
+  | "CAN_HO"
+  | "NGUYEN_CAN"
+  | "KTX";
+export type ListingStatus = "PENDING" | "AVAILABLE" | "RENTED" | "HIDDEN";
 
 export type Amenity = {
   id: number;
@@ -90,13 +90,13 @@ export type ListingSearchParams = {
 // ─── Amenities ────────────────────────────────────────────────────────────────
 export async function getAmenities(): Promise<Amenity[]> {
   const { data, error } = await supabase
-    .from('amenities')
-    .select('*')
-    .order('name');
+    .from("amenities")
+    .select("*")
+    .order("name");
 
   if (error) throw error;
 
-  return (data ?? []).map(row => ({
+  return (data ?? []).map((row) => ({
     id: row.id,
     name: row.name,
     icon: row.icon,
@@ -107,13 +107,13 @@ export async function getAmenities(): Promise<Amenity[]> {
 
 export async function getProvinces(): Promise<Province[]> {
   const { data, error } = await supabase
-    .from('provinces')
-    .select('*')
-    .order('name');
+    .from("provinces")
+    .select("*")
+    .order("name");
 
   if (error) throw error;
 
-  return (data ?? []).map(row => ({
+  return (data ?? []).map((row) => ({
     id: row.id,
     name: row.name,
   }));
@@ -121,14 +121,14 @@ export async function getProvinces(): Promise<Province[]> {
 
 export async function getDistricts(provinceId: number): Promise<District[]> {
   const { data, error } = await supabase
-    .from('districts')
-    .select('*')
-    .eq('province_id', provinceId)
-    .order('name');
+    .from("districts")
+    .select("*")
+    .eq("province_id", provinceId)
+    .order("name");
 
   if (error) throw error;
 
-  return (data ?? []).map(row => ({
+  return (data ?? []).map((row) => ({
     id: row.id,
     provinceId: row.province_id,
     name: row.name,
@@ -137,14 +137,14 @@ export async function getDistricts(provinceId: number): Promise<District[]> {
 
 export async function getWards(districtId: number): Promise<Ward[]> {
   const { data, error } = await supabase
-    .from('wards')
-    .select('*')
-    .eq('district_id', districtId)
-    .order('name');
+    .from("wards")
+    .select("*")
+    .eq("district_id", districtId)
+    .order("name");
 
   if (error) throw error;
 
-  return (data ?? []).map(row => ({
+  return (data ?? []).map((row) => ({
     id: row.id,
     districtId: row.district_id,
     name: row.name,
@@ -153,13 +153,20 @@ export async function getWards(districtId: number): Promise<Ward[]> {
 
 // ─── Listings ─────────────────────────────────────────────────────────────────
 
-export async function searchListings(
-  params: ListingSearchParams
-): Promise<RoomListing[]> {
+function sanitizeSearchKeyword(keyword: string): string {
+  return keyword
+    .replace(/[,()\.;:<>\[\]{}"'`]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
+export async function searchListings(
+  params: ListingSearchParams,
+): Promise<RoomListing[]> {
   let query = supabase
     .from("room_listings")
-    .select(`
+    .select(
+      `
       *,
       wards (
         id,
@@ -182,7 +189,8 @@ export async function searchListings(
         image_url,
         display_order
       )
-    `)
+    `,
+    )
     .eq("status", "AVAILABLE");
 
   if (params.roomType) {
@@ -193,24 +201,24 @@ export async function searchListings(
     query = query.eq("wards.district_id", params.districtId);
   }
 
-  if (params.minPrice != null)
-    query = query.gte("price", params.minPrice);
+  if (params.minPrice != null) query = query.gte("price", params.minPrice);
 
   if (params.maxPrice != null && params.maxPrice !== Infinity)
     query = query.lt("price", params.maxPrice);
 
-  if (params.minArea != null)
-    query = query.gte("area", params.minArea);
+  if (params.minArea != null) query = query.gte("area", params.minArea);
 
   if (params.maxArea != null && params.maxArea !== Infinity)
     query = query.lt("area", params.maxArea);
 
   if (params.query?.trim()) {
-    query = query.or(
-      `title.ilike.%${params.query}%,
-       description.ilike.%${params.query}%,
-       address_detail.ilike.%${params.query}%`
-    );
+    const safeQuery = sanitizeSearchKeyword(params.query);
+    if (safeQuery) {
+      const likePattern = `%${safeQuery}%`;
+      query = query.or(
+        `title.ilike.${likePattern},description.ilike.${likePattern},address_detail.ilike.${likePattern}`,
+      );
+    }
   }
 
   const { data, error } = await query.order("created_at", {
@@ -222,10 +230,12 @@ export async function searchListings(
   return (data ?? []).map(mapListingWithRelations);
 }
 
-export async function createListing(payload: CreateListingPayload): Promise<RoomListing> {
+export async function createListing(
+  payload: CreateListingPayload,
+): Promise<RoomListing> {
   // 1. Insert the listing row
   const { data: listing, error: listingError } = await supabase
-    .from('room_listings')
+    .from("room_listings")
     .insert({
       landlord_id: payload.landlordId,
       title: payload.title,
@@ -236,7 +246,7 @@ export async function createListing(payload: CreateListingPayload): Promise<Room
       room_type: payload.roomType,
       ward_id: payload.wardId ?? null,
       address_detail: payload.addressDetail ?? null,
-      status: 'AVAILABLE',
+      status: "AVAILABLE",
     })
     .select()
     .single();
@@ -248,12 +258,12 @@ export async function createListing(payload: CreateListingPayload): Promise<Room
   // 2. Insert amenities (listing_amenities junction)
   if (payload.amenityIds && payload.amenityIds.length > 0) {
     const { error: amenityError } = await supabase
-      .from('listing_amenities')
+      .from("listing_amenities")
       .insert(
-        payload.amenityIds.map(amenityId => ({
+        payload.amenityIds.map((amenityId) => ({
           listing_id: listingId,
           amenity_id: amenityId,
-        }))
+        })),
       );
 
     if (amenityError) throw amenityError;
@@ -261,16 +271,14 @@ export async function createListing(payload: CreateListingPayload): Promise<Room
 
   // 3. Insert images (listing_images)
   if (payload.imageUrls && payload.imageUrls.length > 0) {
-    const { error: imageError } = await supabase
-      .from('listing_images')
-      .insert(
-        payload.imageUrls.map((url, index) => ({
-          listing_id: listingId,
-          image_url: url,
-          image_path: payload.imagePaths?.[index] ?? null,
-          display_order: index,
-        }))
-      );
+    const { error: imageError } = await supabase.from("listing_images").insert(
+      payload.imageUrls.map((url, index) => ({
+        listing_id: listingId,
+        image_url: url,
+        image_path: payload.imagePaths?.[index] ?? null,
+        display_order: index,
+      })),
+    );
 
     if (imageError) throw imageError;
   }
@@ -280,57 +288,63 @@ export async function createListing(payload: CreateListingPayload): Promise<Room
 
 export async function updateListing(
   listingId: number,
-  payload: Partial<CreateListingPayload>
+  payload: Partial<CreateListingPayload>,
 ): Promise<RoomListing> {
   const updateData: Record<string, unknown> = {
     updated_at: new Date().toISOString(),
   };
 
   if (payload.title !== undefined) updateData.title = payload.title;
-  if (payload.description !== undefined) updateData.description = payload.description ?? null;
+  if (payload.description !== undefined)
+    updateData.description = payload.description ?? null;
   if (payload.price !== undefined) updateData.price = payload.price;
-  if (payload.deposit !== undefined) updateData.deposit = payload.deposit ?? null;
+  if (payload.deposit !== undefined)
+    updateData.deposit = payload.deposit ?? null;
   if (payload.area !== undefined) updateData.area = payload.area;
   if (payload.roomType !== undefined) updateData.room_type = payload.roomType;
   if (payload.wardId !== undefined) updateData.ward_id = payload.wardId ?? null;
-  if (payload.addressDetail !== undefined) updateData.address_detail = payload.addressDetail ?? null;
+  if (payload.addressDetail !== undefined)
+    updateData.address_detail = payload.addressDetail ?? null;
 
   const { data: listing, error: listingError } = await supabase
-    .from('room_listings')
+    .from("room_listings")
     .update(updateData)
-    .eq('id', listingId)
+    .eq("id", listingId)
     .select()
     .single();
 
   if (listingError) throw listingError;
 
   if (payload.amenityIds !== undefined) {
-    await supabase.from('listing_amenities').delete().eq('listing_id', listingId);
+    await supabase
+      .from("listing_amenities")
+      .delete()
+      .eq("listing_id", listingId);
     if (payload.amenityIds.length > 0) {
       const { error: amenityError } = await supabase
-        .from('listing_amenities')
+        .from("listing_amenities")
         .insert(
-          payload.amenityIds.map(amenityId => ({
+          payload.amenityIds.map((amenityId) => ({
             listing_id: listingId,
             amenity_id: amenityId,
-          }))
+          })),
         );
       if (amenityError) throw amenityError;
     }
   }
 
   if (payload.imageUrls !== undefined) {
-    await supabase.from('listing_images').delete().eq('listing_id', listingId);
+    await supabase.from("listing_images").delete().eq("listing_id", listingId);
     if (payload.imageUrls.length > 0) {
       const { error: imageError } = await supabase
-        .from('listing_images')
+        .from("listing_images")
         .insert(
           payload.imageUrls.map((url, index) => ({
             listing_id: listingId,
             image_url: url,
             image_path: payload.imagePaths?.[index] ?? null,
             display_order: index,
-          }))
+          })),
         );
       if (imageError) throw imageError;
     }
@@ -341,23 +355,26 @@ export async function updateListing(
 
 export async function updateListingStatus(
   listingId: number,
-  status: ListingStatus
+  status: ListingStatus,
 ): Promise<void> {
   const { error } = await supabase
-    .from('room_listings')
+    .from("room_listings")
     .update({
       status,
       updated_at: new Date().toISOString(),
     })
-    .eq('id', listingId);
+    .eq("id", listingId);
 
   if (error) throw error;
 }
 
-export async function getListing(listingId: number): Promise<RoomListing | null> {
+export async function getListing(
+  listingId: number,
+): Promise<RoomListing | null> {
   const { data, error } = await supabase
-    .from('room_listings')
-    .select(`
+    .from("room_listings")
+    .select(
+      `
       *,
       wards (
         id,
@@ -371,8 +388,9 @@ export async function getListing(listingId: number): Promise<RoomListing | null>
       ),
       listing_amenities ( amenity_id, amenities ( id, name, icon ) ),
       listing_images ( image_url, display_order )
-    `)
-    .eq('id', listingId)
+    `,
+    )
+    .eq("id", listingId)
     .single();
 
   if (error) throw error;
@@ -381,10 +399,13 @@ export async function getListing(listingId: number): Promise<RoomListing | null>
   return mapListingWithRelations(data);
 }
 
-export async function getListingsByLandlord(landlordId: string): Promise<RoomListing[]> {
+export async function getListingsByLandlord(
+  landlordId: string,
+): Promise<RoomListing[]> {
   const { data, error } = await supabase
-    .from('room_listings')
-    .select(`
+    .from("room_listings")
+    .select(
+      `
       *,
       wards (
         id,
@@ -398,9 +419,10 @@ export async function getListingsByLandlord(landlordId: string): Promise<RoomLis
       ),
       listing_amenities ( amenity_id, amenities ( id, name, icon ) ),
       listing_images ( image_url, display_order )
-    `)
-    .eq('landlord_id', landlordId)
-    .order('created_at', { ascending: false });
+    `,
+    )
+    .eq("landlord_id", landlordId)
+    .order("created_at", { ascending: false });
 
   if (error) throw error;
 
@@ -408,26 +430,24 @@ export async function getListingsByLandlord(landlordId: string): Promise<RoomLis
 }
 
 export async function uploadListingImage(file: File): Promise<{
-    publicUrl: string;
-    path: string;
+  publicUrl: string;
+  path: string;
 }> {
-  const ext = file.name.split('.').pop();
+  const ext = file.name.split(".").pop();
   const fileName = `${uuidv4()}.${ext}`;
   const path = `listings/${fileName}`;
 
   const { error } = await supabase.storage
-    .from('listing-images')
+    .from("listing-images")
     .upload(path, file, {
-      cacheControl: '3600',
+      cacheControl: "3600",
       upsert: false,
       contentType: file.type,
     });
 
   if (error) throw error;
 
-  const { data } = supabase.storage
-    .from('listing-images')
-    .getPublicUrl(path);
+  const { data } = supabase.storage.from("listing-images").getPublicUrl(path);
 
   return {
     publicUrl: data.publicUrl,
@@ -462,8 +482,14 @@ function mapListing(row: Record<string, unknown>): RoomListing {
 function mapListingWithRelations(row: Record<string, unknown>): RoomListing {
   const base = mapListing(row);
 
-  const amenityRows = (row.listing_amenities as { amenities: { id: number; name: string; icon: string | null } }[] | null) ?? [];
-  const imageRows = (row.listing_images as { image_url: string; display_order: number }[] | null) ?? [];
+  const amenityRows =
+    (row.listing_amenities as
+      | { amenities: { id: number; name: string; icon: string | null } }[]
+      | null) ?? [];
+  const imageRows =
+    (row.listing_images as
+      | { image_url: string; display_order: number }[]
+      | null) ?? [];
 
   return {
     ...base,
@@ -472,24 +498,24 @@ function mapListingWithRelations(row: Record<string, unknown>): RoomListing {
     districtName: (row.wards as any)?.districts?.name,
     provinceId: (row.wards as any)?.districts?.province_id,
     amenities: amenityRows
-      .filter(r => r.amenities)
-      .map(r => ({
+      .filter((r) => r.amenities)
+      .map((r) => ({
         id: r.amenities.id,
         name: r.amenities.name,
         icon: r.amenities.icon,
       })),
     imageUrls: imageRows
       .sort((a, b) => a.display_order - b.display_order)
-      .map(r => r.image_url),
+      .map((r) => r.image_url),
   };
 }
 
 export async function isListingSaved(userId: string, listingId: number) {
   const { data, error } = await supabase
-    .from('saved_listings')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('listing_id', listingId)
+    .from("saved_listings")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("listing_id", listingId)
     .maybeSingle();
 
   if (error) throw error;
@@ -499,7 +525,7 @@ export async function isListingSaved(userId: string, listingId: number) {
 
 // save
 export async function saveListing(userId: string, listingId: number) {
-  const { error } = await supabase.from('saved_listings').insert({
+  const { error } = await supabase.from("saved_listings").insert({
     user_id: userId,
     listing_id: listingId,
   });
@@ -510,13 +536,13 @@ export async function saveListing(userId: string, listingId: number) {
 // unsave
 export async function unsaveListing(userId: string, listingId: number) {
   const { error } = await supabase
-    .from('saved_listings')
+    .from("saved_listings")
     .delete()
-    .eq('user_id', userId)
-    .eq('listing_id', listingId);
+    .eq("user_id", userId)
+    .eq("listing_id", listingId);
 
   if (error) throw error;
-}   
+}
 
 export async function getSavedListingIds(userId: string): Promise<number[]> {
   const { data, error } = await supabase
@@ -526,15 +552,14 @@ export async function getSavedListingIds(userId: string): Promise<number[]> {
 
   if (error) throw error;
 
-  return (data ?? []).map(row => row.listing_id);
+  return (data ?? []).map((row) => row.listing_id);
 }
 
-export async function getSavedListings(
-  userId: string
-): Promise<RoomListing[]> {
+export async function getSavedListings(userId: string): Promise<RoomListing[]> {
   const { data, error } = await supabase
     .from("saved_listings")
-    .select(`
+    .select(
+      `
       listing_id,
       room_listings (
         *,
@@ -550,7 +575,8 @@ export async function getSavedListings(
           display_order
         )
       )
-    `)
+    `,
+    )
     .eq("user_id", userId);
 
   if (error) throw error;
