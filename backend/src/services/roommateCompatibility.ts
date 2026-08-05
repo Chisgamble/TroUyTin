@@ -1,10 +1,11 @@
 type SleepScheduleValue = "EARLY" | "FLEXIBLE" | "LATE";
 type TidinessValue = "MESSY" | "MODERATE" | "VERY_TIDY";
-type FrequencyValue = "DAILY" | "WEEKLY" | "BIWEEKLY" | "NEVER" | "RARELY" | "SOMETIMES" | "OFTEN" | "ALWAYS";
+type FrequencyValue = "NEVER" | "RARELY" | "SOMETIMES" | "OFTEN" | "ALWAYS";
 type HabitValue = "NO" | "SOMETIMES" | "YES";
 
 type LegacySleepScheduleValue = "12AM-8AM" | "10PM-6AM" | "8PM-5AM";
 type LegacyTidinessValue = "LOW" | "MEDIUM" | "HIGH";
+type LegacyFrequencyValue = "DAILY" | "WEEKLY" | "BIWEEKLY";
 
 type SleepScheduleInput = SleepScheduleValue | LegacySleepScheduleValue | string | null | undefined;
 type TidinessInput = TidinessValue | LegacyTidinessValue | string | null | undefined;
@@ -24,9 +25,6 @@ const TIDINESS_SCORE: Record<TidinessValue, number> = {
 };
 
 const FREQUENCY_SCORE: Record<FrequencyValue, number> = {
-  DAILY: 5,
-  WEEKLY: 3,
-  BIWEEKLY: 1,
   NEVER: 1,
   RARELY: 2,
   SOMETIMES: 3,
@@ -50,6 +48,12 @@ const TIDINESS_ALIASES: Record<LegacyTidinessValue, TidinessValue> = {
   LOW: "MESSY",
   MEDIUM: "MODERATE",
   HIGH: "VERY_TIDY",
+};
+
+const FREQUENCY_ALIASES: Record<LegacyFrequencyValue, FrequencyValue> = {
+  DAILY: "ALWAYS",
+  WEEKLY: "OFTEN",
+  BIWEEKLY: "SOMETIMES",
 };
 
 function normalizeEnumValue<TValue extends string>(
@@ -95,13 +99,13 @@ export function profileToVector(profile: any): RoommateVector {
   );
   const cleaningFreq = normalizeEnumValue(
     profile.cleaningFreq,
-    ["DAILY", "WEEKLY", "BIWEEKLY", "NEVER", "RARELY", "SOMETIMES", "OFTEN", "ALWAYS"] as const
+    ["NEVER", "RARELY", "SOMETIMES", "OFTEN", "ALWAYS"] as const, FREQUENCY_ALIASES
   );
   const smoking = normalizeEnumValue(profile.smoking, ["NO", "SOMETIMES", "YES"] as const);
   const drinking = normalizeEnumValue(profile.drinking, ["NO", "SOMETIMES", "YES"] as const);
   const cookingFreq = normalizeEnumValue(
     profile.cookingFreq,
-    ["DAILY", "WEEKLY", "BIWEEKLY", "NEVER", "RARELY", "SOMETIMES", "OFTEN", "ALWAYS"] as const
+    ["NEVER", "RARELY", "SOMETIMES", "OFTEN", "ALWAYS"] as const, FREQUENCY_ALIASES
   );
 
   return {

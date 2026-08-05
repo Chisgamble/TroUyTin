@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { roommateService } from "../services/roommates";
 import { 
   User, Calendar, MapPin, Briefcase, DollarSign, 
-  Moon, Cigarette, Beer, Sparkles, Sliders, Loader 
+  Moon, Cigarette, Beer, Sparkles, Sliders, Loader, 
+  SprayCan,
+  UtensilsCrossed
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -24,7 +26,8 @@ export default function RoommateOnboarding() {
     drinking: "NO",
     sleepSchedule: "FLEXIBLE", 
     tidiness: "MODERATE",
-    cleaningFreq: "WEEKLY", 
+    cleaningFreq: "SOMETIMES", 
+    cookingFreq: "SOMETIMES",
     hasPet: false,
     allowOvernightGuest: false,
     hasRoom: false,
@@ -77,7 +80,8 @@ export default function RoommateOnboarding() {
           drinking: profile.drinking ?? "NO",
           sleepSchedule: profile.sleepSchedule ?? "FLEXIBLE",
           tidiness: profile.tidiness ?? "MODERATE",
-          cleaningFreq: profile.cleaningFreq ?? "WEEKLY",
+          cleaningFreq: profile.cleaningFreq ?? "SOMETIMES",
+          cookingFreq: profile.cookingFreq ?? "SOMETIMES",
           hasPet: Boolean(profile.hasPet),
           allowOvernightGuest: Boolean(profile.allowOvernightGuest),
           hasRoom: Boolean(profile.hasRoom),
@@ -310,6 +314,64 @@ export default function RoommateOnboarding() {
                 </div>
               </div>
 
+              {/* Dọn dẹp */}
+              <div className="bg-gray-50/40 p-4 border border-gray-100 rounded-2xl">
+                <label className="block text-xs font-black text-gray-700 uppercase mb-2 flex items-center gap-1.5">
+                  <SprayCan size={14} className="text-teal-500" /> Dọn dẹp
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {[
+                    { value: "NEVER", label: "Không bao giờ" },
+                    { value: "RARELY", label: "Hiếm khi" },
+                    { value: "SOMETIMES", label: "Thỉnh thoảng" },
+                    { value: "OFTEN", label: "Thường xuyên" },
+                    { value: "ALWAYS", label: "Luôn luôn" },
+                  ].map((item) => (
+                    <button
+                      type="button"
+                      key={item.value}
+                      onClick={() => handleChange("cleaningFreq", item.value)}
+                      className={`py-2 text-xs font-semibold rounded-xl border transition-all ${
+                        form.cleaningFreq === item.value
+                          ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                          : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Nấu ăn */}
+              <div className="bg-gray-50/40 p-4 border border-gray-100 rounded-2xl">
+                <label className="block text-xs font-black text-gray-700 uppercase mb-2 flex items-center gap-1.5">
+                  <UtensilsCrossed size={14} className="text-orange-500" /> Nấu ăn
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {[
+                    { value: "NEVER", label: "Không bao giờ" },
+                    { value: "RARELY", label: "Hiếm khi" },
+                    { value: "SOMETIMES", label: "Thỉnh thoảng" },
+                    { value: "OFTEN", label: "Thường xuyên" },
+                    { value: "ALWAYS", label: "Luôn luôn" },
+                  ].map((item) => (
+                    <button
+                      type="button"
+                      key={item.value}
+                      onClick={() => handleChange("cookingFreq", item.value)}
+                      className={`py-2 text-xs font-semibold rounded-xl border transition-all ${
+                        form.cookingFreq === item.value
+                          ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                          : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Tần suất hút thuốc */}
               <div className="bg-gray-50/40 p-4 border border-gray-100 rounded-2xl">
                 <label className="block text-xs font-black text-gray-700 uppercase mb-2 flex items-center gap-1.5">
@@ -369,7 +431,6 @@ export default function RoommateOnboarding() {
             <div className="space-y-3 pt-2">
               {[
                 { field: "hasPet", label: "🐾 Tôi định nuôi hoặc mang theo thú cưng vào phòng" },
-                { field: "allowOvernightGuest", label: "🤝 Tôi muốn được phép dẫn bạn bè/Người yêu qua đêm" },
                 { field: "hasRoom", label: "🏠 Hiện tôi ĐÃ CÓ PHÒNG SẴN, chỉ tuyển người vào gánh tiền phụ" },
               ].map((item) => (
                 <label

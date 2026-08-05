@@ -283,10 +283,10 @@ export default function PublicProfilePage() {
       })
     }
 
-    // Nấu ăn (NEVER | SOMETIMES | OFTEN | DAILY)
-    if (rp.cooking_freq === 'DAILY') {
+    // Nấu ăn (NEVER | RARELY | SOMETIMES | OFTEN | ALWAYS)
+    if (rp.cooking_freq === 'ALWAYS') {
       tags.push({
-        label: 'Nấu ăn hằng ngày',
+        label: 'Luôn luôn nấu ăn',
         icon: '🍳',
         color: 'bg-orange-50 text-orange-700 border-orange-100',
       })
@@ -302,10 +302,49 @@ export default function PublicProfilePage() {
         icon: '🥘',
         color: 'bg-yellow-50 text-yellow-700 border-yellow-100',
       })
+    } else if (rp.cooking_freq === 'RARELY') {
+      tags.push({
+        label: 'Hiếm khi nấu ăn',
+        icon: '🥡',
+        color: 'bg-amber-50 text-amber-700 border-amber-100',
+      })
     } else if (rp.cooking_freq === 'NEVER') {
       tags.push({
         label: 'Không nấu ăn',
         icon: '🥡',
+        color: 'bg-gray-50 text-gray-700 border-gray-100',
+      })
+    }
+
+    // Dọn dẹp (NEVER | RARELY | SOMETIMES | OFTEN | ALWAYS)
+    if (rp.cleaning_freq === 'ALWAYS') {
+      tags.push({
+        label: 'Luôn luôn dọn dẹp',
+        icon: '🧹',
+        color: 'bg-teal-50 text-teal-700 border-teal-100',
+      })
+    } else if (rp.cleaning_freq === 'OFTEN') {
+      tags.push({
+        label: 'Thường xuyên dọn dẹp',
+        icon: '🧹',
+        color: 'bg-teal-50 text-teal-700 border-teal-100',
+      })
+    } else if (rp.cleaning_freq === 'SOMETIMES') {
+      tags.push({
+        label: 'Thỉnh thoảng dọn dẹp',
+        icon: '🧹',
+        color: 'bg-slate-50 text-slate-700 border-slate-100',
+      })
+    } else if (rp.cleaning_freq === 'RARELY') {
+      tags.push({
+        label: 'Hiếm khi dọn dẹp',
+        icon: '📦',
+        color: 'bg-amber-50 text-amber-700 border-amber-100',
+      })
+    } else if (rp.cleaning_freq === 'NEVER') {
+      tags.push({
+        label: 'Không dọn dẹp',
+        icon: '📦',
         color: 'bg-gray-50 text-gray-700 border-gray-100',
       })
     }

@@ -12,6 +12,8 @@ export interface ProfileData {
   drinking: string;
   sleepSchedule: string;
   tidiness: string;
+  cleaningFreq: string;
+  cookingFreq: string;
   hasPet: boolean;
   allowOvernightGuest: boolean;
   hasRoom: boolean;

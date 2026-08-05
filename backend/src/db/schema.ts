@@ -56,9 +56,9 @@ export const targetTypeEnum = pgEnum("target_type", [
   "ROOMMATE",
 ]);
 
-export const cleaningFreqEnum = pgEnum("cleaning_freq", ["DAILY", "WEEKLY", "BIWEEKLY"]);
+export const cleaningFreqEnum = pgEnum("cleaning_freq", ["NEVER", "RARELY", "SOMETIMES", "OFTEN", "ALWAYS"]);
 
-export const cookingFreqEnum = pgEnum("cooking_freq", ["NEVER", "SOMETIMES", "OFTEN", "DAILY"]);
+export const cookingFreqEnum = pgEnum("cooking_freq", ["NEVER", "RARELY", "SOMETIMES", "OFTEN", "ALWAYS"]);
 export const frequencyEnum = pgEnum("frequency", ["YES", "NO", "OCCASIONALLY"]);
 export const genderEnum = pgEnum("gender", ["MALE", "FEMALE", "OTHER"]);
 export const notificationTypeEnum = pgEnum("notification_type", ["NEW_MESSAGE", "MATCH", "LISTING_UPDATE", "REPORT", "SYSTEM"]);
