@@ -1,4 +1,4 @@
-import { Router } from "express";
+﻿import { Router } from "express";
 import { auth } from "../middlewares/auth";
 import { db } from "../db";
 import { profiles, reviews } from "../db/schema";
@@ -67,9 +67,14 @@ router.get("/reviewee/:revieweeId", async (req, res) => {
 router.post("/", auth, async (req, res) => {
   try {
     const userId = (req as any).userId;
-    const { revieweeId, listingId, rating, comment } = req.body;
+    const { revieweeId, listingId, rating, comment } = req.body as {
+      revieweeId?: string;
+      listingId?: number;
+      rating?: number;
+      comment?: string;
+    };
 
-    if (!revieweeId || !listingId || !rating) {
+    if (!revieweeId || !rating) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
@@ -78,12 +83,17 @@ router.post("/", auth, async (req, res) => {
     }
 
     // 1. Check if a review already exists for this reviewee and listing by this user
+    const duplicateConditions = [
+      eq(reviews.reviewerId, userId),
+      eq(reviews.revieweeId, revieweeId),
+    ];
+
+    if (listingId != null) {
+      duplicateConditions.push(eq(reviews.listingId, listingId));
+    }
+
     const existingReview = await db.query.reviews.findFirst({
-      where: and(
-        eq(reviews.reviewerId, userId),
-        eq(reviews.revieweeId, revieweeId),
-        eq(reviews.listingId, listingId)
-      ),
+      where: and(...duplicateConditions),
     });
 
     if (existingReview) {
@@ -94,7 +104,7 @@ router.post("/", auth, async (req, res) => {
     const newReview = await db.insert(reviews).values({
       reviewerId: userId,
       revieweeId: revieweeId,
-      listingId: listingId,
+      listingId: listingId ?? null,
       rating: rating,
       comment: comment,
     }).returning();

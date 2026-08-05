@@ -10,6 +10,7 @@ import { getIcon } from "../utils/iconMap";
 import { api } from "../lib/axios";
 import StarRating from "../components/StarRating";
 import ReviewCard from "../components/ReviewCard";
+import { ReviewModal } from "../components/ReviewModal";
 import ReportModal from "../components/ReportModal";
 import type { Review } from "../types";
 import "./ListingDetailPage.css"; 
@@ -194,6 +195,7 @@ export default function RoommatePostDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState(0);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -373,6 +375,12 @@ export default function RoommatePostDetailPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleReviewSubmitted = async () => {
+    if (!post?.author.id) return;
+    const updatedAuthorReviews = await fetchAuthorReviews(post.author.id);
+    setReviews(updatedAuthorReviews);
   };
 
   const getRoomTypeLabel = (type: string): string => {
@@ -810,6 +818,25 @@ export default function RoommatePostDetailPage() {
                         ))}
                     </div>
                   )}
+
+                  <button
+                    className="btn-outline btn-full detail-review-btn"
+                    style={{ marginTop: "8px" }}
+                    onClick={() => setShowReviewModal(true)}
+                  >
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      style={{ marginRight: "6px" }}
+                    >
+                      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                    </svg>
+                    Viết đánh giá
+                  </button>
                 </div>
               </div>
             </div>
@@ -838,6 +865,13 @@ export default function RoommatePostDetailPage() {
           </div>
         </div>
       )}
+
+      <ReviewModal
+        isOpen={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+        onSubmitted={handleReviewSubmitted}
+        revieweeId={post.author.id}
+      />
 
       <ReportModal
         isOpen={showReportModal}

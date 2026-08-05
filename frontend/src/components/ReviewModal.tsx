@@ -9,7 +9,7 @@ interface ReviewModalProps {
   onClose: () => void;
   onSubmitted?: () => void | Promise<void>;
   revieweeId: string;
-  listingId: number;
+  listingId?: number;
 }
 
 interface ReviewFormInputs {
@@ -42,7 +42,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, onSub
     try {
       await api.post('/api/reviews', {
         revieweeId,
-        listingId,
+        ...(listingId != null ? { listingId } : {}),
         rating: data.rating,
         comment: data.comment,
       });
