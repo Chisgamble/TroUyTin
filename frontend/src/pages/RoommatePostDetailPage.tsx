@@ -484,6 +484,35 @@ export default function RoommatePostDetailPage() {
                 <p className="whitespace-pre-line">{post.description || "Chưa có mô tả chi tiết."}</p>
               </div>
 
+              {post.rules && (
+                <div className="bg-amber-50 p-6 sm:p-8 rounded-2xl shadow-sm border border-amber-100 mb-6">
+                  <h3 className="text-lg font-bold mb-3 text-amber-900 flex items-center gap-2 border-b border-amber-200/50 pb-3">
+                    <ShieldAlert size={22} className="text-amber-500" /> Nội quy phòng ở ghép
+                  </h3>
+                  <p className="whitespace-pre-line text-amber-800 leading-relaxed text-sm">{post.rules}</p>
+                </div>
+              )}
+
+              {post.amenities && post.amenities.length > 0 && (
+                <div className="detail-amenities-card bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100">
+                  <h3 className="text-xl font-bold mb-6 text-gray-900 border-b border-gray-100 pb-3">Tiện ích</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    {post.amenities.map((amenity) => {
+                      const Icon = getIcon(amenity.icon);
+
+                      return (
+                        <div key={amenity.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                          <span className="text-blue-600 bg-blue-100 p-2 rounded-lg">
+                            <Icon size={18} />
+                          </span>
+                          <span className="text-sm font-semibold text-gray-700">{amenity.name}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <div className="detail-reviews">
                 <div className="detail-reviews-header">
                   <h2>Đánh giá từ người dùng trước</h2>
@@ -513,35 +542,6 @@ export default function RoommatePostDetailPage() {
                   <div className="detail-reviews-empty">Người đăng này chưa có đánh giá từ cộng đồng.</div>
                 )}
               </div>
-
-              {post.rules && (
-                <div className="bg-amber-50 p-6 sm:p-8 rounded-2xl shadow-sm border border-amber-100 mb-6">
-                  <h3 className="text-lg font-bold mb-3 text-amber-900 flex items-center gap-2 border-b border-amber-200/50 pb-3">
-                    <ShieldAlert size={22} className="text-amber-500" /> Nội quy phòng ở ghép
-                  </h3>
-                  <p className="whitespace-pre-line text-amber-800 leading-relaxed text-sm">{post.rules}</p>
-                </div>
-              )}
-
-              {post.amenities && post.amenities.length > 0 && (
-                <div className="detail-amenities-card bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100">
-                  <h3 className="text-xl font-bold mb-6 text-gray-900 border-b border-gray-100 pb-3">Tiện ích</h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    {post.amenities.map((amenity) => {
-                      const Icon = getIcon(amenity.icon);
-
-                      return (
-                        <div key={amenity.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                          <span className="text-blue-600 bg-blue-100 p-2 rounded-lg">
-                            <Icon size={18} />
-                          </span>
-                          <span className="text-sm font-semibold text-gray-700">{amenity.name}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
 
             <div className="detail-sidebar sticky top-24" id="detail-sidebar">
