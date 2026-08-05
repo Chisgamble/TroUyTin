@@ -358,7 +358,7 @@ export default function PublicProfilePage() {
     setChatLoading(true)
     try {
       const conv = await chatService.getOrCreateConversation(user.id, userId)
-      navigate('/chat', { state: { conversationId: conv.id } })
+      navigate('/chat', { state: { conversationId: conv, participantId: userId } })
     } catch (e) {
       console.error(e)
     } finally {
