@@ -1,4 +1,4 @@
-import express from "express";
+﻿import express from "express";
 import { db } from "../db";
 import {
   roommatePosts,
@@ -65,6 +65,7 @@ router.post("/", auth, async (req, res) => {
 });
 
 // 2. GET /roommate-posts/user/my-posts - Lấy bài đăng của user hiện tại
+// 2. GET /roommate-posts/user/my-posts - Lay bai dang cua user hien tai ( kem anh )
 router.get("/user/my-posts", auth, async (req, res) => {
   try {
     const posts = await db
@@ -73,7 +74,28 @@ router.get("/user/my-posts", auth, async (req, res) => {
       .where(eq(roommatePosts.userId, req.userId))
       .orderBy(roommatePosts.createdAt);
 
-    return res.json(posts);
+    const postIds = posts.map((p) => p.id);
+    const allImages = postIds.length > 0
+      ? await db
+          .select()
+          .from(roommatePostImages)
+          .where(inArray(roommatePostImages.postId, postIds))
+          .orderBy(roommatePostImages.displayOrder)
+      : [];
+
+    const imagesByPostId = new Map();
+    for (const img of allImages) {
+      const list = imagesByPostId.get(img.postId) || [];
+      list.push(img);
+      imagesByPostId.set(img.postId, list);
+    }
+
+    const postsWithImages = posts.map((post) => ({
+      ...post,
+      images: imagesByPostId.get(post.id) || [],
+    }));
+
+    return res.json(postsWithImages);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Lỗi server" });

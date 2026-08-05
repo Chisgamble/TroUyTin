@@ -15,6 +15,87 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 
+function normalizePostImages(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item, index) => {
+      if (typeof item === "string") {
+        return { url: item.trim(), order: index };
+      }
+
+      if (typeof item === "object" && item !== null) {
+        const image = item as {
+          imageUrl?: unknown;
+          image_url?: unknown;
+          displayOrder?: unknown;
+          display_order?: unknown;
+        };
+        const rawUrl = image.imageUrl ?? image.image_url;
+        const rawOrder = image.displayOrder ?? image.display_order;
+        const order = Number(rawOrder);
+
+        return {
+          url: typeof rawUrl === "string" ? rawUrl.trim() : "",
+          order: Number.isFinite(order) ? order : index,
+        };
+      }
+
+      return { url: "", order: index };
+    })
+    .filter((image) => image.url.length > 0)
+    .sort((a, b) => a.order - b.order)
+    .map((image) => image.url);
+}
+
+type RoommatePostImageInput = {
+  id?: number;
+  url: string;
+  order: number;
+};
+
+function normalizeRoommatePostImages(value: unknown): RoommatePostImageInput[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item, index) => {
+      if (typeof item === "string") {
+        return {
+          url: item.trim(),
+          order: index,
+        };
+      }
+
+      if (typeof item === "object" && item !== null) {
+        const image = item as {
+          id?: unknown;
+          imageUrl?: unknown;
+          image_url?: unknown;
+          url?: unknown;
+          displayOrder?: unknown;
+          display_order?: unknown;
+        };
+        const rawUrl = image.imageUrl ?? image.image_url ?? image.url;
+        const rawOrder = image.displayOrder ?? image.display_order;
+        const parsedId = Number(image.id);
+        const parsedOrder = Number(rawOrder);
+
+        return {
+          id: Number.isFinite(parsedId) ? parsedId : undefined,
+          url: typeof rawUrl === "string" ? rawUrl.trim() : "",
+          order: Number.isFinite(parsedOrder) ? parsedOrder : index,
+        };
+      }
+
+      return {
+        url: "",
+        order: index,
+      };
+    })
+    .filter((image) => image.url.length > 0)
+    .sort((a, b) => a.order - b.order);
+}
+
 export default function RoommatePostCreate() {
   const navigate = useNavigate();
   const { postId } = useParams<{ postId: string }>();
@@ -93,7 +174,7 @@ export default function RoommatePostCreate() {
           amenityIds,
           rules: post.rules ?? "",
         });
-        setImages((post.images ?? []).map((image: { imageUrl: string }) => image.imageUrl));
+        setImages(normalizeRoommatePostImages(post.images).map((image) => image.url));
 
         // Hiện sẵn tên phường/xã đã lưu để người dùng biết đang chọn ở đâu.
         const savedWardName = post.wardName ?? post.ward?.name;
@@ -300,11 +381,19 @@ export default function RoommatePostCreate() {
 
       const savedPostId = postRes.data.id;
 
-      // Existing images remain intact during an edit.
-      if (!isEditMode) {
-        for (let i = 0; i < images.length; i++) {
-          await roommatePostService.uploadImage(savedPostId, images[i], i);
+      if (isEditMode) {
+        const { data: currentPost } = await roommatePostService.getPostDetail(savedPostId);
+        const currentImages = normalizeRoommatePostImages(currentPost.images);
+
+        for (const image of currentImages) {
+          if (image.id !== undefined) {
+            await roommatePostService.deleteImage(savedPostId, image.id);
+          }
         }
+      }
+
+      for (let i = 0; i < images.length; i++) {
+        await roommatePostService.uploadImage(savedPostId, images[i], i);
       }
 
       toast.success(isEditMode ? "Bài đăng đã được cập nhật thành công!" : "Bài đăng tuyển ở ghép đã được tạo thành công!");

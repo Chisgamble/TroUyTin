@@ -46,7 +46,7 @@ const PAIN_POINTS = [
   {
     icon: Ghost,
     title: "Tin ảo, ảnh một đằng thực tế một nẻo",
-    body: "Lặn lội cả buổi chiều tới xem phòng, mở cửa ra mới biết ảnh trên mạng là phòng khác. Có tin còn đã cho thuê từ mấy tháng trước nhưng không ai gỡ.",
+    body: "Chủ phòng được xác minh danh tính nghiêm ngặt qua SĐT và CCCD. Nếu phát hiện tin giả, bạn chỉ cần báo cáo, đội ngũ CSKH sẽ lập tức vào cuộc xử lý tận gốc.",
   },
   {
     icon: Users,

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
-import { Heart, MapPin, CheckCircle, ShieldAlert, Loader, Flag } from "lucide-react";
+import { Heart, MapPin, CheckCircle, ShieldAlert, Loader, Flag, Phone } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { chatService } from "../services/chatService";
 import { roommatePostService } from "../services/roommates";
@@ -17,6 +17,7 @@ import "../components/ui/Button.css";
 import toast from "react-hot-toast";
 
 const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%239ca3af'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E";
+const DEFAULT_ROOM_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 400'%3E%3Crect width='640' height='400' fill='%23f8fafc'/%3E%3Cpath d='M120 280h400v24H120z' fill='%23cbd5e1'/%3E%3Cpath d='M140 160h170v120H140zM340 120h160v160H340z' fill='%23dbeafe'/%3E%3Ccircle cx='215' cy='215' r='26' fill='%2393c5fd'/%3E%3Cpath d='M390 250l48-54 58 54z' fill='%2360a5fa'/%3E%3C/svg%3E";
 
 // Interface map theo dữ liệu hiển thị
 interface RoommatePostDetail {
@@ -116,12 +117,13 @@ function normalizePostImages(value: unknown): string[] {
 
       if (typeof item === "object" && item !== null) {
         const image = item as {
+          url?: unknown;
           imageUrl?: unknown;
           image_url?: unknown;
           displayOrder?: unknown;
           display_order?: unknown;
         };
-        const rawUrl = image.imageUrl ?? image.image_url;
+        const rawUrl = image.imageUrl ?? image.image_url ?? image.url;
         const rawOrder = image.displayOrder ?? image.display_order;
         const order = Number(rawOrder);
 
@@ -232,7 +234,9 @@ export default function RoommatePostDetailPage() {
           viewCount: Number(rawData.viewCount || rawData.view_count || 0),
           createdAt: rawData.createdAt || rawData.created_at || "",
           
-          images: normalizePostImages(rawData.images),
+          images: normalizePostImages(
+            rawData.images ?? rawData.roommatePostImages ?? rawData.roommate_post_images,
+          ),
             
           wardName: rawData.ward?.name || rawData.wardName || "",
           districtName: rawData.ward?.district?.name || rawData.districtName || "",
@@ -259,9 +263,9 @@ export default function RoommatePostDetailPage() {
           }
         };
 
-        if (mappedPost.images.length === 0) {
-          mappedPost.images = ["https://images.unsplash.com/photo-1486304873000-235643847519?q=80&w=3132&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"];
-        }
+        // if (mappedPost.images.length === 0) {
+        //   mappedPost.images = ["https://images.unsplash.com/photo-1486304873000-235643847519?q=80&w=3132&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"];
+        // }
 
         setPost(mappedPost);
         if (user) {
@@ -404,7 +408,8 @@ export default function RoommatePostDetailPage() {
     );
   }
 
-  const displayedActiveImage = Math.min(activeImage, Math.max(post.images.length - 1, 0));
+  const galleryImages = post.images.length > 0 ? post.images : [DEFAULT_ROOM_IMAGE];
+  const displayedActiveImage = Math.min(activeImage, Math.max(galleryImages.length - 1, 0));
   const authorReviewsCount = reviews.length;
   const authorAvgRating = authorReviewsCount
     ? reviews.reduce((sum, review) => sum + review.rating, 0) / authorReviewsCount
@@ -422,7 +427,7 @@ export default function RoommatePostDetailPage() {
                 <div className="detail-gallery-main h-[380px] md:h-[540px] bg-gradient-to-br from-slate-50 via-white to-slate-100 p-4 sm:p-5 relative">
                   <div className="w-full h-full rounded-[24px] overflow-hidden bg-white shadow-inner">
                     <img
-                      src={post.images[displayedActiveImage]}
+                      src={galleryImages[displayedActiveImage]}
                       alt={post.title}
                       className="w-full h-full object-cover"
                     />
@@ -443,7 +448,7 @@ export default function RoommatePostDetailPage() {
                 <div className="bg-white px-5 sm:px-6 py-4 sm:py-5 border-t border-slate-100">
                   <div className="flex flex-col gap-4">
                     <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-none">
-                      {post.images.map((img, i) => (
+                      {galleryImages.map((img, i) => (
                         <button
                           key={i}
                           type="button"
@@ -590,44 +595,82 @@ export default function RoommatePostDetailPage() {
 
                 <div className="flex flex-col gap-3">
                   <button
-                    className="w-full flex items-center justify-center gap-2 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-sm shadow-blue-100 transition-all"
+                    className="w-full flex items-center justify-center gap-3 py-3 rounded-xl shadow-sm transition-all border-0 hover:opacity-90"
+                    style={{ backgroundColor: '#2563eb', color: '#ffffff' }}
                     onClick={(e) => {
                       e.preventDefault();
-                      if (post.author?.phone) setShowPhoneModal(true);
-                      else toast.error("Chủ phòng chưa cập nhật số điện thoại!");
+                      if (post.author?.phone) {
+                        setShowPhoneModal(true);
+                      } else {
+                        alert("Chủ nhà chưa cập nhật số điện thoại!");
+                      }
                     }}
                   >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                    Gọi điện thoại
-                  </button>
-                  <div className="flex gap-2">
-                    <button
-                      className="flex-1 flex items-center justify-center gap-2 border-2 border-blue-500 text-blue-600 hover:bg-blue-50 py-3 rounded-xl font-bold transition-all disabled:opacity-50"
-                      onClick={handleChatClick}
-                      disabled={chatLoading}
+                    <div 
+                      className="p-2 rounded-lg flex items-center justify-center" 
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
                     >
-                      {chatLoading ? <Loader size={18} className="animate-spin" /> : (
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                      )}
-                      {chatLoading ? "Đang mở..." : "Chat ngay"}
-                    </button>
-                    <button
-                      className="w-14 flex items-center justify-center border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-colors bg-white"
-                      onClick={handleToggleSave}
-                      disabled={saving}
-                      title={isSaved ? "Bỏ lưu bài đăng" : "Lưu bài đăng"}
-                    >
-                      <Heart className={isSaved ? "text-rose-500 fill-rose-500" : "text-gray-400"} size={22} />
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100"
-                    onClick={() => setShowReportModal(true)}
-                  >
-                    <Flag size={18} />
-                    Báo cáo / Khiếu nại tin đăng
+                      <Phone size={20} color="#ffffff" strokeWidth={2.5} />
+                    </div>
+                    
+                    <div className="flex flex-col items-start leading-tight">
+                      <span className="font-bold text-base" style={{ color: '#ffffff' }}>
+                        Gọi điện thoại
+                      </span>
+                      <span className="text-[11px] font-medium" style={{ color: '#dbeafe' }}>
+                        {post.author?.phone ? "Bấm để xem số liên lạc" : "Chủ nhà chưa cung cấp số"}
+                      </span>
+                    </div>
                   </button>
+                  {/* NÚT CHAT VÀ NÚT LƯU BÀI VIẾT */}
+                    <div className="flex gap-2 mt-3 mb-4">
+                      <button
+                        className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all hover:bg-blue-50 disabled:opacity-50"
+                        style={{ 
+                          border: '2px solid #2563eb', /* Viền màu xanh blue-600 */
+                          color: '#2563eb', 
+                          backgroundColor: '#ffffff' 
+                        }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleChatClick();
+                        }}
+                        disabled={chatLoading}
+                      >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                        {chatLoading ? "Đang mở..." : "Chat ngay"}
+                      </button>
+
+                      <button
+                        className="w-14 flex items-center justify-center rounded-xl hover:bg-gray-50 transition-colors"
+                        style={{ 
+                          border: '2px solid #e5e7eb', /* Viền xám gray-200 */
+                          backgroundColor: '#ffffff' 
+                        }}
+                        onClick={handleToggleSave}
+                        disabled={saving}
+                        title={isSaved ? "Bỏ lưu bài đăng" : "Lưu bài đăng"}
+                      >
+                        <Heart className={isSaved ? "text-rose-500 fill-rose-500" : "text-gray-400"} size={22} />
+                      </button>
+                    </div>
+
+                    {/* NÚT BÁO CÁO / KHIẾU NẠI */}
+                    <button
+                      type="button"
+                      className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition-all hover:opacity-80"
+                      style={{
+                        border: '2px solid #fecdd3', /* Viền đỏ nhạt rose-200 */
+                        backgroundColor: '#fff1f2',  /* Nền hồng nhạt rose-50 */
+                        color: '#be123c'             /* Chữ đỏ đậm rose-700 */
+                      }}
+                      onClick={() => setShowReportModal(true)}
+                    >
+                      <Flag size={18} />
+                      Báo cáo / Khiếu nại tin đăng
+                    </button>
                 </div>
               </div>
 
