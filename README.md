@@ -5,6 +5,68 @@ giao diện web cho người thuê/chủ trọ, xác thực bằng Supabase, d�
 trên PostgreSQL và một API Express cho các nghiệp vụ phòng, đánh giá, ghép
 người ở cùng và bài đăng tuyển người ở ghép.
 
+## Khai báo công nghệ, thư viện, API và nguồn hỗ trợ
+
+### Framework, runtime và ngôn ngữ
+
+- **Frontend:** React 19, React DOM, Vite 8 và TypeScript 6.
+- **Backend:** Node.js, Express 5 và TypeScript.
+- **Cơ sở dữ liệu:** PostgreSQL thông qua Supabase; Drizzle ORM và Drizzle Kit
+  được sử dụng để khai báo schema và quản lý migration.
+- **Kiểm thử và chất lượng mã nguồn:** Node.js Test Runner, ESLint,
+  `typescript-eslint`, `eslint-plugin-react-hooks` và
+  `eslint-plugin-react-refresh`.
+
+### Thư viện chính
+
+- **Frontend:** `@supabase/supabase-js`, `axios`, `@tanstack/react-query`,
+  `react-router-dom`, `react-hook-form`, `react-hot-toast`, `lucide-react`,
+  `uuid`, `tailwindcss`, `@tailwindcss/vite`, `postcss`, `autoprefixer` và
+  `@openmapvn/openmapvn-gl`.
+- **Backend:** `@supabase/supabase-js`, `@google/generative-ai`,
+  `drizzle-orm`, `postgres`, `zod`, `cors`, `dotenv`, `jsonwebtoken`,
+  `jwks-rsa` và `tsx`.
+
+### API và dịch vụ bên ngoài
+
+- **Supabase API:** Supabase Auth cho đăng nhập/đăng ký và Google OAuth,
+  Supabase Database/PostgreSQL cho dữ liệu, Supabase Storage cho ảnh và
+  Supabase Realtime cho chức năng chat.
+- **API nội bộ:** REST API Express, mặc định tại
+  `http://localhost:3000/api`, phục vụ phòng, đánh giá, hồ sơ người ở ghép,
+  ghép cặp, bài đăng và tìm kiếm.
+- **Google Gemini API:** được gọi thông qua `@google/generative-ai` cho tính
+  năng chuyển câu tìm kiếm tự nhiên thành bộ lọc tại
+  `POST /api/search/parse`. API key được cấu hình bằng biến
+  `TROUYTIN_API_KEY`.
+- **OpenMapVN:** bản đồ được hiển thị bằng `@openmapvn/openmapvn-gl` và style
+  bản đồ tại `https://tiles.openmap.vn/styles/day-v1/style.json`.
+- **Google Fonts:** sử dụng font Inter được nhúng trong `frontend/index.html`.
+  Một số ảnh minh họa dự phòng sử dụng URL ảnh Unsplash khi dữ liệu chưa có
+  ảnh trong Storage.
+
+### Template và mã nguồn được hỗ trợ bởi AI
+
+- Frontend được khởi tạo từ **Vite React TypeScript template** và sau đó được mở rộng cho các nghiệp vụ của TroUyTin.
+- Phần lớn mã nguồn được xây dựng với sự hỗ trợ của **AI Agent**. AI Agent
+  được sử dụng để phân tích yêu cầu, đề xuất kiến trúc, xây dựng chức năng,
+  tạo mã nguồn, phát hiện lỗi, tái cấu trúc code và hỗ trợ hoàn thiện tài liệu.
+  Mã nguồn sau khi sinh được nhóm kiểm tra, chỉnh sửa và tích hợp vào dự án.
+
+### Nguyên tắc tổng hợp tài liệu và sử dụng công cụ AI
+
+- Mã nguồn của dự án được xây dựng phần lớn với sự hỗ trợ của các AI Agent nhằm
+  đẩy nhanh tốc độ phát triển. Trong quá trình phát triển, AI Agent được sử dụng
+  như một công cụ hỗ trợ kỹ thuật để phân tích yêu cầu, đề xuất kiến trúc, xây dựng
+  các chức năng, tạo mã nguồn, phát hiện lỗi, tái cấu trúc code và hỗ trợ hoàn thiện
+  tài liệu kỹ thuật.
+- Tuy nhiên các thành viên trong nhóm giữ vai trò xác định yêu cầu, đưa ra tiêu chí
+  đầu vào, lựa chọn phương án triển khai và chịu trách nhiệm đối với chất lượng cuối
+  cùng của sản phẩm. Các thành viên trong nhóm sẽ thực hiện manual test và review
+  mã nguồn để kiểm tra cấu trúc chương trình, logic xử lý và sự phù hợp giữa các
+  module.
+
+
 ## Tính năng chính
 
 - Xem, tìm kiếm và xem chi tiết phòng trọ.
@@ -282,3 +344,4 @@ curl http://localhost:3000/api/roommates/profiles/me
 
 Request thứ hai sẽ trả `401 {"error":"No token"}` nếu chưa gửi token; đây là
 hành vi đúng.
+
