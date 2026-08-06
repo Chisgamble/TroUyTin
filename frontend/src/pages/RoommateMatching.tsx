@@ -16,6 +16,8 @@ import { useAuth } from "../contexts/AuthContext";
 import { chatService } from "../services/chatService";
 import { roommateService } from "../services/roommates";
 
+const MISSING_PROFILE_TOAST_ID = "roommate-matching-missing-profile";
+
 interface RoommateCandidate {
   id: number;
   userId: string;
@@ -173,7 +175,9 @@ export default function RoommateMatching() {
       console.error("Error:", error);
 
       if (error.response?.status === 400) {
-        toast.error("Bạn cần hoàn thiện hồ sơ thói quen sinh hoạt trước khi tìm bạn ở ghép!");
+        toast.error("Bạn cần hoàn thiện hồ sơ thói quen sinh hoạt trước khi tìm bạn ở ghép!", {
+          id: MISSING_PROFILE_TOAST_ID,
+        });
         navigate("/roommate-onboarding");
       } else {
         toast.error("Lỗi khi tải danh sách ứng viên");
